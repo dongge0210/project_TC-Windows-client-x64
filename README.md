@@ -35,3 +35,7 @@
   - **协议**: 其他  
   - **使用方式**: 本项目将其作为 Git 子模块引入，用于数据压缩。  
   - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/madler/zlib) 中找到完整的源代码及其协议文件。
+- [FFmpeg](https://github.com/FFmpeg/FFmpeg)  
+  - **协议**: 请参考仓库中的 `LICENSE` 文件或相关协议说明。  
+  - **使用方式**: 可能不会使用，预留。  
+  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/FFmpeg/FFmpeg) 中找到完整的源代码及其协议文件。
