@@ -39,18 +39,27 @@
   - **协议**: 其他  
   - **使用方式**: 本项目将其作为 Git 子模块引入，用于数据压缩。  
   - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/madler/zlib) 中找到完整的源代码及其协议文件。
+
 - [FFmpeg](https://github.com/FFmpeg/FFmpeg)  
   - **协议**: 请参考仓库中的 `LICENSE` 文件或相关协议说明。  
   - **使用方式**: 可能不会使用，预留。  
   - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/FFmpeg/FFmpeg) 中找到完整的源代码及其协议文件。
+
 - [Libwebsockets](https://github.com/warmcat/libwebsockets)  
   - **协议**: 整体为[MIT License](https://github.com/warmcat/libwebsockets/blob/main/LICENSE)  
   - **使用方式**: 作为 Git 子模块用于 WebSocket 通信功能。  
   - **源代码获取**: [GitHub 仓库](https://github.com/warmcat/libwebsockets)
+
 - [Qt](https://www.qt.io/)  
   - **协议**: [GNU Lesser General Public License v3 (LGPL-3.0)](https://www.gnu.org/licenses/lgpl-3.0.html) 或 [GNU General Public License v3 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html)  
   - **使用方式**: 用于提供一定的 UI 支持。  
-  - **源代码获取**: [GitHub 仓库](https://github.com/qt/qtbase)  
+  - **源代码获取**: [GitHub 仓库](https://github.com/qt/qtbase)
+
+- [Boost](https://github.com/boostorg/boost)  
+  - **协议**: [Boost Software License 1.0](https://www.boost.org/users/license.html)  
+  - **使用方式**: 作为 C++ 标准库的扩展，用于提供多种功能（如智能指针、多线程、正则表达式、序列化等）。  
+  - **源代码获取**: [GitHub 仓库](https://github.com/boostorg/boost)
+
 ### 环境要求
 - C++17 或更高版本
 - CMake 3.15 或更高版本
