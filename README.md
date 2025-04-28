@@ -56,7 +56,7 @@
   - **源代码获取**: [GitHub 仓库](https://github.com/qt/qtbase)
 
 - [Boost](https://github.com/boostorg/boost)  
-  - **协议**: [Boost Software License 1.0](https://www.boost.org/users/license.html)  
+  - **协议**: [Boost Software License 1.0(BSL-1.0)](https://www.boost.org/users/license.html)  
   - **使用方式**: 作为 C++ 标准库的扩展，用于提供多种功能（如智能指针、多线程、正则表达式、序列化等）。  
   - **源代码获取**: [GitHub 仓库](https://github.com/boostorg/boost)
 
