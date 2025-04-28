@@ -49,7 +49,7 @@
   - **源代码获取**: [GitHub 仓库](https://github.com/warmcat/libwebsockets)
 - [Qt](https://www.qt.io/)  
   - **协议**: [GNU Lesser General Public License v3 (LGPL-3.0)](https://www.gnu.org/licenses/lgpl-3.0.html) 或 [GNU General Public License v3 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html)  
-  - **使用方式**: 用于提供跨平台的 GUI 支持。  
+  - **使用方式**: 用于提供一定的 UI 支持。  
   - **源代码获取**: [GitHub 仓库](https://github.com/qt/qtbase)  
 ### 环境要求
 - C++17 或更高版本
