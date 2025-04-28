@@ -2,6 +2,10 @@
 
 本项目遵循 [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html) 开源协议。
 
+`project-monitor-TC` 是一个基于 C++ 的项目，主要用于监控和管理系统硬件状态，同时支持多种功能扩展。
+
+额，为了方便，项目暂时全局调整为 GPLv3
+
 ## 此项目使用的子仓库
 
 本项目使用了以下仓库：
@@ -39,3 +43,12 @@
   - **协议**: 请参考仓库中的 `LICENSE` 文件或相关协议说明。  
   - **使用方式**: 可能不会使用，预留。  
   - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/FFmpeg/FFmpeg) 中找到完整的源代码及其协议文件。
+- [Libwebsockets](https://github.com/warmcat/libwebsockets)  
+  - **协议**: 整体为[MIT License](https://github.com/warmcat/libwebsockets/blob/main/LICENSE)  
+  - **使用方式**: 作为 Git 子模块用于 WebSocket 通信功能。  
+  - **源代码获取**: [GitHub 仓库](https://github.com/warmcat/libwebsockets)
+ 
+### 环境要求
+- C++17 或更高版本
+- CMake 3.15 或更高版本
+- 支持的操作系统（如 Windows 或 Linux）
