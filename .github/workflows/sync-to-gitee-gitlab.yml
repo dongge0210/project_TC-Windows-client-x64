@@ -23,26 +23,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: 验证运行环境
-      - name: Validate repository
+      # Step 2: 验证密钥
+      - name: Validate Secrets
         run: |
-          if [[ "${{ github.repository }}" != "dongge0210/project-monitor-TC" ]]; then
-            echo "This workflow is not allowed to run outside the original repository."
-            exit 1
+          missing_secrets=0
+
+          if [ -z "${{ secrets.GITEE_TOKEN }}" ]; then
+            echo "❌ ERROR: Missing GITEE_TOKEN secret."
+            missing_secrets=$((missing_secrets+1))
+          else
+            echo "✅ GITEE_TOKEN is available."
           fi
 
-      - name: Validate actor
-        run: |
-          if [[ "${{ github.actor }}" != "dongge0210" ]]; then
-            echo "Unauthorized actor. Exiting..."
-            exit 1
+          if [ -z "${{ secrets.GITLAB_TOKEN }}" ]; then
+            echo "❌ ERROR: Missing GITLAB_TOKEN secret."
+            missing_secrets=$((missing_secrets+1))
+          else
+            echo "✅ GITLAB_TOKEN is available."
           fi
 
-      - name: Check secrets
-        run: |
-          if [ -z "${{ secrets.GITEE_TOKEN }}" ] || [ -z "${{ secrets.GITLAB_TOKEN }}" ] || [ -z "${{ secrets.GITEA_LOCAL_TOKEN }}" ]; then
-            echo "Missing required secrets. Exiting..."
+          if [ -z "${{ secrets.GITEA_LOCAL_TOKEN }}" ]; then
+            echo "❌ ERROR: Missing GITEA_LOCAL_TOKEN secret."
+            missing_secrets=$((missing_secrets+1))
+          else
+            echo "✅ GITEA_LOCAL_TOKEN is available."
+          fi
+
+          if [ $missing_secrets -ne 0 ]; then
+            echo "❌ ERROR: Validation failed. Missing $missing_secrets secrets."
             exit 1
+          else
+            echo "✅ All required secrets are available."
           fi
 
       # Step 3: 获取当前 commit SHA
