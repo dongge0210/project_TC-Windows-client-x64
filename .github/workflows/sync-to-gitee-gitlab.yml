@@ -37,7 +37,12 @@ jobs:
             exit 1
           fi
 
-      # Step 3: 配置 Gitee 和 GitLab 的凭据
+      # Step 3: 获取当前 commit SHA
+      - name: Get current commit
+        id: get_commit
+        run: echo "COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      # Step 4: 配置 Gitee 和 GitLab 的凭据
       - name: Setup credentials
         run: |
           git config --global user.name "dongge0210"
@@ -49,17 +54,21 @@ jobs:
           # 添加 Gitea 作者 远程仓库
           git remote add gitea_author_local http://dongge0210:${{ secrets.GITEA_LOCAL_TOKEN }}@115.231.176.235:3000/dongge0210/project-monitor-TC
 
-      # Step 4: 推送到 Gitee
+      # Step 5: 推送到 Gitee
       - name: Push to Gitee
         run: |
           git fetch --unshallow
-          git push gitee T1-F-P --force
+          git push gitee $COMMIT_SHA:refs/heads/T1-F-P --force
 
-      # Step 5: 推送到 GitLab
+      # Step 6: 推送到 GitLab
       - name: Push to GitLab
         run: |
-          git push gitlab T1-F-P --force
+          git push gitlab $COMMIT_SHA:refs/heads/T1-F-P --force
 
+      # Step 7: 推送到 Gitea_local
+      - name: Push to Gitea_local
+        run: |
+          git push gitea_author_local $COMMIT_SHA:refs/heads/T1-F-P --force
       # Step 6: 推送到 Gitea_local
       - name: Push to Gitea_local
         run: |
