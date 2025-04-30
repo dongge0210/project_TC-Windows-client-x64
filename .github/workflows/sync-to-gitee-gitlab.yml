@@ -23,6 +23,8 @@ jobs:
           git remote add gitee https://DonggeML:${{ secrets.GITEE_TOKEN }}@gitee.com/DonggeML/project-monitor-TC.git
           # 添加 GitLab 远程仓库
           git remote add gitlab https://dongge0210:${{ secrets.GITLAB_TOKEN }}@gitlab.com/dongge0210/project-monitor-TC.git
+          # 添加 Gitea 作者 远程仓库
+          git Gitea remote add http://dongge0210:${{ secrets.GITEA_LOCAL_TOKEN }}@115.231.176.235:3000/dongge0210/project-monitor-TC
 
       # Step 3: 推送到 Gitee
       - name: Push to Gitee
@@ -34,3 +36,7 @@ jobs:
       - name: Push to GitLab
         run: |
           git push gitlab T1-F-P --force
+
+      - name: Push to Gitea_local
+        run: |
+          git push Gitea T1-F-P --force
