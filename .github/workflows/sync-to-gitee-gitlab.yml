@@ -10,11 +10,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 检出代码
+      # Step 1: 检出代码（仅允许在特定仓库中运行）
       - name: Checkout code
+        if: github.repository == 'dongge0210/project-monitor-TC'
         uses: actions/checkout@v3
 
-      # Step 2: 配置 Gitee 和 GitLab 的凭据
+      # Step 2: 验证运行环境
+      - name: Validate repository
+        run: |
+          if [[ "${{ github.repository }}" != "dongge0210/project-monitor-TC" ]]; then
+            echo "This workflow is not allowed to run outside the original repository."
+            exit 1
+          fi
+
+      - name: Validate actor
+        run: |
+          if [[ "${{ github.actor }}" != "dongge0210" ]]; then
+            echo "Unauthorized actor. Exiting..."
+            exit 1
+          fi
+
+      - name: Check secrets
+        run: |
+          if [ -z "${{ secrets.GITEE_TOKEN }}" ] || [ -z "${{ secrets.GITLAB_TOKEN }}" ] || [ -z "${{ secrets.GITEA_LOCAL_TOKEN }}" ]; then
+            echo "Missing required secrets. Exiting..."
+            exit 1
+          fi
+
+      # Step 3: 配置 Gitee 和 GitLab 的凭据
       - name: Setup credentials
         run: |
           git config --global user.name "dongge0210"
@@ -26,17 +49,18 @@ jobs:
           # 添加 Gitea 作者 远程仓库
           git remote add gitea_author_local http://dongge0210:${{ secrets.GITEA_LOCAL_TOKEN }}@115.231.176.235:3000/dongge0210/project-monitor-TC
 
-      # Step 3: 推送到 Gitee
+      # Step 4: 推送到 Gitee
       - name: Push to Gitee
         run: |
           git fetch --unshallow
           git push gitee T1-F-P --force
 
-      # Step 4: 推送到 GitLab
+      # Step 5: 推送到 GitLab
       - name: Push to GitLab
         run: |
           git push gitlab T1-F-P --force
 
+      # Step 6: 推送到 Gitea_local
       - name: Push to Gitea_local
         run: |
           git push gitea_author_local T1-F-P --force
