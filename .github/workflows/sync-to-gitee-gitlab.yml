@@ -1,18 +1,26 @@
-name: Sync to Gitee and GitLab
+name: CI/CD Workflow
 
 on:
   push:
     branches:
-      - T1-F-P  # 监听 T1-F-P 分支的更新
+      - T1-F-P  # 分发功能监听 T1-F-P 分支的改动
+
+  schedule:
+    # 定时触发任务：每天中国时间（UTC+8）的 10:00 和 22:00
+    - cron: "0 2 * * *"   # 对应 UTC 时间 02:00（中国时间 10:00）
+    - cron: "0 14 * * *"  # 对应 UTC 时间 14:00（中国时间 22:00）
+
+  workflow_dispatch: # 允许手动触发任务
 
 jobs:
+  # 分发任务：监听仓库改动并推送到 Gitee、GitLab 和 Gitea
   sync:
+    if: github.event_name == 'push'  # 仅在 push 事件触发时运行
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: 检出代码（仅允许在特定仓库中运行）
+      # Step 1: 检出代码
       - name: Checkout code
-        if: github.repository == 'dongge0210/project-monitor-TC'
         uses: actions/checkout@v3
 
       # Step 2: 验证运行环境
@@ -69,7 +77,30 @@ jobs:
       - name: Push to Gitea_local
         run: |
           git push gitea_author_local $COMMIT_SHA:refs/heads/T1-F-P --force
-      # Step 6: 推送到 Gitea_local
-      - name: Push to Gitea_local
+
+  # .sln 生成任务：每天中国时间 10:00 和 22:00 自动运行
+  build-sln:
+    if: github.event_name != 'push'  # 避免在 push 事件中触发，只运行定时任务
+    runs-on: windows-latest
+
+    steps:
+      # Step 1: 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: 恢复 NuGet 包（如果项目有依赖）
+      - name: Restore NuGet packages
         run: |
-          git push gitea_author_local T1-F-P --force
+          nuget restore project-monitor-TC.sln
+
+      # Step 3: 编译解决方案
+      - name: Build Solution
+        run: |
+          msbuild project-monitor-TC.sln /p:Configuration=Debug /p:Platform=x64
+
+      # Step 4: 上传生成的文件（可选）
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: ./bin/Debug/x64/
