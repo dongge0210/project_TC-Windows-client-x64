@@ -195,7 +195,14 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        LibreHardwareMonitorBridge::Initialize();
+        try {
+            LibreHardwareMonitorBridge::Initialize();
+            // 温度监控功能正常初始化
+        }
+        catch (const std::exception& e) {
+            Logger::Warning("LibreHardwareMonitor 初始化失败，温度监控功能将不可用: " + std::string(e.what()));
+            // 继续运行程序，但不使用温度监控功能
+        }
 
         while (true) {
 

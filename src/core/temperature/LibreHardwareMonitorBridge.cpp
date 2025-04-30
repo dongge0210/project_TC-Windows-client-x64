@@ -4,8 +4,6 @@
 #include <iostream>
 #include <windows.h>
 
-#using "LibreHardwareMonitorLib.dll"
-
 using namespace LibreHardwareMonitor::Hardware;
 using namespace System;
 using namespace System::Collections::Generic;
