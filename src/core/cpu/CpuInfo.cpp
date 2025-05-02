@@ -4,6 +4,8 @@
 #include <windows.h>
 #include <vector>
 #include <pdh.h>
+#include <pdhmsg.h> // 添加PDH消息头文件，包含所有PDH_*常量定义
+#include <sstream>  // 添加stringstream头文件
 
 #pragma comment(lib, "pdh.lib")
 
@@ -33,7 +35,7 @@ CpuInfo::~CpuInfo() {
 void CpuInfo::InitializeCounter() {
     PDH_STATUS status = PdhOpenQuery(NULL, 0, &queryHandle);
     if (status != ERROR_SUCCESS) {
-        Logger::Error("无法打开性能计数器查询");
+        Logger::Error("无法打开性能计数器查询，错误代码: " + std::to_string(status));
         return;
     }
 
@@ -44,7 +46,7 @@ void CpuInfo::InitializeCounter() {
         &counterHandle);
 
     if (status != ERROR_SUCCESS) {
-        Logger::Error("无法添加CPU使用率计数器");
+        Logger::Error("无法添加CPU使用率计数器，错误代码: " + std::to_string(status));
         PdhCloseQuery(queryHandle);
         return;
     }
@@ -52,14 +54,20 @@ void CpuInfo::InitializeCounter() {
     // 首次查询以初始化计数器
     status = PdhCollectQueryData(queryHandle);
     if (status != ERROR_SUCCESS) {
-        Logger::Error("无法收集性能计数器数据");
+        Logger::Error("无法收集性能计数器数据，错误代码: " + std::to_string(status));
         PdhCloseQuery(queryHandle);
         return;
     }
 
     counterInitialized = true;
-    Sleep(100); // 等待首次采样完成
-    updateUsage(); // 初始化采样
+    Logger::Info("CPU性能计数器初始化成功");
+    
+    // 等待足够时间让计数器稳定
+    Sleep(500); 
+    
+    // 初始化采样 - 第一次采样通常不准确，但我们需要先执行一次
+    double initialUsage = updateUsage();
+    Logger::Info("CPU初始使用率: " + std::to_string(initialUsage) + "%");
 }
 
 double CpuInfo::GetLargeCoreSpeed() const {
@@ -92,6 +100,7 @@ void CpuInfo::CleanupCounter() {
     if (counterInitialized) {
         PdhCloseQuery(queryHandle);
         counterInitialized = false;
+        Logger::Info("CPU性能计数器已清理");
     }
 }
 
@@ -149,27 +158,92 @@ void CpuInfo::UpdateCoreSpeeds() {
 
 double CpuInfo::updateUsage() {
     if (!counterInitialized) {
+        Logger::Error("性能计数器未初始化。");
         return cpuUsage;
     }
 
     PDH_STATUS status = PdhCollectQueryData(queryHandle);
     if (status != ERROR_SUCCESS) {
-        Logger::Error("无法收集CPU使用率数据");
+        Logger::Error("无法收集 CPU 使用率数据，错误代码: " + std::to_string(status));
+        
+        // 如果是因为计数器无效，尝试重新初始化
+        if (status == PDH_INVALID_HANDLE || status == PDH_INVALID_DATA) {
+            Logger::Warning("计数器无效，尝试重新初始化...");
+            CleanupCounter();
+            InitializeCounter();
+            return cpuUsage; // 返回上次的值
+        }
+        
         return cpuUsage;
     }
+
+    // 等待一小段时间以确保有足够的数据样本
+    Sleep(50);
 
     PDH_FMT_COUNTERVALUE counterValue;
-    status = PdhGetFormattedCounterValue(counterHandle,
-        PDH_FMT_DOUBLE,
-        NULL,
-        &counterValue);
+    
+    // 使用 PDH_FMT_DOUBLE 格式获取值
+    status = PdhGetFormattedCounterValue(counterHandle, 
+                                         PDH_FMT_DOUBLE, 
+                                         NULL, 
+                                         &counterValue);
 
     if (status != ERROR_SUCCESS) {
-        Logger::Error("无法格式化CPU使用率数据");
-        return cpuUsage;
+        std::string errorMessage = "无法格式化 CPU 使用率数据，错误代码: " + std::to_string(status);
+        
+        // 针对特定错误码提供更详细的信息
+        switch (status) {
+            case PDH_INVALID_ARGUMENT:
+                errorMessage += " (无效参数)";
+                break;
+            case PDH_INVALID_HANDLE:
+                errorMessage += " (无效句柄)";
+                break;
+            case PDH_INVALID_DATA:
+                errorMessage += " (无效数据)";
+                break;
+            case PDH_CSTATUS_NO_INSTANCE:
+                errorMessage += " (实例不存在)";
+                break;
+            case PDH_CSTATUS_NO_OBJECT:
+                errorMessage += " (对象不存在)";
+                break;
+            case PDH_CSTATUS_NO_COUNTER:
+                errorMessage += " (计数器不存在)";
+                break;
+            case PDH_CALC_NEGATIVE_DENOMINATOR:
+                errorMessage += " (计算中的负分母)";
+                break;
+            case PDH_CALC_NEGATIVE_VALUE:
+                errorMessage += " (计算中的负值)";
+                break;
+            case PDH_CSTATUS_INVALID_DATA:
+                errorMessage += " (PDH数据无效)";
+                break;
+        }
+        
+        Logger::Error(errorMessage);
+        
+        // 如果是严重错误，尝试重新初始化计数器
+        if (status == PDH_INVALID_HANDLE || status == PDH_INVALID_DATA || 
+            status == PDH_CSTATUS_NO_INSTANCE || status == PDH_CSTATUS_NO_COUNTER) {
+            Logger::Warning("检测到严重错误，重新初始化 CPU 性能计数器...");
+            CleanupCounter();
+            InitializeCounter();
+        }
+        
+        return cpuUsage; // 返回上一次的值
     }
 
-    cpuUsage = counterValue.doubleValue;
+    // 检查值是否合理 (0-100%)
+    double newValue = counterValue.doubleValue;
+    if (newValue < 0 || newValue > 100 || std::isnan(newValue) || std::isinf(newValue)) {
+        Logger::Warning("CPU使用率数据异常: " + std::to_string(newValue) + "%, 使用默认值");
+        return cpuUsage; // 返回上次的有效值
+    }
+
+    // 更新并返回新值
+    cpuUsage = newValue;
     return cpuUsage;
 }
 

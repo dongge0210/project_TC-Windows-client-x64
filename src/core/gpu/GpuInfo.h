@@ -23,6 +23,7 @@ public:
         double coreClock = 0.0;
         bool isNvidia = false;
         bool isIntegrated = false;
+        bool isAmd = false;
         int computeCapabilityMajor = 0;
         int computeCapabilityMinor = 0;
         unsigned int temperature = 0;

@@ -32,6 +32,9 @@ public:
     // Enable a privilege by name (such as "SeCreateGlobalPrivilege")
     static bool EnablePrivilege(const std::wstring& privilegeName, bool enable = true);
     
+    // Overload for wchar_t* version
+    static bool EnablePrivilege(const wchar_t* privilegeName);
+    
     // Check if the current process has a specific privilege enabled
     static bool CheckPrivilege(const std::wstring& privilegeName);
     
@@ -40,4 +43,13 @@ public:
     
     // Format Windows error code to message string
     static std::string FormatWindowsErrorMessage(DWORD errorCode);
+
+    // 添加在其他转换函数附近
+    static std::string WstringToUtf8String(const std::wstring& wstr);
+
+    // Check if the current process is elevated
+    static bool IsProcessElevated();
+
+    // Check if the current user is an administrator
+    static bool IsUserAdmin();
 };

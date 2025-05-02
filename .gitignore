@@ -1,4 +1,5 @@
-.DS_Store# Visual Studio directories
+.DS_Store
+# Visual Studio directories
 .vs/
 ipch/
 [Dd]ebug/

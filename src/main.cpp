@@ -21,13 +21,12 @@
 #include <QMessageBox> 
 #include <io.h>
 #include <fcntl.h>
+#include <msclr/marshal_cppstd.h>
 
 //QT已在本体软件因为COM证实为无效，QTUI将单独UI通过内存共享显示
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
-
-// Remove the global variables for shared memory - now in SharedMemoryManager
 
 //辅助函数
 // 硬件名称翻译
@@ -141,7 +140,6 @@ static void PrintInfoItem(const std::string& label, const std::string& value, in
 }
 
 // Remove InitSharedMemory and WriteToSharedMemory functions - now in SharedMemoryManager
-
 // 将SystemInfo转换为共享内存格式
 void ConvertToSharedData(const SystemInfo& sysInfo, SharedMemoryBlock& sharedData) {
     wcscpy_s(sharedData.cpuName, sizeof(sharedData.cpuName) / sizeof(wchar_t), WinUtils::StringToWstring(sysInfo.cpuName).c_str());
@@ -157,6 +155,16 @@ void ConvertToSharedData(const SystemInfo& sysInfo, SharedMemoryBlock& sharedDat
 
 //主要函数
 int main(int argc, char* argv[]) {
+    // 在 main 函数开始处添加
+    wchar_t runtimePath[MAX_PATH] = L"";
+    GetEnvironmentVariableW(L"ProgramFiles", runtimePath, MAX_PATH);
+    wcscat_s(runtimePath, L"\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.0");
+
+    // 添加到DLL搜索路径
+    AddDllDirectory(runtimePath);
+
+    // 然后设置LibreHardwareMonitor DLL路径
+    SetDllDirectory(L"F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net8.0");
     try {
         // Set console output to UTF-8
         _setmode(_fileno(stdout), _O_U8TEXT);
@@ -181,9 +189,17 @@ int main(int argc, char* argv[]) {
             ~ComCleanup() { CoUninitialize(); }
         } comCleanup;
 
+        // 检测管理员权限
+        bool isAdmin = WinUtils::IsUserAdmin();
+        Logger::Info(std::string("当前用户是否管理员: ") + (isAdmin ? "是" : "否"));
+
+        // Set global privilege based on admin status
+        SharedMemoryManager::SetGlobalPrivilegeEnabled(isAdmin);
+
         // Use SharedMemoryManager instead of local functions
         if (!SharedMemoryManager::InitSharedMemory()) {
-            CoUninitialize();
+            Logger::Error("共享内存初始化失败: " + SharedMemoryManager::GetSharedMemoryError());
+            QMessageBox::critical(nullptr, "错误", "共享内存初始化失败，程序将退出。");
             return 1;
         }
 
@@ -197,11 +213,20 @@ int main(int argc, char* argv[]) {
 
         try {
             LibreHardwareMonitorBridge::Initialize();
-            // 温度监控功能正常初始化
+        }
+        catch (System::IO::FileNotFoundException^ ex) {
+            // 使用正确的字符编码转换
+            std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
+            std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
+            Logger::Warning("LibreHardwareMonitor 初始化失败 (FileNotFound): " + utf8Str);
+        }
+        catch (System::Exception^ ex) {
+            std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
+            std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
+            Logger::Warning("LibreHardwareMonitor 初始化异常: " + utf8Str);
         }
         catch (const std::exception& e) {
-            Logger::Warning("LibreHardwareMonitor 初始化失败，温度监控功能将不可用: " + std::string(e.what()));
-            // 继续运行程序，但不使用温度监控功能
+            Logger::Warning("LibreHardwareMonitor 初始化失败 (C++ 异常): " + std::string(e.what()));
         }
 
         while (true) {
@@ -220,7 +245,12 @@ int main(int argc, char* argv[]) {
             sysInfo.logicalCores = cpu.GetTotalCores();
             sysInfo.performanceCores = cpu.GetLargeCores();
             sysInfo.efficiencyCores = cpu.GetSmallCores();
-            sysInfo.cpuUsage = cpu.GetUsage();
+            double cpuUsage = cpu.GetUsage();
+            if (std::isnan(cpuUsage) || std::isinf(cpuUsage) || cpuUsage < 0) {
+                cpuUsage = 0.0; // 使用默认值替代无效值
+                Logger::Warning("获取到无效的 CPU 使用率数据，CPU使用率无效");
+            }
+            sysInfo.cpuUsage = cpuUsage;
             sysInfo.hyperThreading = cpu.IsHyperThreadingEnabled();
             sysInfo.virtualization = cpu.IsVirtualizationEnabled();
             sysInfo.performanceCoreFreq = cpu.GetLargeCoreSpeed();
@@ -256,7 +286,7 @@ int main(int argc, char* argv[]) {
             // 写入共享内存，使用 SharedMemoryManager 代替
             if (!SharedMemoryManager::GetBuffer() && !SharedMemoryManager::InitSharedMemory()) {
                 // Handle shared memory initialization failure
-                Logger::Error("Failed to initialize shared memory: " + SharedMemoryManager::GetLastError());
+                Logger::Error("Failed to initialize shared memory: " + SharedMemoryManager::GetSharedMemoryError());
                 // Continue with program execution even if shared memory fails
                 // This prevents the program from crashing but logs the error
             } else {
@@ -269,11 +299,28 @@ int main(int argc, char* argv[]) {
             
         // 清理资源
         LibreHardwareMonitorBridge::Cleanup();
-        SharedMemoryManager::CleanupSharedMemory(); // Use SharedMemoryManager for cleanup
+        SharedMemoryManager::CleanupSharedMemory();
+
+        // Add .NET 8 runtime path to DLL search paths
+        wchar_t runtimePath[MAX_PATH] = L"";
+        GetEnvironmentVariableW(L"ProgramFiles", runtimePath, MAX_PATH);
+        wcscat_s(runtimePath, L"\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.0");
+
+        // Add to DLL search path
+        AddDllDirectory(runtimePath);
+
+        // Set LibreHardwareMonitor DLL path
+        SetDllDirectory(L"F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net8.0");
+
         CoUninitialize();
 
         Logger::Info("程序正常退出");
         return 0;
+    }
+    catch (System::Exception^ ex) {
+        std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
+        std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
+        Logger::Warning("LibreHardwareMonitor 初始化异常: " + utf8Str);
     }
     catch (const std::exception& e) {
         Logger::Error("程序发生致命错误: " + std::string(e.what()));

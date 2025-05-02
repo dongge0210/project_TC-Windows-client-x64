@@ -26,6 +26,9 @@ void Logger::Initialize(const std::string& logFilePath) {
         logFile.write(reinterpret_cast<const char*>(bom), sizeof(bom));
     }
 
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     // Set console output to UTF-8
     _setmode(_fileno(stdout), _O_U8TEXT);
     _setmode(_fileno(stderr), _O_U8TEXT);
@@ -52,7 +55,7 @@ std::wstring Logger::ConvertToWideString(const std::string& utf8Str) {
     );
     
     if (bufferSize == 0) {
-        throw std::runtime_error("Failed to convert UTF-8 string to wide string");
+        throw std::runtime_error("无法将UTF-8字符串转化为宽字符串");
     }
     
     // Create buffer to hold the wide string
@@ -67,7 +70,7 @@ std::wstring Logger::ConvertToWideString(const std::string& utf8Str) {
         &wideStr[0],            // Output buffer
         bufferSize              // Output buffer size
     )) {
-        throw std::runtime_error("Failed to convert UTF-8 string to wide string");
+        throw std::runtime_error("无法将UTF-8字符串转化为宽字符串");
     }
     
     return wideStr;
@@ -77,13 +80,19 @@ void Logger::WriteLog(const std::string& level, const std::string& message) {
     std::lock_guard<std::mutex> lock(logMutex);
 
     if (message.empty()) {
-        throw std::invalid_argument("Log message cannot be empty");
+        throw std::invalid_argument("日志消息不能为空");
+    }
+
+    // 去除潜在的前导空格
+    std::string trimmedMessage = message;
+    while (!trimmedMessage.empty() && std::isspace(static_cast<unsigned char>(trimmedMessage.front()))) {
+        trimmedMessage.erase(trimmedMessage.begin());
     }
 
     if (logFile.is_open()) {
         // Validate stream state
         if (!logFile.good()) {
-            throw std::runtime_error("Log file stream is in an invalid state");
+            throw std::runtime_error("日志文件流处于无效状态");
         }
 
         // Get current time
@@ -98,7 +107,7 @@ void Logger::WriteLog(const std::string& level, const std::string& message) {
         std::stringstream ss;
         ss << "[" << std::put_time(&timeinfo, "%Y-%m-%d %H:%M:%S") << "]"
            << "[" << level << "] "
-           << message
+           << trimmedMessage
            << std::endl;
 
         std::string logEntry = ss.str();
@@ -118,7 +127,7 @@ void Logger::WriteLog(const std::string& level, const std::string& message) {
             std::wcout << wideLogEntry; // Output to console only once
         }
     } else {
-        throw std::runtime_error("Log file is not open");
+        throw std::runtime_error("日志文件未能打开");
     }
 }
 

@@ -24,9 +24,6 @@
 #include "../src/core/DataStruct/DataStruct.h" // Include header for SystemInfo
 #include "../src/core/utils/Logger.h"
 
-// Add external declaration for pBuffer
-extern struct SharedMemoryBlock* pBuffer;
-
 // Define the maximum number of data points for charts
 constexpr int MAX_DATA_POINTS = 60;
 
@@ -55,6 +52,9 @@ private:
     void createGpuSection();
     void createTemperatureSection();
     void createDiskSection();
+    
+    // Add the missing updateDiskInfo method
+    void updateDiskInfo(SharedMemoryBlock* pBuffer);
 
     // Formatting helper functions
     QString formatSize(uint64_t bytes);

@@ -1,8 +1,10 @@
-#include "stdafx.h"
+#include <stdafx.h>
 #include "WinUtils.h"
+#include "Logger.h"
 #include <windows.h>
 #include <string>
 #include <sstream>
+#include <iostream>
 
 #pragma comment(lib, "advapi32.lib") // Required for security-related functions like OpenProcessToken
 
@@ -28,6 +30,11 @@ bool WinUtils::EnablePrivilege(const std::wstring& privilegeName, bool enable /*
     }
     CloseHandle(token);
     return (GetLastError() == ERROR_SUCCESS);
+}
+
+// Overload for wchar_t* version - delegates to std::wstring version
+bool WinUtils::EnablePrivilege(const wchar_t* privilegeName) {
+    return EnablePrivilege(std::wstring(privilegeName));
 }
 
 bool WinUtils::CheckPrivilege(const std::wstring& privilegeName) {
@@ -75,6 +82,36 @@ bool WinUtils::IsRunAsAdmin() {
     return (isAdmin != FALSE);
 }
 
+bool WinUtils::IsUserAdmin() {
+    BOOL isAdmin = FALSE;
+    PSID administratorsGroup = NULL;
+    SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+
+    if (AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                 DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &administratorsGroup)) {
+        CheckTokenMembership(NULL, administratorsGroup, &isAdmin);
+        FreeSid(administratorsGroup);
+    }
+
+    return isAdmin == TRUE;
+}
+
+bool WinUtils::IsProcessElevated() {
+    BOOL fIsElevated = FALSE;
+    HANDLE hToken = NULL;
+
+    if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+        TOKEN_ELEVATION elevation;
+        DWORD cbSize = sizeof(elevation);
+
+        if (GetTokenInformation(hToken, TokenElevation, &elevation, sizeof(elevation), &cbSize)) {
+            fIsElevated = elevation.TokenIsElevated;
+        }
+        CloseHandle(hToken);
+    }
+    return (fIsElevated != FALSE);
+}
+
 std::string WinUtils::FormatWindowsErrorMessage(DWORD errorCode) {
     LPWSTR buffer = nullptr;
     FormatMessageW(
@@ -91,5 +128,24 @@ std::string WinUtils::FormatWindowsErrorMessage(DWORD errorCode) {
     }
     std::wstring wideMsg(buffer);
     LocalFree(buffer);
-    return std::string(wideMsg.begin(), wideMsg.end());
+    return WstringToString(wideMsg);
+}
+
+std::string WinUtils::WstringToUtf8String(const std::wstring& wstr) {
+    if (wstr.empty()) return std::string();
+
+    int bufferSize = WideCharToMultiByte(
+        CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()),
+        nullptr, 0, nullptr, nullptr
+    );
+
+    if (bufferSize <= 0) return std::string();
+
+    std::string utf8Str(bufferSize, 0);
+    WideCharToMultiByte(
+        CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()),
+        &utf8Str[0], bufferSize, nullptr, nullptr
+    );
+
+    return utf8Str;
 }
