@@ -1,4 +1,5 @@
-#include "DataStruct.h"
+#include "../DataStruct/DataStruct.h"
+#include "../disk/DiskInfo.h"
 #include "SharedMemoryManager.h"
 #include "../utils/WinUtils.h"
 #include <iostream>

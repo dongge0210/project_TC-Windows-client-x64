@@ -1,10 +1,18 @@
 ﻿// DiskInfo.cpp
 #include "DiskInfo.h"
+#include <windows.h>
+#include <algorithm>
+#include "../Utils/Logger.h"
 
+// Qt 方式：引入 QStorageInfo
+#include <QStorageInfo>
+
+// 构造函数实现
 DiskInfo::DiskInfo() {
     QueryDrives();
 }
 
+// 查询所有本地磁盘
 void DiskInfo::QueryDrives() {
     drives.clear();
     for (char drive = 'A'; drive <= 'Z'; drive++) {
@@ -40,10 +48,58 @@ void DiskInfo::QueryDrives() {
     }
 }
 
+// 刷新磁盘信息
 void DiskInfo::Refresh() {
     QueryDrives();
 }
 
+// 获取当前磁盘信息
 const std::vector<DriveInfo>& DiskInfo::GetDrives() const {
     return drives;
+}
+
+// 静态方法：获取所有磁盘信息（名称、型号、总容量、可用空间）
+std::vector<DiskInfoData> DiskInfo::GetAllDisks() {
+    std::vector<DiskInfoData> disks;
+    char driveStrings[256] = {0};
+    DWORD len = GetLogicalDriveStringsA(sizeof(driveStrings), driveStrings);
+    if (len == 0) {
+        Logger::Error("无法获取逻辑磁盘列表");
+        return disks;
+    }
+
+    for (char* drive = driveStrings; *drive; drive += strlen(drive) + 1) {
+        UINT type = GetDriveTypeA(drive);
+        if (type == DRIVE_FIXED || type == DRIVE_REMOVABLE) {
+            ULARGE_INTEGER freeBytesAvailable, totalBytes, totalFreeBytes;
+            if (GetDiskFreeSpaceExA(drive, &freeBytesAvailable, &totalBytes, &totalFreeBytes)) {
+                DiskInfoData info;
+                info.letter = drive[0];
+                char volumeName[MAX_PATH] = {0};
+                char fileSystemName[MAX_PATH] = {0};
+                DWORD serialNumber = 0, maxComponentLen = 0, fileSystemFlags = 0;
+                if (GetVolumeInformationA(
+                        drive, volumeName, MAX_PATH, &serialNumber, &maxComponentLen,
+                        &fileSystemFlags, fileSystemName, MAX_PATH)) {
+                    info.label = volumeName;
+                    info.fileSystem = fileSystemName;
+                } else {
+                    info.label = "";
+                    info.fileSystem = "";
+                }
+                info.totalSize = totalBytes.QuadPart;
+                info.freeSpace = freeBytesAvailable.QuadPart;
+                info.usedSpace = info.totalSize > info.freeSpace ? (info.totalSize - info.freeSpace) : 0;
+                disks.push_back(info);
+                Logger::Info("检测到磁盘: " + std::string(1, info.letter) + " 卷标: " + info.label +
+                             " 文件系统: " + info.fileSystem +
+                             " 总容量: " + std::to_string(info.totalSize) +
+                             " 可用: " + std::to_string(info.freeSpace));
+            }
+        }
+    }
+    if (disks.empty()) {
+        Logger::Warning("未检测到任何磁盘");
+    }
+    return disks;
 }

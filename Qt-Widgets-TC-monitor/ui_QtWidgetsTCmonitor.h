@@ -1,4 +1,4 @@
-/********************************************************************************
+﻿/********************************************************************************
 ** Form generated from reading UI file 'QtWidgetsTCmonitor.ui'
 **
 ** Created by: Qt User Interface Compiler version 6.10.0
@@ -17,6 +17,7 @@
 #include <QtWidgets/QStatusBar>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
+#include <QtWidgets/QTableWidget>
 #include "../src/core/DataStruct/SharedMemoryManager.h"
 
 QT_BEGIN_NAMESPACE
@@ -27,6 +28,7 @@ public:
     QWidget *centralWidget;
     QVBoxLayout *verticalLayout;
     QPushButton *pushButton;
+    QTableWidget *diskTable;
     QMenuBar *menuBar;
     QStatusBar *statusBar;
 
@@ -47,31 +49,17 @@ public:
 
         verticalLayout->addWidget(pushButton);
 
+        diskTable = new QTableWidget(centralWidget);
+        diskTable->setObjectName("diskTable");
+        diskTable->setColumnCount(6);
+        diskTable->setHorizontalHeaderLabels(QStringList() << "盘符" << "卷标" << "文件系统" << "总容量" << "已用空间" << "可用空间");
+
+        verticalLayout->addWidget(diskTable);
+
+        // 修正：设置中心部件
         QtWidgetsTCmonitorClass->setCentralWidget(centralWidget);
-        menuBar = new QMenuBar(QtWidgetsTCmonitorClass);
-        menuBar->setObjectName("menuBar");
-        menuBar->setGeometry(QRect(0, 0, 800, 22));
-        QtWidgetsTCmonitorClass->setMenuBar(menuBar);
-        statusBar = new QStatusBar(QtWidgetsTCmonitorClass);
-        statusBar->setObjectName("statusBar");
-        QtWidgetsTCmonitorClass->setStatusBar(statusBar);
-
-        retranslateUi(QtWidgetsTCmonitorClass);
-
-        QMetaObject::connectSlotsByName(QtWidgetsTCmonitorClass);
-    } // setupUi
-
-    void retranslateUi(QMainWindow *QtWidgetsTCmonitorClass)
-    {
-        QtWidgetsTCmonitorClass->setWindowTitle(QCoreApplication::translate("QtWidgetsTCmonitorClass", "System Monitor", nullptr));
-        pushButton->setText(QCoreApplication::translate("QtWidgetsTCmonitorClass", "Test", nullptr));
-    } // retranslateUi
-
+    }
 };
-
-namespace Ui {
-    class QtWidgetsTCmonitorClass: public Ui_QtWidgetsTCmonitorClass {};
-} // namespace Ui
 
 QT_END_NAMESPACE
 

@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #pragma pack(push, 1) // 确保内存对齐
 
@@ -31,6 +32,16 @@ struct DiskData {
     uint64_t freeSpace = 0; // 可用空间（字节）
 };
 
+// DiskInfoData结构
+struct DiskInfoData {
+    char letter;                // 盘符，如 'C'
+    std::string label;          // 卷标
+    std::string fileSystem;     // 文件系统类型
+    uint64_t totalSize;         // 总容量（字节）
+    uint64_t usedSpace;         // 已用空间（字节）
+    uint64_t freeSpace;         // 可用空间（字节）
+};
+
 // 温度传感器信息
 struct TemperatureData {
     wchar_t sensorName[64]; // 传感器名称
@@ -54,7 +65,7 @@ struct SystemInfo {
     uint64_t availableMemory;
     std::vector<GPUData> gpus;
     std::vector<NetworkAdapterData> adapters;
-    std::vector<DiskData> disks;
+    std::vector<DiskInfoData> disks;
     std::vector<std::pair<std::string, double>> temperatures;
     std::string osVersion;
     std::string gpuName;            // Added
@@ -64,6 +75,29 @@ struct SystemInfo {
     std::string networkAdapterName; // Added
     std::string networkAdapterMac;  // Added
     uint64_t networkAdapterSpeed;   // Added
+    SYSTEMTIME lastUpdate;
+};
+
+// SystemData结构
+struct SystemData {
+    std::string cpuName;
+    int physicalCores;
+    int logicalCores;
+    double cpuUsage;
+    int performanceCores;
+    int efficiencyCores;
+    double performanceCoreFreq;
+    double efficiencyCoreFreq;
+    bool hyperThreading;
+    bool virtualization;
+    uint64_t totalMemory;
+    uint64_t usedMemory;
+    uint64_t availableMemory;
+    std::vector<GPUData> gpus;
+    std::vector<NetworkAdapterData> adapters;
+    std::vector<DiskInfoData> disks;
+    std::vector<std::pair<std::string, double>> temperatures;
+    std::string osVersion;
     SYSTEMTIME lastUpdate;
 };
 

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <windows.h>
+#include "DataStruct.h"
 
 // Forward declaration
 struct SystemInfo;
@@ -52,4 +53,11 @@ public:
 
     // Add declaration for SetGlobalPrivilegeEnabled
     static void SetGlobalPrivilegeEnabled(bool enabled);
+
+    // Add declaration for UpdateDiskInfo
+    static void UpdateDiskInfo();
+
+    // Add declaration for GetSystemData
+    static SystemData& GetSystemData();
 };
+   

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Software">
+      <UniqueIdentifier>{7d04f83b-0c0d-436c-b401-33d21f8f9e8e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\core\cpu\CpuInfo.h">
@@ -113,5 +116,8 @@
     <None Include="..\Project1.vcxproj.filters" />
     <None Include="Qt-Widgets-TC-monitor.vcxproj" />
     <None Include="docs\RuntimeRequirements.md" />
+    <None Include="..\src\third_party\librehardwaremonitor-0.9.4\librehardwaremonitorlib\software\operatingsystem.cs">
+      <Filter>Software</Filter>
+    </None>
   </ItemGroup>
 </Project>

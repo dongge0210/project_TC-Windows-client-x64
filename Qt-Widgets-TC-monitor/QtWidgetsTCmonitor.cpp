@@ -29,10 +29,16 @@
 #include <iomanip>
 #include <QString>
 
+#include "QtWidgetsTCmonitor.h" // Ensure MAX_DATA_POINTS is available
+
 QtWidgetsTCmonitor::QtWidgetsTCmonitor(QWidget* parent)
     : QMainWindow(parent)
 {
-    setupUI();
+    ui = new Ui_QtWidgetsTCmonitorClass(); // 实例化ui
+    ui->setupUi(this);                     // 初始化UI
+
+    // 可选：如果你还需要自定义UI布局，可以保留setupUI()，否则可移除
+    // setupUI();
 
     // Set window properties
     setWindowTitle(tr("系统硬件监视器"));
@@ -59,6 +65,7 @@ QtWidgetsTCmonitor::~QtWidgetsTCmonitor()
         updateTimer->stop();
         delete updateTimer;
     }
+    delete ui; // 释放ui
 }
 
 void QtWidgetsTCmonitor::setupUI()
@@ -699,3 +706,20 @@ void QtWidgetsTCmonitor::updateDiskInfo(SharedMemoryBlock* pBuffer) {
 
     diskLayout->addStretch();
 }
+
+void QtWidgetsTCmonitor::UpdateDiskInfoUI() {
+    const auto& disks = SharedMemoryManager::GetSystemData().disks;
+    ui->diskTable->setRowCount(static_cast<int>(disks.size()));
+    for (int i = 0; i < disks.size(); ++i) {
+        const auto& d = disks[i];
+        ui->diskTable->setItem(i, 0, new QTableWidgetItem(QString(d.letter)));
+        ui->diskTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(d.label)));
+        ui->diskTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(d.fileSystem)));
+        ui->diskTable->setItem(i, 3, new QTableWidgetItem(QString("%1 GB").arg(d.totalSize / (1024 * 1024 * 1024.0), 0, 'f', 2)));
+        ui->diskTable->setItem(i, 4, new QTableWidgetItem(QString("%1 GB").arg(d.usedSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
+        ui->diskTable->setItem(i, 5, new QTableWidgetItem(QString("%1 GB").arg(d.freeSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
+    }
+}
+
+// 在合适的地方调用 UpdateDiskInfoUI()，如定时刷新或窗口初始化时
+

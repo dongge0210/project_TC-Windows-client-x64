@@ -139,9 +139,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;WIN32_LEAN_AND_MEAN;
-NOMINMAX;
-_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS;WIN32_LEAN_AND_MEAN;NOMINMAX;_WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <CompileAsManaged>true</CompileAsManaged>
       <CompileAsWinRT>false</CompileAsWinRT>
@@ -234,6 +232,7 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
   <ItemGroup>
     <None Include="..\Project1.vcxproj.filters" />
     <None Include="..\Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.pro" />
+    <None Include="..\src\third_party\librehardwaremonitor-0.9.4\librehardwaremonitorlib\software\operatingsystem.cs" />
     <None Include="docs\RuntimeRequirements.md" />
     <None Include="Qt-Widgets-TC-monitor.vcxproj" />
   </ItemGroup>

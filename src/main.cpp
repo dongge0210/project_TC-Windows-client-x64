@@ -215,7 +215,6 @@ int main(int argc, char* argv[]) {
             LibreHardwareMonitorBridge::Initialize();
         }
         catch (System::IO::FileNotFoundException^ ex) {
-            // 使用正确的字符编码转换
             std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
             std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
             Logger::Warning("LibreHardwareMonitor 初始化失败 (FileNotFound): " + utf8Str);
@@ -283,6 +282,9 @@ int main(int argc, char* argv[]) {
                 sysInfo.networkAdapterSpeed = adapter.speed;
             }
 
+            auto temps = LibreHardwareMonitorBridge::GetTemperatures();
+            sysInfo.temperatures = temps;
+
             // 写入共享内存，使用 SharedMemoryManager 代替
             if (!SharedMemoryManager::GetBuffer() && !SharedMemoryManager::InitSharedMemory()) {
                 // Handle shared memory initialization failure
@@ -304,7 +306,6 @@ int main(int argc, char* argv[]) {
         // Add .NET 8 runtime path to DLL search paths
         wchar_t runtimePath[MAX_PATH] = L"";
         GetEnvironmentVariableW(L"ProgramFiles", runtimePath, MAX_PATH);
-        wcscat_s(runtimePath, L"\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.0");
 
         // Add to DLL search path
         AddDllDirectory(runtimePath);

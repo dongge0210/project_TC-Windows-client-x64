@@ -23,9 +23,12 @@
 #include <iomanip>
 #include "../src/core/DataStruct/DataStruct.h" // Include header for SystemInfo
 #include "../src/core/utils/Logger.h"
+#include "ui_QtWidgetsTCmonitor.h" // 添加此行以包含UI类声明
 
 // Define the maximum number of data points for charts
-constexpr int MAX_DATA_POINTS = 60;
+#ifndef MAX_DATA_POINTS
+#define MAX_DATA_POINTS 1000
+#endif
 
 class QtWidgetsTCmonitor : public QMainWindow
 {
@@ -85,5 +88,9 @@ private:
     std::queue<float> cpuTempHistory;
     std::queue<float> gpuTempHistory;
     SystemInfo currentSysInfo;
+
+    void UpdateDiskInfoUI();
+
+    Ui_QtWidgetsTCmonitorClass *ui = nullptr; // 添加ui指针成员
 };
 

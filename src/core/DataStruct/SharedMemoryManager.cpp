@@ -39,6 +39,7 @@
 #include "../DataStruct/DataStruct.h" // Include DataStruct.h for SharedMemoryBlock definition
 #include "../Utils/WinUtils.h"
 #include "../Utils/Logger.h"
+#include "../disk/DiskInfo.h"
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -48,6 +49,9 @@ HANDLE SharedMemoryManager::hMapFile = NULL;
 SharedMemoryBlock* SharedMemoryManager::pBuffer = nullptr;
 std::string SharedMemoryManager::lastError = "";
 std::vector<SharedMemoryRegion*> SharedMemoryManager::memoryRegions;
+
+// 全局SystemData对象只定义一次
+static SystemData g_systemData;
 
 #ifndef WINUTILS_IMPLEMENTED
 // Fallback implementation for FormatWindowsErrorMessage
@@ -207,6 +211,7 @@ void SharedMemoryManager::CleanupSharedMemory() {
 }
 
 bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
+
     if (pBuffer == nullptr) {
         lastError = "共享内存未初始化";
         Logger::Error(lastError);
@@ -551,6 +556,14 @@ void SharedMemoryManager::SetGlobalPrivilegeEnabled(bool enabled) {
     } else {
         Logger::Info("全局权限已禁用以用于共享内存。");
     }
+}
+
+void SharedMemoryManager::UpdateDiskInfo() {
+    g_systemData.disks = DiskInfo::GetAllDisks();
+}
+
+SystemData& SharedMemoryManager::GetSystemData() {
+    return g_systemData;
 }
 
 // 重新恢复 Qt 宏定义
