@@ -199,6 +199,7 @@
     <ClInclude Include="..\src\core\Utils\TimeUtils.h" />
     <ClInclude Include="..\src\core\Utils\WinUtils.h" />
     <ClInclude Include="..\src\core\Utils\WMIManager.h" />
+    <ClInclude Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.h" />
     <ClInclude Include="src\core\Utils\ComInitializationHelper.h" />
   </ItemGroup>
   <ItemGroup>
@@ -217,6 +218,7 @@
     <ClCompile Include="..\src\core\Utils\WinUtils.cpp" />
     <ClCompile Include="..\src\core\Utils\WMIManager.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="HidSharp">

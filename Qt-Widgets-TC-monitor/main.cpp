@@ -3,6 +3,7 @@
 #include "QtWidgetsTCmonitor.h"
 #include "../src/core/utils/Logger.h"
 #include "../src/core/DataStruct/SharedMemoryManager.h"
+#include "../src/core/disk/diskInfo.h"
 
 int main(int argc, char *argv[])
 {

@@ -26,6 +26,11 @@
 #define __cplusplus 202002L
 #endif
 
+// Define MAX_DATA_POINTS if not already defined
+#ifndef MAX_DATA_POINTS
+#define MAX_DATA_POINTS 1000
+#endif
+
 // Make sure QtCharts namespace is accessible without conflicts
 namespace QtCharts {}
 
