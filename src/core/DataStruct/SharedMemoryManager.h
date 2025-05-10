@@ -50,7 +50,6 @@ public:
     static bool IsSharedMemoryInitialized() {
         return pBuffer != nullptr;
     }
-
     // Add declaration for SetGlobalPrivilegeEnabled
     static void SetGlobalPrivilegeEnabled(bool enabled);
 

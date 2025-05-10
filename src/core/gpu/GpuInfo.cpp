@@ -1,5 +1,5 @@
 ﻿#include "GpuInfo.h"
-#include "Logger.h"
+#include "../Utils/Logger.h"
 #include "WmiManager.h"
 #include <comutil.h>
 #include <nvml.h>
@@ -213,7 +213,6 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         result = nvmlDeviceGetClockInfo(device, NVML_CLOCK_GRAPHICS, &clockMHz);
         if (NVML_SUCCESS == result) {
             gpuList[index].coreClock = static_cast<double>(clockMHz);
-            Logger::Info("NVIDIA GPU 核心频率: " + std::to_string(clockMHz) + " MHz");
         }
 
         // 获取计算能力
@@ -226,6 +225,13 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
                 Logger::Info("NVIDIA GPU 计算能力: " + std::to_string(major) + "." + std::to_string(minor));
                 capabilityLogged = true;
             }
+        }
+
+        // GPU功率日志输出，单位为W，不带百分号
+        unsigned int power_mw = 0;
+        if (nvmlDeviceGetPowerUsage(device, &power_mw) == NVML_SUCCESS) {
+            double power = power_mw / 1000.0; // 转换为瓦特
+            Logger::Info("GPU功率: " + std::to_string(power) + " W");
         }
         // 保留 NVML 资源以便后续使用
 

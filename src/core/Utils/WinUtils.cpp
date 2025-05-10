@@ -1,4 +1,4 @@
-#include <stdafx.h>
+﻿#include <stdafx.h>
 #include "WinUtils.h"
 #include "Logger.h"
 #include <windows.h>
@@ -9,6 +9,11 @@
 #pragma comment(lib, "advapi32.lib") // Required for security-related functions like OpenProcessToken
 
 #define WINUTILS_IMPLEMENTED 1
+
+#ifdef QT_CORE_LIB
+#include <QString>
+#include <QDebug> // 显式包含QDebug，防止QDebug未定义
+#endif
 
 bool WinUtils::EnablePrivilege(const std::wstring& privilegeName, bool enable /*= true*/) {
     HANDLE token;
@@ -128,7 +133,7 @@ std::string WinUtils::FormatWindowsErrorMessage(DWORD errorCode) {
     }
     std::wstring wideMsg(buffer);
     LocalFree(buffer);
-    return WstringToString(wideMsg);
+    return WstringToUtf8String(wideMsg);
 }
 
 std::string WinUtils::WstringToUtf8String(const std::wstring& wstr) {
@@ -149,3 +154,15 @@ std::string WinUtils::WstringToUtf8String(const std::wstring& wstr) {
 
     return utf8Str;
 }
+
+#ifdef QT_CORE_LIB
+QString WinUtils::WstringToQString(const std::wstring& wstr) {
+    // 使用 QString::fromStdWString，Qt 内部已处理好对齐
+    return QString::fromStdWString(wstr);
+}
+
+QString WinUtils::Utf8StringToQString(const std::string& str) {
+    // 明确指定 UTF-8，防止编码和对齐问题
+    return QString::fromUtf8(str.c_str(), static_cast<int>(str.size()));
+}
+#endif

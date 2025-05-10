@@ -90,7 +90,7 @@ std::string FormatFrequency(double value) {
 
 std::string FormatPercentage(double value) {
     std::stringstream ss;
-    ss << std::fixed << std::setprecision(1) << value << "%";
+    ss << std::fixed << std::setprecision(2) << value << "%"; // 保留两位小数
     return ss.str();
 }
 
@@ -158,13 +158,12 @@ int main(int argc, char* argv[]) {
     // 在 main 函数开始处添加
     wchar_t runtimePath[MAX_PATH] = L"";
     GetEnvironmentVariableW(L"ProgramFiles", runtimePath, MAX_PATH);
-    wcscat_s(runtimePath, L"\\dotnet\\shared\\Microsoft.NETCore.App\\8.0.0");
 
     // 添加到DLL搜索路径
     AddDllDirectory(runtimePath);
 
     // 然后设置LibreHardwareMonitor DLL路径
-    SetDllDirectory(L"F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net8.0");
+    SetDllDirectory(L"F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net472");
     try {
         // Set console output to UTF-8
         _setmode(_fileno(stdout), _O_U8TEXT);
@@ -236,10 +235,12 @@ int main(int argc, char* argv[]) {
             // 操作系统信息
             OSInfo os;
             sysInfo.osVersion = os.GetVersion();
+            sysInfo.osDetailedVersion = os.GetDetailedVersion(); // 新增
 
             // CPU信息
             CpuInfo cpu;
             sysInfo.cpuName = cpu.GetName();
+            sysInfo.cpuArch = cpu.GetArchitecture(); // 新增
             sysInfo.physicalCores = cpu.GetLargeCores() + cpu.GetSmallCores();
             sysInfo.logicalCores = cpu.GetTotalCores();
             sysInfo.performanceCores = cpu.GetLargeCores();
@@ -254,6 +255,14 @@ int main(int argc, char* argv[]) {
             sysInfo.virtualization = cpu.IsVirtualizationEnabled();
             sysInfo.performanceCoreFreq = cpu.GetLargeCoreSpeed();
             sysInfo.efficiencyCoreFreq = cpu.GetSmallCoreSpeed() * 0.8;
+
+            // 新增功率检测
+            sysInfo.cpuPower = LibreHardwareMonitorBridge::GetCpuPower();
+            sysInfo.gpuPower = LibreHardwareMonitorBridge::GetGpuPower();
+            sysInfo.totalPower = LibreHardwareMonitorBridge::GetTotalPower();
+            Logger::Info("CPU功率: " + FormatPercentage(sysInfo.cpuPower) + " W");
+            Logger::Info("GPU功率: " + FormatPercentage(sysInfo.gpuPower) + " W");
+            Logger::Info("整机功率: " + FormatPercentage(sysInfo.totalPower) + " W");
 
             // 内存信息
             MemoryInfo mem;
@@ -284,6 +293,18 @@ int main(int argc, char* argv[]) {
 
             auto temps = LibreHardwareMonitorBridge::GetTemperatures();
             sysInfo.temperatures = temps;
+
+            // 新增Logger输出系统架构和详细系统版本
+            Logger::Info("操作系统架构: " + sysInfo.cpuArch);
+            Logger::Info("系统详细版本: " + sysInfo.osDetailedVersion);
+
+            // 只显示物理磁盘
+            sysInfo.disks.clear();
+            for (const auto& disk : DiskInfo::GetAllDisks()) {
+                if (disk.isPhysical) { // 只添加物理磁盘
+                    sysInfo.disks.push_back(disk);
+                }
+            }
 
             // 写入共享内存，使用 SharedMemoryManager 代替
             if (!SharedMemoryManager::GetBuffer() && !SharedMemoryManager::InitSharedMemory()) {

@@ -2,6 +2,11 @@
 #include <windows.h>
 #include <string>
 
+#ifdef QT_CORE_LIB
+#include <QString>
+#include <QDebug> // 显式包含QDebug，防止QDebug未定义
+#endif
+
 // Utility class for Windows-specific operations
 class WinUtils {
 public:
@@ -52,4 +57,10 @@ public:
 
     // Check if the current user is an administrator
     static bool IsUserAdmin();
+
+#ifdef QT_CORE_LIB
+    // 建议：提供与 Qt 交互的安全转换函数
+    static QString WstringToQString(const std::wstring& wstr);
+    static QString Utf8StringToQString(const std::string& str);
+#endif
 };

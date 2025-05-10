@@ -28,17 +28,27 @@
 #include <sstream>
 #include <iomanip>
 #include <QString>
+#include <QDebug> // 显式包含QDebug，解决QDebug相关编译错误
 
 #include "QtWidgetsTCmonitor.h" // Ensure MAX_DATA_POINTS is available
+
+// Helper function to check if a wchar_t array is null-terminated within a given max length
+static bool isWCharArrayNullTerminated(const wchar_t* arr, size_t maxLen) {
+    if (!arr) return false;
+    for (size_t i = 0; i < maxLen; ++i) {
+        if (arr[i] == L'\0') return true;
+    }
+    return false;
+}
 
 QtWidgetsTCmonitor::QtWidgetsTCmonitor(QWidget* parent)
     : QMainWindow(parent)
 {
-    ui = new Ui_QtWidgetsTCmonitorClass(); // 实例化ui
-    ui->setupUi(this);                     // 初始化UI
+    ui = new Ui_QtWidgetsTCmonitorClass();
+    ui->setupUi(this);
 
-    // 可选：如果你还需要自定义UI布局，可以保留setupUI()，否则可移除
-    // setupUI();
+    // 显式调用，确保界面元素已初始化
+    setupUI();
 
     // Set window properties
     setWindowTitle(tr("系统硬件监视器"));
@@ -96,6 +106,15 @@ void QtWidgetsTCmonitor::setupUI()
     mainLayout->addWidget(temperatureGroupBox);
     mainLayout->addWidget(diskGroupBox);
     mainLayout->addStretch();
+
+    // 在主布局最后添加总功率显示
+    if (!infoLabels.contains("totalPower")) {
+        infoLabels["totalPower"] = new QLabel(this);
+        QHBoxLayout* powerLayout = new QHBoxLayout();
+        powerLayout->addWidget(new QLabel(tr("整机功率:"), this));
+        powerLayout->addWidget(infoLabels["totalPower"]);
+        mainLayout->addLayout(powerLayout);
+    }
 }
 
 void QtWidgetsTCmonitor::createCpuSection()
@@ -128,6 +147,10 @@ void QtWidgetsTCmonitor::createCpuSection()
     layout->addWidget(new QLabel(tr("CPU使用率:"), this), row, 0);
     infoLabels["cpuUsage"] = new QLabel(this);
     layout->addWidget(infoLabels["cpuUsage"], row++, 1);
+
+    layout->addWidget(new QLabel(tr("CPU功率:"), this), row, 0); // 新增
+    infoLabels["cpuPower"] = new QLabel(this);                  // 新增
+    layout->addWidget(infoLabels["cpuPower"], row++, 1);        // 新增
 
     layout->addWidget(new QLabel(tr("超线程:"), this), row, 0);
     infoLabels["hyperThreading"] = new QLabel(this);
@@ -182,6 +205,10 @@ void QtWidgetsTCmonitor::createGpuSection()
     layout->addWidget(new QLabel(tr("核心频率:"), this), row, 0);
     infoLabels["gpuCoreFreq"] = new QLabel(this);
     layout->addWidget(infoLabels["gpuCoreFreq"], row++, 1);
+
+    layout->addWidget(new QLabel(tr("GPU功率:"), this), row, 0); // 新增
+    infoLabels["gpuPower"] = new QLabel(this);                  // 新增
+    layout->addWidget(infoLabels["gpuPower"], row++, 1);        // 新增
 }
 
 void QtWidgetsTCmonitor::createTemperatureSection()
@@ -517,15 +544,36 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
         // Enter critical section to safely access shared memory
         EnterCriticalSection(&pBuffer->lock);
 
-        // Update CPU information
-        infoLabels["cpuName"]->setText(QString::fromWCharArray(pBuffer->cpuName));
-        infoLabels["physicalCores"]->setText(QString::number(pBuffer->physicalCores));
-        infoLabels["logicalCores"]->setText(QString::number(pBuffer->logicalCores));
-        infoLabels["cpuUsage"]->setText(formatPercentage(pBuffer->cpuUsage));
-        infoLabels["performanceCores"]->setText(QString::number(pBuffer->performanceCores));
-        infoLabels["efficiencyCores"]->setText(QString::number(pBuffer->efficiencyCores));
-        infoLabels["hyperThreading"]->setText(pBuffer->hyperThreading ? tr("已启用") : tr("未启用"));
-        infoLabels["virtualization"]->setText(pBuffer->virtualization ? tr("已启用") : tr("未启用"));
+        // 防御性判空检查
+        if (infoLabels.contains("cpuName") && infoLabels["cpuName"]) {
+            if (isWCharArrayNullTerminated(pBuffer->cpuName, 128)) {
+                infoLabels["cpuName"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->cpuName)));
+            } else {
+                infoLabels["cpuName"]->setText(tr("无数据"));
+            }
+        }
+
+        if (infoLabels.contains("physicalCores") && infoLabels["physicalCores"]) {
+            infoLabels["physicalCores"]->setText(QString::number(pBuffer->physicalCores));
+        }
+        if (infoLabels.contains("logicalCores") && infoLabels["logicalCores"]) {
+            infoLabels["logicalCores"]->setText(QString::number(pBuffer->logicalCores));
+        }
+        if (infoLabels.contains("cpuUsage") && infoLabels["cpuUsage"]) {
+            infoLabels["cpuUsage"]->setText(formatPercentage(pBuffer->cpuUsage));
+        }
+        if (infoLabels.contains("performanceCores") && infoLabels["performanceCores"]) {
+            infoLabels["performanceCores"]->setText(QString::number(pBuffer->performanceCores));
+        }
+        if (infoLabels.contains("efficiencyCores") && infoLabels["efficiencyCores"]) {
+            infoLabels["efficiencyCores"]->setText(QString::number(pBuffer->efficiencyCores));
+        }
+        if (infoLabels.contains("hyperThreading") && infoLabels["hyperThreading"]) {
+            infoLabels["hyperThreading"]->setText(pBuffer->hyperThreading ? tr("已启用") : tr("未启用"));
+        }
+        if (infoLabels.contains("virtualization") && infoLabels["virtualization"]) {
+            infoLabels["virtualization"]->setText(pBuffer->virtualization ? tr("已启用") : tr("未启用"));
+        }
 
         // Update memory information
         infoLabels["totalMemory"]->setText(formatSize(pBuffer->totalMemory));
@@ -537,8 +585,14 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
 
         // Update GPU information
         if (pBuffer->gpuCount > 0) {
-            infoLabels["gpuName"]->setText(QString::fromWCharArray(pBuffer->gpus[0].name));
-            infoLabels["gpuBrand"]->setText(QString::fromWCharArray(pBuffer->gpus[0].brand));
+            if (infoLabels.contains("gpuName") && infoLabels["gpuName"] &&
+                isWCharArrayNullTerminated(pBuffer->gpus[0].name, 128)) {
+                infoLabels["gpuName"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->gpus[0].name)));
+            }
+            if (infoLabels.contains("gpuBrand") && infoLabels["gpuBrand"] &&
+                isWCharArrayNullTerminated(pBuffer->gpus[0].brand, 128)) {
+                infoLabels["gpuBrand"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->gpus[0].brand)));
+            }
             infoLabels["gpuMemory"]->setText(formatSize(pBuffer->gpus[0].memory));
             infoLabels["gpuCoreFreq"]->setText(formatFrequency(pBuffer->gpus[0].coreClock));
         }
@@ -551,32 +605,36 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
 
         // Parse temperature sensors to find CPU and GPU temperatures
         for (int i = 0; i < pBuffer->tempCount; i++) {
-            // Convert wchar_t string to std::string for easier processing
+            // Defensive: Check sensorName pointer and null-termination
+            if (!isWCharArrayNullTerminated(pBuffer->temperatures[i].sensorName, 128))
+                continue;
             std::wstring wideSensorName(pBuffer->temperatures[i].sensorName);
             std::string sensorName = WinUtils::WstringToString(wideSensorName);
-            
+
             double temperature = pBuffer->temperatures[i].temperature;
-            
+
             if (sensorName.find("CPU Package") != std::string::npos || 
                 sensorName.find("CPU Temperature") != std::string::npos || 
                 sensorName.find("CPU") != std::string::npos) {
                 cpuTemp = static_cast<float>(temperature);
                 cpuFound = true;
-                infoLabels["cpuTemp"]->setText(formatTemperature(cpuTemp));
+                if (infoLabels.contains("cpuTemp") && infoLabels["cpuTemp"])
+                    infoLabels["cpuTemp"]->setText(formatTemperature(cpuTemp));
             }
             else if (sensorName.find("GPU Core") != std::string::npos ||
                      sensorName.find("GPU") != std::string::npos) {
                 gpuTemp = static_cast<float>(temperature);
                 gpuFound = true;
-                infoLabels["gpuTemp"]->setText(formatTemperature(gpuTemp));
+                if (infoLabels.contains("gpuTemp") && infoLabels["gpuTemp"])
+                    infoLabels["gpuTemp"]->setText(formatTemperature(gpuTemp));
             }
         }
 
         // If no specific temperature data found, set to no data
-        if (!cpuFound) {
+        if (!cpuFound && infoLabels.contains("cpuTemp") && infoLabels["cpuTemp"]) {
             infoLabels["cpuTemp"]->setText(tr("无数据"));
         }
-        if (!gpuFound) {
+        if (!gpuFound && infoLabels.contains("gpuTemp") && infoLabels["gpuTemp"]) {
             infoLabels["gpuTemp"]->setText(tr("无数据"));
         }
 
@@ -593,6 +651,19 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
             if (gpuTempHistory.size() > MAX_DATA_POINTS) {
                 gpuTempHistory.pop();
             }
+        }
+
+        // CPU功率
+        if (infoLabels.contains("cpuPower") && infoLabels["cpuPower"]) {
+            infoLabels["cpuPower"]->setText(QString("%1 W").arg(pBuffer->cpuPower, 0, 'f', 2));
+        }
+        // GPU功率
+        if (infoLabels.contains("gpuPower") && infoLabels["gpuPower"]) {
+            infoLabels["gpuPower"]->setText(QString("%1 W").arg(pBuffer->gpuPower, 0, 'f', 2));
+        }
+        // 整机功率
+        if (infoLabels.contains("totalPower") && infoLabels["totalPower"]) {
+            infoLabels["totalPower"]->setText(QString("%1 W").arg(pBuffer->totalPower, 0, 'f', 2));
         }
 
         // Update disk information
@@ -662,7 +733,9 @@ void QtWidgetsTCmonitor::updateDiskInfo(SharedMemoryBlock* pBuffer) {
         auto& disk = pBuffer->disks[i];
         QString diskLabel = QString("%1: %2").arg(disk.letter).arg(tr("驱动器"));
         
-        QString label = QString::fromWCharArray(disk.label);
+        QString label = isWCharArrayNullTerminated(disk.label, 128)
+            ? WinUtils::WstringToQString(std::wstring(disk.label))
+            : QString();
         if (!label.isEmpty()) {
             diskLabel += QString(" (%1)").arg(label);
         }
@@ -671,7 +744,9 @@ void QtWidgetsTCmonitor::updateDiskInfo(SharedMemoryBlock* pBuffer) {
         QGridLayout* diskInfoLayout = new QGridLayout(diskBox);
 
         int row = 0;
-        QString fileSystem = QString::fromWCharArray(disk.fileSystem);
+        QString fileSystem = isWCharArrayNullTerminated(disk.fileSystem, 32)
+            ? WinUtils::WstringToQString(std::wstring(disk.fileSystem))
+            : QString();
         if (!fileSystem.isEmpty()) {
             diskInfoLayout->addWidget(new QLabel(tr("文件系统:"), diskBox), row, 0);
             diskInfoLayout->addWidget(new QLabel(fileSystem, diskBox), row++, 1);
@@ -713,8 +788,8 @@ void QtWidgetsTCmonitor::UpdateDiskInfoUI() {
     for (int i = 0; i < disks.size(); ++i) {
         const auto& d = disks[i];
         ui->diskTable->setItem(i, 0, new QTableWidgetItem(QString(d.letter)));
-        ui->diskTable->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(d.label)));
-        ui->diskTable->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(d.fileSystem)));
+        ui->diskTable->setItem(i, 1, new QTableWidgetItem(WinUtils::Utf8StringToQString(d.label)));
+        ui->diskTable->setItem(i, 2, new QTableWidgetItem(WinUtils::Utf8StringToQString(d.fileSystem)));
         ui->diskTable->setItem(i, 3, new QTableWidgetItem(QString("%1 GB").arg(d.totalSize / (1024 * 1024 * 1024.0), 0, 'f', 2)));
         ui->diskTable->setItem(i, 4, new QTableWidgetItem(QString("%1 GB").arg(d.usedSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
         ui->diskTable->setItem(i, 5, new QTableWidgetItem(QString("%1 GB").arg(d.freeSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));

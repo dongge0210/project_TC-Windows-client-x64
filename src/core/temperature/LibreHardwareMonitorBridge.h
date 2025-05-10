@@ -42,6 +42,28 @@ public:
      * @return 包含传感器名称和温度值(°C)的向量
      */
     static std::vector<std::pair<std::string, double>> GetTemperatures();
+
+    /**
+     * @brief 获取CPU功耗
+     *
+     * @return CPU功耗值(瓦特)
+     */
+    static double GetCpuPower();
+
+    /**
+     * @brief 获取GPU功耗
+     *
+     * @return GPU功耗值(瓦特)
+     */
+    static double GetGpuPower();
+
+    /**
+     * @brief 获取总功耗
+     *
+     * @return 总功耗值(瓦特)
+     */
+    static double GetTotalPower();
+
     ref class UpdateVisitor;
 
 private:

@@ -1,9 +1,11 @@
 ﻿#include "stdafx.h"  // 放在最前面
 #include <QtWidgets/QApplication>
+#include <QDebug> // 显式包含QDebug，解决QDebug相关编译错误
 #include "QtWidgetsTCmonitor.h"
 #include "../src/core/utils/Logger.h"
 #include "../src/core/DataStruct/SharedMemoryManager.h"
 #include "../src/core/disk/diskInfo.h"
+#include "../src/core/Utils/WinUtils.h" // 路径区分大小写，确保Utils大写
 
 int main(int argc, char *argv[])
 {

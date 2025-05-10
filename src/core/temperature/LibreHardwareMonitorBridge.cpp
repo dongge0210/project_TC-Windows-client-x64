@@ -113,3 +113,24 @@ std::vector<std::pair<std::string, double>> LibreHardwareMonitorBridge::GetTempe
     return temps;
 }
 
+double LibreHardwareMonitorBridge::GetCpuPower() {
+    // 实现：从监控数据中获取CPU功率，单位瓦特
+    double cpuPower = 0.0; // TODO: 实现实际获取
+    Logger::Info("CPU功率: " + std::to_string(cpuPower) + " W");
+    return cpuPower;
+}
+
+double LibreHardwareMonitorBridge::GetGpuPower() {
+    // 实现：从监控数据中获取GPU功率，单位瓦特
+    double gpuPower = 0.0; // TODO: 实现实际获取
+    Logger::Info("GPU功率: " + std::to_string(gpuPower) + " W");
+    return gpuPower;
+}
+
+double LibreHardwareMonitorBridge::GetTotalPower() {
+    // 实现：从监控数据中获取整机功率，单位瓦特
+    double totalPower = 0.0; // TODO: 实现实际获取
+    Logger::Info("整机功率: " + std::to_string(totalPower) + " W");
+    return totalPower;
+}
+

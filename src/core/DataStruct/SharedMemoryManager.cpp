@@ -224,6 +224,7 @@ bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
 
         // Core CPU info
         wcsncpy_s(pBuffer->cpuName, _countof(pBuffer->cpuName), WinUtils::StringToWstring(sysInfo.cpuName).c_str(), _TRUNCATE);
+        wcsncpy_s(pBuffer->cpuArch, _countof(pBuffer->cpuArch), WinUtils::StringToWstring(sysInfo.cpuArch).c_str(), _TRUNCATE); // 新增
         pBuffer->physicalCores = sysInfo.physicalCores;
         pBuffer->logicalCores = sysInfo.logicalCores;
         pBuffer->cpuUsage = static_cast<float>(sysInfo.cpuUsage);
@@ -233,6 +234,7 @@ bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
         pBuffer->eCoreFreq = sysInfo.efficiencyCoreFreq / 1000.0; // Convert MHz to GHz
         pBuffer->hyperThreading = sysInfo.hyperThreading;
         pBuffer->virtualization = sysInfo.virtualization;
+        pBuffer->cpuPower = static_cast<float>(sysInfo.cpuPower); // 新增
         
         // Memory info
         pBuffer->totalMemory = sysInfo.totalMemory;
@@ -240,7 +242,7 @@ bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
         pBuffer->availableMemory = sysInfo.availableMemory;
 
         // GPU info - use std::min from <algorithm> with parentheses
-        int gpuCount = (std::min)(static_cast<int>(sysInfo.gpus.size()), 2); // Max 2 GPUs supported
+        int gpuCount = (std::min)(static_cast<int>(sysInfo.gpus.size()), 2); // 修正：加上最大数量2
         if (gpuCount > 0) {
             pBuffer->gpuCount = gpuCount;
             for (int i = 0; i < gpuCount; i++) {
@@ -258,6 +260,13 @@ bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
             pBuffer->gpus[0].memory = sysInfo.gpuMemory;
             pBuffer->gpus[0].coreClock = sysInfo.gpuCoreFreq;
         }
+
+        // OS info
+        wcsncpy_s(pBuffer->osDetailedVersion, _countof(pBuffer->osDetailedVersion), WinUtils::StringToWstring(sysInfo.osDetailedVersion).c_str(), _TRUNCATE); // 新增
+
+        // GPU power
+        pBuffer->gpuPower = static_cast<float>(sysInfo.gpuPower); // 新增
+        pBuffer->totalPower = static_cast<float>(sysInfo.totalPower); // 新增
 
         // Network adapters info
         int adapterCount = (std::min)(static_cast<int>(sysInfo.adapters.size()), 4); // Max 4 adapters supported

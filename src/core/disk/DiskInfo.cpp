@@ -1,11 +1,29 @@
 ﻿// DiskInfo.cpp
 #include "DiskInfo.h"
+#include "../DataStruct/DataStruct.h"
 #include <windows.h>
 #include <algorithm>
 #include "../Utils/Logger.h"
 
-// Qt 方式：引入 QStorageInfo
-#include <QStorageInfo>
+// 新增：单位换算辅助函数
+static std::string FormatSize(uint64_t bytes) {
+    const double KB = 1024.0;
+    const double MB = KB * 1024.0;
+    const double GB = MB * 1024.0;
+    const double TB = GB * 1024.0;
+    char buf[64];
+    if (bytes >= TB)
+        snprintf(buf, sizeof(buf), "%.2f TB", bytes / TB);
+    else if (bytes >= GB)
+        snprintf(buf, sizeof(buf), "%.2f GB", bytes / GB);
+    else if (bytes >= MB)
+        snprintf(buf, sizeof(buf), "%.2f MB", bytes / MB);
+    else if (bytes >= KB)
+        snprintf(buf, sizeof(buf), "%.2f KB", bytes / KB);
+    else
+        snprintf(buf, sizeof(buf), "%llu B", bytes);
+    return buf;
+}
 
 // 构造函数实现
 DiskInfo::DiskInfo() {
@@ -70,7 +88,7 @@ std::vector<DiskInfoData> DiskInfo::GetAllDisks() {
 
     for (char* drive = driveStrings; *drive; drive += strlen(drive) + 1) {
         UINT type = GetDriveTypeA(drive);
-        if (type == DRIVE_FIXED || type == DRIVE_REMOVABLE) {
+        if (type == DRIVE_FIXED) { // 只标记物理磁盘
             ULARGE_INTEGER freeBytesAvailable, totalBytes, totalFreeBytes;
             if (GetDiskFreeSpaceExA(drive, &freeBytesAvailable, &totalBytes, &totalFreeBytes)) {
                 DiskInfoData info;
@@ -90,13 +108,15 @@ std::vector<DiskInfoData> DiskInfo::GetAllDisks() {
                 info.totalSize = totalBytes.QuadPart;
                 info.freeSpace = freeBytesAvailable.QuadPart;
                 info.usedSpace = info.totalSize > info.freeSpace ? (info.totalSize - info.freeSpace) : 0;
+                info.isPhysical = true; // 只对物理磁盘设为true
                 disks.push_back(info);
-                Logger::Info("检测到磁盘: " + std::string(1, info.letter) + " 卷标: " + info.label +
+                Logger::Info("检测到磁盘: " + std::string(1, static_cast<char>(info.letter)) + " 卷标: " + info.label +
                              " 文件系统: " + info.fileSystem +
-                             " 总容量: " + std::to_string(info.totalSize) +
-                             " 可用: " + std::to_string(info.freeSpace));
+                             " 总容量: " + FormatSize(info.totalSize) +
+                             " 可用: " + FormatSize(info.freeSpace));
             }
         }
+        // 其它类型磁盘不加入或isPhysical=false
     }
     if (disks.empty()) {
         Logger::Warning("未检测到任何磁盘");

@@ -1,11 +1,13 @@
 ﻿#include "CpuInfo.h"
-#include "Logger.h"
+#include "../Utils/Logger.h"
 #include <intrin.h>
 #include <windows.h>
 #include <vector>
 #include <pdh.h>
 #include <pdhmsg.h> // 添加PDH消息头文件，包含所有PDH_*常量定义
 #include <sstream>  // 添加stringstream头文件
+#include <VersionHelpers.h> // 可能用于架构判断
+#include <iomanip> // 添加头文件
 
 #pragma comment(lib, "pdh.lib")
 
@@ -20,6 +22,7 @@ CpuInfo::CpuInfo() :
     try {
         DetectCores();
         cpuName = GetNameFromRegistry();
+        cpuArch = GetArchitecture(); // 新增
         InitializeCounter();
         UpdateCoreSpeeds();  // 初始化频率信息
     }
@@ -67,7 +70,10 @@ void CpuInfo::InitializeCounter() {
     
     // 初始化采样 - 第一次采样通常不准确，但我们需要先执行一次
     double initialUsage = updateUsage();
-    Logger::Info("CPU初始使用率: " + std::to_string(initialUsage) + "%");
+    // 保留一位小数
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(1) << initialUsage;
+    Logger::Info("CPU初始使用率: " + ss.str() + "%");
 }
 
 double CpuInfo::GetLargeCoreSpeed() const {
@@ -260,6 +266,18 @@ std::string CpuInfo::GetNameFromRegistry() {
         RegCloseKey(hKey);
     }
     return "Unknown CPU";
+}
+
+std::string CpuInfo::GetArchitecture() const {
+    SYSTEM_INFO sysInfo;
+    GetNativeSystemInfo(&sysInfo);
+    switch (sysInfo.wProcessorArchitecture) {
+        case PROCESSOR_ARCHITECTURE_AMD64: return "x64";
+        case PROCESSOR_ARCHITECTURE_INTEL: return "x86";
+        case PROCESSOR_ARCHITECTURE_ARM:   return "ARM";
+        case PROCESSOR_ARCHITECTURE_ARM64: return "ARM64";
+        default: return "Unknown";
+    }
 }
 
 double CpuInfo::GetUsage() {

@@ -20,6 +20,8 @@ public:
     DWORD GetCurrentSpeed() const;       // 保持兼容性
     bool IsHyperThreadingEnabled() const;
     bool IsVirtualizationEnabled() const;
+    std::string GetArchitecture() const; // 新增：获取CPU架构
+    std::string cpuArch;                 // 只保留这一处
 
 private:
     void DetectCores();

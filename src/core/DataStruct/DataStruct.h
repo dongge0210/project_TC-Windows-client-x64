@@ -40,6 +40,7 @@ struct DiskInfoData {
     uint64_t totalSize;         // 总容量（字节）
     uint64_t usedSpace;         // 已用空间（字节）
     uint64_t freeSpace;         // 可用空间（字节）
+    bool isPhysical = false;    // 是否物理磁盘
 };
 
 // 温度传感器信息
@@ -75,6 +76,11 @@ struct SystemInfo {
     std::string networkAdapterName; // Added
     std::string networkAdapterMac;  // Added
     uint64_t networkAdapterSpeed;   // Added
+    std::string cpuArch;            // 新增：CPU架构
+    std::string osDetailedVersion;  // 新增：详细系统版本
+    double cpuPower;                // 新增：CPU功率
+    double gpuPower;                // 新增：GPU功率
+    double totalPower;              // 新增：整机功率
     SYSTEMTIME lastUpdate;
 };
 
@@ -135,6 +141,12 @@ struct SharedMemoryBlock {
 
     // 温度数据（支持10个传感器）
     TemperatureData temperatures[10];
+
+    wchar_t cpuArch[16];          // 新增
+    wchar_t osDetailedVersion[128]; // 新增
+    float cpuPower;               // 新增
+    float gpuPower;               // 新增
+    float totalPower;             // 新增
 
     int adapterCount;
     int tempCount;
