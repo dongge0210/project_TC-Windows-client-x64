@@ -39,6 +39,7 @@ public:
     /**
      * @brief 获取温度数据
      *
+     * Returns a vector of (sensor name, temperature) pairs, filtering out invalid or missing values.
      * @return 包含传感器名称和温度值(°C)的向量
      */
     static std::vector<std::pair<std::string, double>> GetTemperatures();
@@ -64,11 +65,18 @@ public:
      */
     static double GetTotalPower();
 
+    /**
+     * @brief 诊断所有硬件和传感器
+     *
+     * 输出所有硬件和传感器的详细信息（可在初始化和外部调用）。
+     */
+    static void DiagnoseAllHardwareAndSensors();
+
     ref class UpdateVisitor;
 
 private:
     // 初始化状态标志
-    static bool initialized;
+    static bool initialized;    
 
     // .NET对象的托管指针
     static msclr::gcroot<LibreHardwareMonitor::Hardware::Computer^> computer;

@@ -17,4 +17,9 @@ public:
     static void Info(const std::string& message);
     static void Error(const std::string& message);
     static void Warning(const std::string& message);
+
+    // 支持宽字符串日志
+    static void Info(const std::wstring& message);
+    static void Warning(const std::wstring& message);
+    static void Error(const std::wstring& message);
 };

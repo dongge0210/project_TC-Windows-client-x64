@@ -126,6 +126,13 @@ std::string FormatDiskUsage(uint64_t used, uint64_t total) {
     return ss.str();
 }
 
+// 修正功率格式化：不要用百分号
+std::string FormatPower(double value) {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << value << " W";
+    return ss.str();
+}
+
 static void PrintSectionHeader(const std::string& title) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, 14); // 黄色
@@ -215,13 +222,11 @@ int main(int argc, char* argv[]) {
         }
         catch (System::IO::FileNotFoundException^ ex) {
             std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
-            std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
-            Logger::Warning("LibreHardwareMonitor 初始化失败 (FileNotFound): " + utf8Str);
+            Logger::Warning(wstr);
         }
         catch (System::Exception^ ex) {
             std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
-            std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
-            Logger::Warning("LibreHardwareMonitor 初始化异常: " + utf8Str);
+            Logger::Warning(wstr);
         }
         catch (const std::exception& e) {
             Logger::Warning("LibreHardwareMonitor 初始化失败 (C++ 异常): " + std::string(e.what()));
@@ -256,13 +261,13 @@ int main(int argc, char* argv[]) {
             sysInfo.performanceCoreFreq = cpu.GetLargeCoreSpeed();
             sysInfo.efficiencyCoreFreq = cpu.GetSmallCoreSpeed() * 0.8;
 
-            // 新增功率检测
             sysInfo.cpuPower = LibreHardwareMonitorBridge::GetCpuPower();
             sysInfo.gpuPower = LibreHardwareMonitorBridge::GetGpuPower();
             sysInfo.totalPower = LibreHardwareMonitorBridge::GetTotalPower();
-            Logger::Info("CPU功率: " + FormatPercentage(sysInfo.cpuPower) + " W");
-            Logger::Info("GPU功率: " + FormatPercentage(sysInfo.gpuPower) + " W");
-            Logger::Info("整机功率: " + FormatPercentage(sysInfo.totalPower) + " W");
+
+            Logger::Info("CPU功率: " + FormatPower(sysInfo.cpuPower));
+            Logger::Info("GPU功率: " + FormatPower(sysInfo.gpuPower));
+            Logger::Info("整机功率: " + FormatPower(sysInfo.totalPower));
 
             // 内存信息
             MemoryInfo mem;
@@ -293,6 +298,14 @@ int main(int argc, char* argv[]) {
 
             auto temps = LibreHardwareMonitorBridge::GetTemperatures();
             sysInfo.temperatures = temps;
+            // 新增调试日志：输出原始温度数据
+            for (const auto& t : temps) {
+                Logger::Info("原始温度: " + t.first + " = " + std::to_string(t.second));
+            }
+            // 新增调试日志：输出有效温度数据
+            for (const auto& t : temps) {
+                Logger::Info("有效温度: " + t.first + " = " + std::to_string(t.second));
+            }
 
             // 新增Logger输出系统架构和详细系统版本
             Logger::Info("操作系统架构: " + sysInfo.cpuArch);
@@ -341,8 +354,7 @@ int main(int argc, char* argv[]) {
     }
     catch (System::Exception^ ex) {
         std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
-        std::string utf8Str = WinUtils::WstringToUtf8String(wstr);
-        Logger::Warning("LibreHardwareMonitor 初始化异常: " + utf8Str);
+        Logger::Warning(wstr);
     }
     catch (const std::exception& e) {
         Logger::Error("程序发生致命错误: " + std::string(e.what()));
