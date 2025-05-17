@@ -10,6 +10,9 @@
 #include <sstream>
 #include <iomanip>
 
+// 保证没有与comutil.h冲突的全局符号、宏、using等
+// 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
+
 #pragma comment(lib, "iphlpapi.lib")
 #pragma comment(lib, "ws2_32.lib")
 

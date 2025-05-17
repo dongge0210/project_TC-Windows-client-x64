@@ -4,52 +4,118 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <utility>
 
 #pragma pack(push, 1) // 确保内存对齐
 
-// GPU信息
-struct GPUData {
-    wchar_t name[128];    // GPU名称
-    wchar_t brand[64];    // 品牌
-    uint64_t memory;      // 显存（字节）
-    double coreClock;     // 核心频率（MHz）
+// POD types for shared memory (no std::string, std::vector, etc.)
+
+// GPU information structure for shared memory
+struct GPUDataSM {
+    wchar_t name[128];
+    wchar_t brand[64];
+    uint64_t vram;           // 专用显存 (VRAM)
+    uint64_t sharedMemory;   // 可用共享内存
+    uint32_t coreClock;
+    float power;
 };
 
-// 网络适配器信息
-struct NetworkAdapterData {
-    wchar_t name[128];    // 适配器名称
-    wchar_t mac[32];      // MAC地址
-    uint64_t speed;       // 速度（bps）
+// Network adapter information structure for shared memory
+struct NetworkAdapterDataSM {
+    wchar_t name[128];
+    wchar_t mac[32];
+    uint64_t speed;
 };
 
-// 磁盘信息
-struct DiskData {
-    char letter;          // 盘符（如'C'）
-    std::string label;    // 卷标
-    std::string fileSystem;// 文件系统
-    uint64_t totalSize = 0; // 总容量（字节）
-    uint64_t usedSpace = 0; // 已用空间（字节）
-    uint64_t freeSpace = 0; // 可用空间（字节）
+// Disk information structure for shared memory
+struct SharedDiskData {
+    wchar_t letter;
+    wchar_t label[128];
+    wchar_t fileSystem[32];
+    uint64_t totalSize;
+    uint64_t usedSpace;
+    uint64_t freeSpace;
 };
 
-// DiskInfoData结构
-struct DiskInfoData {
-    char letter;                // 盘符，如 'C'
-    std::string label;          // 卷标
-    std::string fileSystem;     // 文件系统类型
-    uint64_t totalSize;         // 总容量（字节）
-    uint64_t usedSpace;         // 已用空间（字节）
-    uint64_t freeSpace;         // 可用空间（字节）
-    bool isPhysical = false;    // 是否物理磁盘
-};
-
-// 温度传感器信息
+// Temperature sensor data structure for shared memory
 struct TemperatureData {
-    wchar_t sensorName[64]; // 传感器名称
-    double temperature;     // 温度（摄氏度）
+    wchar_t sensorName[128];
+    float temperature;
 };
 
-// SystemInfo结构
+// Shared memory block structure (POD only)
+struct SharedMemoryBlock {
+    CRITICAL_SECTION lock;
+
+    // CPU information
+    wchar_t cpuName[128];
+    wchar_t cpuArch[64];
+    int physicalCores;
+    int logicalCores;
+    float cpuUsage;
+    int performanceCores;
+    int efficiencyCores;
+    double pCoreFreq;
+    double eCoreFreq;
+    bool hyperThreading;
+    bool virtualization;
+    float cpuPower;
+
+    // Memory information
+    uint64_t totalMemory;
+    uint64_t usedMemory;
+    uint64_t availableMemory;
+    uint32_t memoryFrequency;
+
+    // GPU information
+    GPUDataSM gpus[2];
+    int gpuCount;
+    float gpuPower;
+    float totalPower;
+
+    // Network adapters
+    NetworkAdapterDataSM adapters[4];
+    int adapterCount;
+
+    // Disk information
+    SharedDiskData disks[8];
+    int diskCount;
+
+    // Temperature sensors
+    TemperatureData temperatures[10];
+    int tempCount;
+
+    // System information
+    wchar_t osDetailedVersion[256];
+    SYSTEMTIME lastUpdate; 
+    wchar_t motherboardName[128];
+    wchar_t deviceName[128];
+};
+
+struct GPUData {
+    std::string name;
+    std::string brand;
+    uint64_t vram;          // 专用显存
+    uint64_t sharedMemory;  // 共享内存
+    uint32_t coreClock;
+};
+
+struct NetworkAdapterData {
+    std::string name;
+    std::string mac;
+    uint64_t speed;
+};
+
+struct DiskInfoData {
+    char letter;
+    std::string label;
+    std::string fileSystem;
+    uint64_t totalSize;
+    uint64_t usedSpace;
+    uint64_t freeSpace;
+    bool isPhysical = false;
+};
+
 struct SystemInfo {
     std::string cpuName;
     int physicalCores;
@@ -64,27 +130,23 @@ struct SystemInfo {
     uint64_t totalMemory;
     uint64_t usedMemory;
     uint64_t availableMemory;
+
     std::vector<GPUData> gpus;
     std::vector<NetworkAdapterData> adapters;
     std::vector<DiskInfoData> disks;
     std::vector<std::pair<std::string, double>> temperatures;
     std::string osVersion;
-    std::string gpuName;            // Added
-    std::string gpuBrand;           // Added
-    uint64_t gpuMemory;             // Added
-    double gpuCoreFreq;             // Added
-    std::string networkAdapterName; // Added
-    std::string networkAdapterMac;  // Added
-    uint64_t networkAdapterSpeed;   // Added
-    std::string cpuArch;            // 新增：CPU架构
-    std::string osDetailedVersion;  // 新增：详细系统版本
-    double cpuPower;                // 新增：CPU功率
-    double gpuPower;                // 新增：GPU功率
-    double totalPower;              // 新增：整机功率
+    std::string osDetailedVersion;
+    std::string cpuArch;
+    std::string motherboardName;
+    std::string deviceName;
+    double cpuPower;
+    double gpuPower;
+    double totalPower;
+    uint32_t memoryFrequency;
     SYSTEMTIME lastUpdate;
 };
 
-// SystemData结构
 struct SystemData {
     std::string cpuName;
     int physicalCores;
@@ -107,52 +169,4 @@ struct SystemData {
     SYSTEMTIME lastUpdate;
 };
 
-// 共享内存主结构
-struct SharedMemoryBlock {
-    wchar_t cpuName[128];       // CPU名称 - wchar_t array
-    int physicalCores;        // 物理核心数
-    int logicalCores;         // 逻辑核心数
-    float cpuUsage;           // CPU使用率（百分比）
-    int performanceCores;     // 性能核心数
-    int efficiencyCores;      // 能效核心数
-    double pCoreFreq;         // 性能核心频率（GHz）
-    double eCoreFreq;         // 能效核心频率（GHz）
-    bool hyperThreading;      // 超线程是否启用
-    bool virtualization;      // 虚拟化是否启用
-    uint64_t totalMemory;     // 总内存（字节）
-    uint64_t usedMemory;      // 已用内存（字节）
-    uint64_t availableMemory; // 可用内存（字节）
-
-    // GPU信息（支持最多2个GPU）
-    GPUData gpus[2];
-
-    // 网络适配器（支持最多4个适配器）
-    NetworkAdapterData adapters[4];
-
-    // 磁盘信息（支持最多8个磁盘）
-    struct SharedDiskData {
-        char letter;             // 盘符（如'C'）
-        wchar_t label[128];      // 卷标 - Using wchar_t array for shared memory
-        wchar_t fileSystem[32];  // 文件系统 - Using wchar_t array for shared memory
-        uint64_t totalSize;      // 总容量（字节）
-        uint64_t usedSpace;      // 已用空间（字节）
-        uint64_t freeSpace;      // 可用空间（字节）
-    } disks[8];
-
-    // 温度数据（支持10个传感器）
-    TemperatureData temperatures[10];
-
-    wchar_t cpuArch[16];          // 新增
-    wchar_t osDetailedVersion[128]; // 新增
-    float cpuPower;               // 新增
-    float gpuPower;               // 新增
-    float totalPower;             // 新增
-
-    int adapterCount;
-    int tempCount;
-    int gpuCount;
-    int diskCount;
-    SYSTEMTIME lastUpdate;
-    CRITICAL_SECTION lock;
-};
 #pragma pack(pop)

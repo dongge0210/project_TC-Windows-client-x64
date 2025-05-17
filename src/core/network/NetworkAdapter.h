@@ -15,6 +15,10 @@
 #include <string>
 #include <vector>
 #include "WmiManager.h"
+#include "../DataStruct/DataStruct.h"
+
+// 确保没有与comutil.h冲突的类型、宏、using等
+// 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
 
 class NetworkAdapter {
 public:

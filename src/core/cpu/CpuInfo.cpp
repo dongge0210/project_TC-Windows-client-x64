@@ -63,7 +63,6 @@ void CpuInfo::InitializeCounter() {
     }
 
     counterInitialized = true;
-    Logger::Info("CPU性能计数器初始化成功");
     
     // 等待足够时间让计数器稳定
     Sleep(500); 
@@ -73,7 +72,6 @@ void CpuInfo::InitializeCounter() {
     // 保留一位小数
     std::stringstream ss;
     ss << std::fixed << std::setprecision(1) << initialUsage;
-    Logger::Info("CPU初始使用率: " + ss.str() + "%");
 }
 
 double CpuInfo::GetLargeCoreSpeed() const {
@@ -106,7 +104,6 @@ void CpuInfo::CleanupCounter() {
     if (counterInitialized) {
         PdhCloseQuery(queryHandle);
         counterInitialized = false;
-        Logger::Info("CPU性能计数器已清理");
     }
 }
 

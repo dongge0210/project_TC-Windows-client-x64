@@ -5,6 +5,11 @@
 #include <nvml.h>
 #include <sstream>
 #include <iomanip>
+#include <windows.h>
+#include <limits>
+
+// 保证没有与comutil.h冲突的全局符号、宏、using等
+// 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
 
 // 避免重复日志的静态变量
 static bool firstGpuDetection = true;
@@ -21,7 +26,6 @@ GpuInfo::GpuInfo(WmiManager& manager) : wmiManager(manager) {
 GpuInfo::~GpuInfo() {
     // 仅在第一次输出 GPU 完成日志
     if (firstGpuDetection) {
-        Logger::Info("GPU 信息检测完成");
         firstGpuDetection = false;
     }
 }
@@ -61,7 +65,7 @@ void GpuInfo::DetectGpusViaWmi() {
         }
 
         if (SUCCEEDED(pclsObj->Get(L"AdapterRAM", 0, &vtAdapterRAM, 0, 0)) && vtAdapterRAM.vt == VT_UI4) {
-            data.dedicatedMemory = static_cast<uint64_t>(vtAdapterRAM.uintVal);
+            data.vram = static_cast<uint64_t>(vtAdapterRAM.uintVal);
         }
 
         if (SUCCEEDED(pclsObj->Get(L"CurrentClockSpeed", 0, &vtCurrentClockSpeed, 0, 0)) && vtCurrentClockSpeed.vt == VT_UI4) {
@@ -95,33 +99,33 @@ void GpuInfo::DetectGpusViaWmi() {
     } else {
         // 只在首次检测时输出日志
         if (firstGpuDetection) {
-            Logger::Info("GPU 检测结果: 发现 " + std::to_string(gpuList.size()) + " 个 GPU");
+            // Logger::Info("GPU 检测结果: 发现 " + std::to_string(gpuList.size()) + " 个 GPU");
 
             // 输出检测到的 GPU 信息
-            for (size_t i = 0; i < gpuList.size(); ++i) {
-                const auto& gpu = gpuList[i];
-                std::wstring wname = gpu.name;
-                std::string name(wname.begin(), wname.end());
+            // for (size_t i = 0; i < gpuList.size(); ++i) {
+            //     const auto& gpu = gpuList[i];
+            //     std::wstring wname = gpu.name;
+            //     std::string name(wname.begin(), wname.end());
 
-                std::string type;
-                if (gpu.isNvidia) type = "NVIDIA";
-                else if (gpu.isAmd) type = "AMD";
-                else if (gpu.isIntegrated) type = "Intel 集成显卡";
-                else type = "其他";
+            //     std::string type;
+            //     if (gpu.isNvidia) type = "NVIDIA";
+            //     else if (gpu.isAmd) type = "AMD";
+            //     else if (gpu.isIntegrated) type = "Intel 集成显卡";
+            //     else type = "其他";
 
-                std::string memoryInfo;
-                if (gpu.dedicatedMemory > 0) {
-                    double gbMem = static_cast<double>(gpu.dedicatedMemory) / (1024 * 1024 * 1024);
-                    std::stringstream ss;
-                    ss << std::fixed << std::setprecision(1) << gbMem;
-                    memoryInfo = ss.str() + " GB";
-                } else {
-                    memoryInfo = "未知";
-                }
+            //     std::string memoryInfo;
+            //     if (gpu.dedicatedMemory > 0) {
+            //         double gbMem = static_cast<double>(gpu.dedicatedMemory) / (1024 * 1024 * 1024);
+            //         std::stringstream ss;
+            //         ss << std::fixed << std::setprecision(1) << gbMem;
+            //         memoryInfo = ss.str() + " GB";
+            //     } else {
+            //         memoryInfo = "未知";
+            //     }
 
-                Logger::Info("GPU #" + std::to_string(i + 1) + ": " + name + " (" + type + ", " +
-                             memoryInfo + " 显存)");
-            }
+            //     Logger::Warning("GPU #" + std::to_string(i + 1) + ": " + name + " (" + type + ", " +
+            //                     memoryInfo + " 显存)");
+            // }
         }
     }
 
@@ -152,9 +156,10 @@ void GpuInfo::QueryIntelGpuInfo(int index) {
         if (SUCCEEDED(pFactory->EnumAdapters(index, &pAdapter))) {
             DXGI_ADAPTER_DESC desc;
             if (SUCCEEDED(pAdapter->GetDesc(&desc))) {
-                gpuList[index].dedicatedMemory = desc.DedicatedVideoMemory;
-                Logger::Info("已获取 Intel GPU 显存大小: " +
-                             std::to_string(desc.DedicatedVideoMemory / (1024 * 1024)) + " MB");
+                gpuList[index].vram = desc.DedicatedVideoMemory;  // 专用显存
+                gpuList[index].sharedMemory = desc.SharedSystemMemory; // 共享系统内存
+                Logger::Info("Intel GPU 专用显存: " + std::to_string(desc.DedicatedVideoMemory / (1024 * 1024)) + " MB");
+                Logger::Info("Intel GPU 共享内存: " + std::to_string(desc.SharedSystemMemory / (1024 * 1024)) + " MB");
             }
             pAdapter->Release();
         }
@@ -201,11 +206,8 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         nvmlMemory_t memory;
         result = nvmlDeviceGetMemoryInfo(device, &memory);
         if (NVML_SUCCESS == result) {
-            gpuList[index].dedicatedMemory = memory.total;
-            if (!memoryLogged) {
-                Logger::Info("NVIDIA GPU 显存: " + std::to_string(memory.total / (1024 * 1024)) + " MB");
-                memoryLogged = true;
-            }
+            gpuList[index].vram = memory.total;     // 将 NVML 获取的显存赋值给 vram
+            // 移除显存日志输出
         }
 
         // 获取核心频率
@@ -221,10 +223,6 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         if (NVML_SUCCESS == result) {
             gpuList[index].computeCapabilityMajor = major;
             gpuList[index].computeCapabilityMinor = minor;
-            if (!capabilityLogged) {
-                Logger::Info("NVIDIA GPU 计算能力: " + std::to_string(major) + "." + std::to_string(minor));
-                capabilityLogged = true;
-            }
         }
 
         // GPU功率日志输出，单位为W，不带百分号
@@ -235,11 +233,77 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         }
         // 保留 NVML 资源以便后续使用
 
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         Logger::Error("查询 NVIDIA GPU 信息时发生异常: " + std::string(e.what()));
-    } catch (...) {
+    }
+    catch (...) {
         Logger::Error("查询 NVIDIA GPU 信息时发生未知异常");
     }
+}
+
+double GpuInfo::GetGpuPowerNVML() {
+#ifdef _WIN32
+    static bool loggedNotSupported = false; // 防止重复刷屏
+    nvmlReturn_t result;
+    result = nvmlInit_v2();
+    if (result != NVML_SUCCESS) {
+        Logger::Error(std::string("NVML 初始化失败: ") + nvmlErrorString(result));
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    nvmlDevice_t device;
+    result = nvmlDeviceGetHandleByIndex_v2(0, &device); // 取第一个GPU
+    if (result != NVML_SUCCESS) {
+        Logger::Error(std::string("NVML 获取设备句柄失败: ") + nvmlErrorString(result));
+        nvmlShutdown();
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    nvmlEnableState_t pmSupported = NVML_FEATURE_DISABLED;
+    result = nvmlDeviceGetPowerManagementMode(device, &pmSupported);
+    if (result != NVML_SUCCESS) {
+        Logger::Error(std::string("NVML 检查功率管理支持失败: ") + nvmlErrorString(result));
+        nvmlShutdown();
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    if (pmSupported == NVML_FEATURE_DISABLED) {
+        char name[NVML_DEVICE_NAME_BUFFER_SIZE] = {0};
+        nvmlDeviceGetName(device, name, NVML_DEVICE_NAME_BUFFER_SIZE);
+        if (!loggedNotSupported) {
+            Logger::Warning(std::string("NVML: 设备 [") + name + "] 不支持功率监控，跳过功率读取。");
+            loggedNotSupported = true;
+        }
+        nvmlShutdown();
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    unsigned int power_mw = 0;
+    result = nvmlDeviceGetPowerUsage(device, &power_mw);
+    if (result != NVML_SUCCESS) {
+        if (!loggedNotSupported) {
+            Logger::Warning("NVML: 设备支持功率管理，但获取GPU功率失败: " + std::string(nvmlErrorString(result)));
+            loggedNotSupported = true;
+        }
+        nvmlShutdown();
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    nvmlShutdown();
+
+    if (power_mw == 0) {
+        if (!loggedNotSupported) {
+            Logger::Info("NVML 获取到的GPU功率为0，可能未支持或无效。");
+            loggedNotSupported = true;
+        }
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
+    double power = static_cast<double>(power_mw) / 1000.0;
+    Logger::Info("NVML GPU功率: " + std::to_string(power) + " W");
+    return power;
+#else
+    return std::numeric_limits<double>::quiet_NaN();
+#endif
 }
 
 const std::vector<GpuInfo::GpuData>& GpuInfo::GetGpuData() const {

@@ -55,6 +55,8 @@ private:
     void createGpuSection();
     void createTemperatureSection();
     void createDiskSection();
+    void onGpuSelectionChanged(int index);
+    void updateGpuSelector(int gpuCount);
     
     // Add the missing updateDiskInfo method
     void updateDiskInfo(SharedMemoryBlock* pBuffer);
@@ -82,12 +84,15 @@ private:
     QChart *gpuTempChart;
     QChartView *gpuTempChartView;
     QLineSeries *gpuTempSeries;
+    QComboBox* gpuSelector = nullptr;
 
     // Data containers
     std::map<std::string, QLabel*> infoLabels;
     std::queue<float> cpuTempHistory;
     std::queue<float> gpuTempHistory;
     SystemInfo currentSysInfo;
+    int currentGpuIndex = 0;  // 当前选中的 GPU 索引
+    std::vector<int> gpuIndices;
 
     void UpdateDiskInfoUI();
 

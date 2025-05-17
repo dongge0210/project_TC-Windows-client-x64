@@ -17,7 +17,10 @@
 #ifdef emit
 #undef emit
 #endif
-#ifdef foreach
+#ifdef for each (object var in collection_to_loop)
+    {
+
+    }
 #undef foreach
 #endif
 #ifdef name
@@ -31,7 +34,14 @@
 #endif
 #endif
 
+#ifdef _MANAGED
+#pragma managed(push, off)
+#endif
+
 #include <algorithm>
+
+// 保证头文件包含顺序正确，windows.h、Ole2.h等在comutil.h之前
+#include <windows.h>
 
 // Make sure Windows.h is included before any other headers that might redefine GetLastError
 
@@ -43,6 +53,68 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+
+// Helper conversion functions for POD <-> STL types
+
+static void ToGPUDataSM(const GPUData & src, GPUDataSM & dst) {
+    wcsncpy_s(dst.name, 128, WinUtils::StringToWstring(src.name).c_str(), _TRUNCATE);
+    wcsncpy_s(dst.brand, 64, WinUtils::StringToWstring(src.brand).c_str(), _TRUNCATE);
+    dst.vram = src.vram;           // 专用显存
+    dst.sharedMemory = src.sharedMemory; // 共享内存
+    dst.coreClock = src.coreClock;
+}
+
+static void ToNetworkAdapterDataSM(const NetworkAdapterData& src, NetworkAdapterDataSM& dst) {
+    wcsncpy_s(dst.name, 128, WinUtils::StringToWstring(src.name).c_str(), _TRUNCATE);
+    wcsncpy_s(dst.mac, 32, WinUtils::StringToWstring(src.mac).c_str(), _TRUNCATE);
+    dst.speed = src.speed;
+}
+
+static void ToSharedDiskData(const DiskInfoData& src, SharedDiskData& dst) {
+    dst.letter = src.letter;
+    wcsncpy_s(dst.label, 128, WinUtils::StringToWstring(src.label).c_str(), _TRUNCATE);
+    wcsncpy_s(dst.fileSystem, 32, WinUtils::StringToWstring(src.fileSystem).c_str(), _TRUNCATE);
+    dst.totalSize = src.totalSize;
+    dst.usedSpace = src.usedSpace;
+    dst.freeSpace = src.freeSpace;
+}
+
+static void ToTemperatureData(const std::pair<std::string, double>& src, TemperatureData& dst) {
+    wcsncpy_s(dst.sensorName, 128, WinUtils::StringToWstring(src.first).c_str(), _TRUNCATE);
+    dst.temperature = static_cast<float>(src.second);
+}
+
+// Helper function to convert SharedDiskData to DiskInfoData
+static DiskInfoData SharedDiskToDiskInfoData(const SharedDiskData& disk) {
+    DiskInfoData info;
+    info.letter = disk.letter;
+    info.label = WinUtils::WstringToString(disk.label);
+    info.fileSystem = WinUtils::WstringToString(disk.fileSystem);
+    info.totalSize = disk.totalSize;
+    info.usedSpace = disk.usedSpace;
+    info.freeSpace = disk.freeSpace;
+    return info;
+}
+
+// Helper function to convert GPUDataSM to GPUData
+static GPUData SharedGPUToGPUData(const GPUDataSM& gpu) {
+    GPUData gd;
+    gd.name = WinUtils::WstringToString(gpu.name);
+    gd.brand = WinUtils::WstringToString(gpu.brand);
+    gd.vram = gpu.vram;           // 专用显存
+    gd.sharedMemory = gpu.sharedMemory; // 共享内存
+    gd.coreClock = gpu.coreClock;
+    return gd;
+}
+
+// Helper function to convert NetworkAdapterDataSM to NetworkAdapterData
+static NetworkAdapterData SharedAdapterToAdapterData(const NetworkAdapterDataSM& adapter) {
+    NetworkAdapterData nd;
+    nd.name = WinUtils::WstringToString(adapter.name);
+    nd.mac = WinUtils::WstringToString(adapter.mac);
+    nd.speed = adapter.speed;
+    return nd;
+}
 
 // Initialize static members
 HANDLE SharedMemoryManager::hMapFile = NULL;
@@ -210,8 +282,7 @@ void SharedMemoryManager::CleanupSharedMemory() {
     Logger::Info("共享内存已清理");
 }
 
-bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
-
+bool SharedMemoryManager::WriteToSharedMemory(SystemInfo& sysInfo) {
     if (pBuffer == nullptr) {
         lastError = "共享内存未初始化";
         Logger::Error(lastError);
@@ -219,93 +290,67 @@ bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
     }
 
     try {
-        // Enter critical section
         EnterCriticalSection(&(pBuffer->lock));
 
         // Core CPU info
         wcsncpy_s(pBuffer->cpuName, _countof(pBuffer->cpuName), WinUtils::StringToWstring(sysInfo.cpuName).c_str(), _TRUNCATE);
-        wcsncpy_s(pBuffer->cpuArch, _countof(pBuffer->cpuArch), WinUtils::StringToWstring(sysInfo.cpuArch).c_str(), _TRUNCATE); // 新增
+        wcsncpy_s(pBuffer->cpuArch, _countof(pBuffer->cpuArch), WinUtils::StringToWstring(sysInfo.cpuArch).c_str(), _TRUNCATE);
         pBuffer->physicalCores = sysInfo.physicalCores;
         pBuffer->logicalCores = sysInfo.logicalCores;
         pBuffer->cpuUsage = static_cast<float>(sysInfo.cpuUsage);
         pBuffer->performanceCores = sysInfo.performanceCores;
         pBuffer->efficiencyCores = sysInfo.efficiencyCores;
-        pBuffer->pCoreFreq = sysInfo.performanceCoreFreq / 1000.0; // Convert MHz to GHz
-        pBuffer->eCoreFreq = sysInfo.efficiencyCoreFreq / 1000.0; // Convert MHz to GHz
+        pBuffer->pCoreFreq = sysInfo.performanceCoreFreq / 1000.0;
+        pBuffer->eCoreFreq = sysInfo.efficiencyCoreFreq / 1000.0;
         pBuffer->hyperThreading = sysInfo.hyperThreading;
         pBuffer->virtualization = sysInfo.virtualization;
-        pBuffer->cpuPower = static_cast<float>(sysInfo.cpuPower); // 新增
-        
+        pBuffer->cpuPower = static_cast<float>(sysInfo.cpuPower);
+
         // Memory info
         pBuffer->totalMemory = sysInfo.totalMemory;
         pBuffer->usedMemory = sysInfo.usedMemory;
         pBuffer->availableMemory = sysInfo.availableMemory;
+        pBuffer->memoryFrequency = sysInfo.memoryFrequency;
 
-        // GPU info - use std::min from <algorithm> with parentheses
-        int gpuCount = (std::min)(static_cast<int>(sysInfo.gpus.size()), 2); // 修正：加上最大数量2
-        if (gpuCount > 0) {
-            pBuffer->gpuCount = gpuCount;
-            for (int i = 0; i < gpuCount; i++) {
-                const auto& gpu = sysInfo.gpus[i];
-                wcsncpy_s(pBuffer->gpus[i].name, _countof(pBuffer->gpus[i].name), gpu.name, _TRUNCATE);
-                wcsncpy_s(pBuffer->gpus[i].brand, _countof(pBuffer->gpus[i].brand), gpu.brand, _TRUNCATE);
-                pBuffer->gpus[i].memory = gpu.memory;
-                pBuffer->gpus[i].coreClock = gpu.coreClock;
-            }
-        } else {
-            // Use fallback from SystemInfo if gpus vector is empty
-            pBuffer->gpuCount = 1;
-            wcsncpy_s(pBuffer->gpus[0].name, _countof(pBuffer->gpus[0].name), WinUtils::StringToWstring(sysInfo.gpuName).c_str(), _TRUNCATE);
-            wcsncpy_s(pBuffer->gpus[0].brand, _countof(pBuffer->gpus[0].brand), WinUtils::StringToWstring(sysInfo.gpuBrand).c_str(), _TRUNCATE);
-            pBuffer->gpus[0].memory = sysInfo.gpuMemory;
-            pBuffer->gpus[0].coreClock = sysInfo.gpuCoreFreq;
+        // GPU info
+        int gpuCount = (std::min)(static_cast<int>(sysInfo.gpus.size()), 2);
+        pBuffer->gpuCount = gpuCount;
+        for (int i = 0; i < gpuCount; i++) {
+            ToGPUDataSM(sysInfo.gpus[i], pBuffer->gpus[i]);
         }
 
         // OS info
-        wcsncpy_s(pBuffer->osDetailedVersion, _countof(pBuffer->osDetailedVersion), WinUtils::StringToWstring(sysInfo.osDetailedVersion).c_str(), _TRUNCATE); // 新增
+        wcsncpy_s(pBuffer->osDetailedVersion, _countof(pBuffer->osDetailedVersion), WinUtils::StringToWstring(sysInfo.osDetailedVersion).c_str(), _TRUNCATE);
 
         // GPU power
-        pBuffer->gpuPower = static_cast<float>(sysInfo.gpuPower); // 新增
-        pBuffer->totalPower = static_cast<float>(sysInfo.totalPower); // 新增
+        pBuffer->gpuPower = static_cast<float>(sysInfo.gpuPower);
+        pBuffer->totalPower = static_cast<float>(sysInfo.totalPower);
 
         // Network adapters info
-        int adapterCount = (std::min)(static_cast<int>(sysInfo.adapters.size()), 4); // Max 4 adapters supported
+        int adapterCount = (std::min)(static_cast<int>(sysInfo.adapters.size()), 4);
         pBuffer->adapterCount = adapterCount;
         for (int i = 0; i < adapterCount; i++) {
-            const auto& adapter = sysInfo.adapters[i];
-            wcsncpy_s(pBuffer->adapters[i].name, _countof(pBuffer->adapters[i].name), adapter.name, _TRUNCATE);
-            wcsncpy_s(pBuffer->adapters[i].mac, _countof(pBuffer->adapters[i].mac), adapter.mac, _TRUNCATE);
-            pBuffer->adapters[i].speed = adapter.speed;
+            ToNetworkAdapterDataSM(sysInfo.adapters[i], pBuffer->adapters[i]);
         }
 
         // Disk info
-        int diskCount = (std::min)(static_cast<int>(sysInfo.disks.size()), 8); // Max 8 disks supported
+        int diskCount = (std::min)(static_cast<int>(sysInfo.disks.size()), 8);
         pBuffer->diskCount = diskCount;
         for (int i = 0; i < diskCount; i++) {
-            const auto& disk = sysInfo.disks[i];
-            pBuffer->disks[i].letter = disk.letter;
-            wcsncpy_s(pBuffer->disks[i].label, _countof(pBuffer->disks[i].label), WinUtils::StringToWstring(disk.label).c_str(), _TRUNCATE);
-            wcsncpy_s(pBuffer->disks[i].fileSystem, _countof(pBuffer->disks[i].fileSystem), WinUtils::StringToWstring(disk.fileSystem).c_str(), _TRUNCATE);
-            pBuffer->disks[i].totalSize = disk.totalSize;
-            pBuffer->disks[i].usedSpace = disk.usedSpace;
-            pBuffer->disks[i].freeSpace = disk.freeSpace;
+            ToSharedDiskData(sysInfo.disks[i], pBuffer->disks[i]);
         }
 
         // Temperature info
-        int tempCount = (std::min)(static_cast<int>(sysInfo.temperatures.size()), 10); // Max 10 temp sensors
+        int tempCount = (std::min)(static_cast<int>(sysInfo.temperatures.size()), 10);
         pBuffer->tempCount = tempCount;
         for (int i = 0; i < tempCount; i++) {
-            const auto& temp = sysInfo.temperatures[i];
-            wcsncpy_s(pBuffer->temperatures[i].sensorName, _countof(pBuffer->temperatures[i].sensorName), WinUtils::StringToWstring(temp.first).c_str(), _TRUNCATE);
-            pBuffer->temperatures[i].temperature = temp.second;
+            ToTemperatureData(sysInfo.temperatures[i], pBuffer->temperatures[i]);
         }
 
         // Update timestamp
         GetSystemTime(&(pBuffer->lastUpdate));
 
-        // Leave critical section
         LeaveCriticalSection(&(pBuffer->lock));
-
         return true;
     }
     catch (const std::exception& e) {
@@ -323,6 +368,87 @@ bool SharedMemoryManager::WriteToSharedMemory(const SystemInfo& sysInfo) {
         lastError = "写入共享内存时发生未知异常";
         Logger::Error(lastError);
         return false;
+    }
+}
+
+void SharedMemoryManager::ReadSystemInfoFromSharedMemory(SystemInfo& sysInfo) {
+    if (pBuffer == nullptr) {
+        lastError = "共享内存未初始化";
+        Logger::Error(lastError);
+        return;
+    }
+
+    try {
+        EnterCriticalSection(&(pBuffer->lock));
+
+        // Core CPU info
+        sysInfo.cpuName = WinUtils::WstringToString(pBuffer->cpuName);
+        sysInfo.cpuArch = WinUtils::WstringToString(pBuffer->cpuArch);
+        sysInfo.physicalCores = pBuffer->physicalCores;
+        sysInfo.logicalCores = pBuffer->logicalCores;
+        sysInfo.cpuUsage = static_cast<double>(pBuffer->cpuUsage);
+        sysInfo.performanceCores = pBuffer->performanceCores;
+        sysInfo.efficiencyCores = pBuffer->efficiencyCores;
+        sysInfo.performanceCoreFreq = pBuffer->pCoreFreq * 1000; // GHz to MHz
+        sysInfo.efficiencyCoreFreq = pBuffer->eCoreFreq * 1000; // GHz to MHz
+        sysInfo.hyperThreading = pBuffer->hyperThreading;
+        sysInfo.virtualization = pBuffer->virtualization;
+        sysInfo.cpuPower = static_cast<double>(pBuffer->cpuPower);
+
+        // Memory info
+        sysInfo.totalMemory = pBuffer->totalMemory;
+        sysInfo.usedMemory = pBuffer->usedMemory;
+        sysInfo.availableMemory = pBuffer->availableMemory;
+        sysInfo.memoryFrequency = pBuffer->memoryFrequency;
+
+        // GPU info
+        sysInfo.gpus.clear();
+        for (int i = 0; i < pBuffer->gpuCount; i++) {
+            sysInfo.gpus.push_back(SharedGPUToGPUData(pBuffer->gpus[i]));
+        }
+
+        // OS info
+        sysInfo.osDetailedVersion = WinUtils::WstringToString(pBuffer->osDetailedVersion);
+
+        // GPU power
+        sysInfo.gpuPower = static_cast<double>(pBuffer->gpuPower);
+        sysInfo.totalPower = static_cast<double>(pBuffer->totalPower);
+
+        // Network adapters info
+        sysInfo.adapters.clear();
+        for (int i = 0; i < pBuffer->adapterCount; i++) {
+            sysInfo.adapters.push_back(SharedAdapterToAdapterData(pBuffer->adapters[i]));
+        }
+
+        // Disk info
+        sysInfo.disks.clear();
+        for (int i = 0; i < pBuffer->diskCount; i++) {
+            sysInfo.disks.push_back(SharedDiskToDiskInfoData(pBuffer->disks[i]));
+        }
+
+        // Temperature info
+        sysInfo.temperatures.clear();
+        for (int i = 0; i < pBuffer->tempCount; i++) {
+            std::string sensorName = WinUtils::WstringToString(pBuffer->temperatures[i].sensorName);
+            double temperature = static_cast<double>(pBuffer->temperatures[i].temperature);
+            sysInfo.temperatures.emplace_back(sensorName, temperature);
+        }
+
+        LeaveCriticalSection(&(pBuffer->lock));
+    }
+    catch (const std::exception& e) {
+        if (pBuffer != nullptr) {
+            LeaveCriticalSection(&(pBuffer->lock));
+        }
+        lastError = std::string("读取共享内存时异常: ") + e.what();
+        Logger::Error(lastError);
+    }
+    catch (...) {
+        if (pBuffer != nullptr) {
+            LeaveCriticalSection(&(pBuffer->lock));
+        }
+        lastError = "读取共享内存时发生未知异常";
+        Logger::Error(lastError);
     }
 }
 
@@ -575,6 +701,11 @@ SystemData& SharedMemoryManager::GetSystemData() {
     return g_systemData;
 }
 
+// 新增：判断共享内存是否已初始化
+bool SharedMemoryManager::IsSharedMemoryInitialized() {
+    return pBuffer != nullptr;
+}
+
 // 重新恢复 Qt 宏定义
 #ifdef SAVE_QT_KEYWORDS
 #ifdef signals
@@ -586,4 +717,8 @@ SystemData& SharedMemoryManager::GetSystemData() {
 #ifdef emit
 #define emit Q_EMIT
 #endif
+#endif
+
+#ifdef _MANAGED
+#pragma managed(pop)
 #endif

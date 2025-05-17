@@ -28,6 +28,32 @@
       </property>
      </widget>
     </item>
+    <item>
+     <widget class="QGroupBox" name="cpuGroupBox">
+      <property name="title">
+       <string>处理器信息</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayoutCpu">
+       <!-- ...原有CPU信息行... -->
+       <!-- 新增：CPU功率 -->
+       <item row="8" column="0">
+        <widget class="QLabel" name="labelCpuPowerTitle">
+         <property name="text">
+          <string>CPU功率:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="1">
+        <widget class="QLabel" name="labelCpuPower">
+         <property name="text">
+          <string>-- W</string>
+         </property>
+        </widget>
+       </item>
+       <!-- ...如有其他内容... -->
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">

@@ -40,6 +40,8 @@ public:
      * @brief 获取温度数据
      *
      * Returns a vector of (sensor name, temperature) pairs, filtering out invalid or missing values.
+     * 返回的温度值为NaN（std::numeric_limits<double>::quiet_NaN()）时，表示传感器无效或libre输出-9999。
+     * 调用方应判断std::isnan(value)以识别无效温度。
      * @return 包含传感器名称和温度值(°C)的向量
      */
     static std::vector<std::pair<std::string, double>> GetTemperatures();
@@ -65,15 +67,7 @@ public:
      */
     static double GetTotalPower();
 
-    /**
-     * @brief 诊断所有硬件和传感器
-     *
-     * 输出所有硬件和传感器的详细信息（可在初始化和外部调用）。
-     */
-    static void DiagnoseAllHardwareAndSensors();
-
     ref class UpdateVisitor;
-
 private:
     // 初始化状态标志
     static bool initialized;    

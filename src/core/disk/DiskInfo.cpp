@@ -110,10 +110,6 @@ std::vector<DiskInfoData> DiskInfo::GetAllDisks() {
                 info.usedSpace = info.totalSize > info.freeSpace ? (info.totalSize - info.freeSpace) : 0;
                 info.isPhysical = true; // 只对物理磁盘设为true
                 disks.push_back(info);
-                Logger::Info("检测到磁盘: " + std::string(1, static_cast<char>(info.letter)) + " 卷标: " + info.label +
-                             " 文件系统: " + info.fileSystem +
-                             " 总容量: " + FormatSize(info.totalSize) +
-                             " 可用: " + FormatSize(info.freeSpace));
             }
         }
         // 其它类型磁盘不加入或isPhysical=false

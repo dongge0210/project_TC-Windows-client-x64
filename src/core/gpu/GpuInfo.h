@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <vector>
 #include <string>
 #include <d3d11.h>
@@ -11,34 +11,36 @@
 #include <dxgi.h>
 #endif
 #include <wbemidl.h>
+#include "../DataStruct/DataStruct.h"
+#include "../Utils/WmiManager.h"
 
-class WmiManager;
+// 确保没有与comutil.h冲突的类型、宏、using等
+// 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
 
 class GpuInfo {
 public:
     struct GpuData {
         std::wstring name;
         std::wstring deviceId;
-        uint64_t dedicatedMemory = 0;
-        double coreClock = 0.0;
+        std::wstring brand;
+        uint64_t vram = 0;          // 更名自 dedicatedMemory
+        uint64_t sharedMemory = 0;  // 更名自 memory
+        double coreClock = 0;
         bool isNvidia = false;
-        bool isIntegrated = false;
         bool isAmd = false;
+        bool isIntegrated = false;
         int computeCapabilityMajor = 0;
         int computeCapabilityMinor = 0;
-        unsigned int temperature = 0;
     };
-
     GpuInfo(WmiManager& manager);
     ~GpuInfo();
-
-    const std::vector<GpuData>& GetGpuData() const;
-
-private:
     void DetectGpusViaWmi();
     void QueryIntelGpuInfo(int index);
     void QueryNvidiaGpuInfo(int index);
+    static double GetGpuPowerNVML();
+    const std::vector<GpuData>& GetGpuData() const;
 
+private:
     WmiManager& wmiManager;
     IWbemServices* pSvc = nullptr;
     std::vector<GpuData> gpuList;

@@ -3,6 +3,12 @@
 #include <msclr/marshal_cppstd.h>
 #include <iostream>
 #include <windows.h>
+#include <limits> // Add for NaN
+#include "../gpu/GpuInfo.h" // 新增：包含GpuInfo.h
+#include <codecvt>
+#include <locale>
+#include <algorithm> // 新增：安全字符串转换和清理工具
+#include <sstream> // 修复 stringstream 未定义
 #using "F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net472\\LibreHardwareMonitorLib.dll"
 
 using namespace LibreHardwareMonitor::Hardware;
@@ -29,6 +35,17 @@ public:
     virtual void VisitParameter(IParameter^ parameter) override {}
 };
 
+// 辅助函数：去除字符串前后空白和不可见字符
+static std::string CleanString(const std::string& input) {
+    std::string s = input;
+    // 去除前后空白
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
+    // 替换不可见字符为普通空格
+    std::replace_if(s.begin(), s.end(), [](unsigned char ch) { return (ch == '\t' || ch == '\r' || ch == '\n' || ch == '\xa0'); }, ' ');
+    return s;
+}
+
 // 在初始化时输出所有硬件类型和名称，辅助调试
 void LibreHardwareMonitorBridge::Initialize() {
     try {
@@ -47,15 +64,31 @@ void LibreHardwareMonitorBridge::Initialize() {
         initialized = true;
         Logger::Info(L"LibreHardwareMonitor 初始化完成");
 
-        // 新增：输出所有硬件类型和名称
+        // 新增：输出所有硬件类型和名称（UTF-8安全转换并清理）
         for each (IHardware ^ hardware in computer->Hardware) {
-            std::string hwType = msclr::interop::marshal_as<std::string>(hardware->HardwareType.ToString());
-            std::string hwName = msclr::interop::marshal_as<std::string>(hardware->Name);
-            Logger::Info("[调试] 枚举到硬件: 类型=" + hwType + ", 名称=" + hwName);
+            // 使用ToString()并marshal_as转换，避免Data()错误
+            std::wstring hwTypeW = msclr::interop::marshal_as<std::wstring>(hardware->HardwareType.ToString());
+            std::wstring hwNameW = msclr::interop::marshal_as<std::wstring>(hardware->Name);
+            // 转为UTF-8
+            std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+            std::string hwType = CleanString(conv.to_bytes(hwTypeW));
+            std::string hwName = CleanString(conv.to_bytes(hwNameW));
+            Logger::Info("枚举到硬件: 类型=" + hwType + ", 名称=" + hwName); // 去掉[调试]前缀
+
+            // 如果包含问号，输出原始宽字节内容用于调试
+            if (hwName.find('?') != std::string::npos) {
+                std::ostringstream ss;
+                ss << "[调试] 原始硬件名称宽字节: ";
+                for (wchar_t ch : hwNameW) {
+                    if (ch == 0) break;
+                    ss << std::hex << std::showbase << (int)ch << " ";
+                }
+                Logger::Info(ss.str());
+            }
         }
 
-        // 新增：初始化后立即诊断所有硬件和传感器
-        DiagnoseAllHardwareAndSensors();
+        // 只保留调试，不再自动诊断
+        // DiagnoseAllHardwareAndSensors(); // 注释掉未定义函数
     }
     catch (System::IO::FileNotFoundException^ ex) {
         Logger::Error(msclr::interop::marshal_as<std::wstring>(ex->Message));
@@ -83,117 +116,50 @@ std::vector<std::pair<std::string, double>> LibreHardwareMonitorBridge::GetTempe
 
     computer->Accept(visitor);
 
-    int gpuIndex = 0;
-    int tempSensorCount = 0;
-    int invalidTempCount = 0;
-    int missingSensorCount = 0;
+    bool cpuTempAdded = false;
+    bool gpuTempAdded = false;
 
-    // Enhanced debug: log all sensors and their HasValue status
     for each (IHardware ^ hardware in computer->Hardware) {
         hardware->Update();
-        std::string hwName = msclr::interop::marshal_as<std::string>(hardware->Name);
 
-        // Log all sensors for this hardware (for debugging)
-        for each (ISensor ^ sensor in hardware->Sensors) {
-            std::string name = msclr::interop::marshal_as<std::string>(sensor->Name);
-            std::string type = msclr::interop::marshal_as<std::string>(sensor->SensorType.ToString());
-            bool hasValue = sensor->Value.HasValue;
-            double value = hasValue ? sensor->Value.GetValueOrDefault() : -9999.0;
-            std::string identifier = msclr::interop::marshal_as<std::string>(sensor->Identifier->ToString());
-            Logger::Info("[调试] 传感器: " + name + ", 类型: " + type + ", HasValue: " + (hasValue ? "true" : "false") + ", Value: " + std::to_string(value) + ", Identifier: " + identifier);
-        }
-
-        // Collect all temperature sensors for CPU
-        if (hardware->HardwareType == HardwareType::Cpu) {
-            bool foundTempSensor = false;
+        if (hardware->HardwareType == HardwareType::Cpu && !cpuTempAdded) {
             for each (ISensor ^ sensor in hardware->Sensors) {
                 if (sensor->SensorType == SensorType::Temperature) {
-                    foundTempSensor = true;
+                    double value = sensor->Value.HasValue ? sensor->Value.GetValueOrDefault() : std::numeric_limits<double>::quiet_NaN();
+                    temps.push_back({ "CPU温度", value });
+                    cpuTempAdded = true;
+                    break; // 只取第一个有效CPU温度
+                }
+            }
+        }
+        else if ((hardware->HardwareType == HardwareType::GpuNvidia ||
+                  hardware->HardwareType == HardwareType::GpuAmd ||
+                  hardware->HardwareType == HardwareType::GpuIntel) && !gpuTempAdded) {
+            for each (ISensor ^ sensor in hardware->Sensors) {
+                if (sensor->SensorType == SensorType::Temperature) {
                     std::string name = msclr::interop::marshal_as<std::string>(sensor->Name);
-                    double value = sensor->Value.HasValue ? sensor->Value.GetValueOrDefault() : -9999.0;
-                    temps.push_back({ name, value });
-                    tempSensorCount++;
-                    if (!sensor->Value.HasValue) invalidTempCount++;
-                    if (sensor->Value.HasValue) {
-                        Logger::Info("有效温度: " + name + " = " + std::to_string(value));
-                    } else {
-                        Logger::Warning("[无效] 温度传感器: " + name + ", Value: -9999.0 (HasValue == false)");
+                    double value = sensor->Value.HasValue ? sensor->Value.GetValueOrDefault() : std::numeric_limits<double>::quiet_NaN();
+                    // 只取"GPU Core"或"GPU温度"等主温度
+                    if (name == "GPU Core" || name == "GPU温度") {
+                        temps.push_back({ "GPU温度", value });
+                        gpuTempAdded = true;
+                        break; // 只取第一个有效GPU温度
                     }
                 }
             }
-            if (!foundTempSensor) {
-                Logger::Warning("[诊断] 未发现CPU温度传感器: " + hwName);
-                missingSensorCount++;
-            }
-        }
-        // Collect all temperature sensors for GPU
-        else if (hardware->HardwareType == HardwareType::GpuNvidia ||
-            hardware->HardwareType == HardwareType::GpuAmd ||
-            hardware->HardwareType == HardwareType::GpuIntel) {
-            bool foundTempSensor = false;
-            for each (ISensor ^ sensor in hardware->Sensors) {
-                if (sensor->SensorType == SensorType::Temperature) {
-                    foundTempSensor = true;
-                    std::string name = msclr::interop::marshal_as<std::string>(sensor->Name);
-                    double value = sensor->Value.HasValue ? sensor->Value.GetValueOrDefault() : -9999.0;
-                    std::string gpuLabel = "GPU#" + std::to_string(gpuIndex) + "/" + name;
-                    temps.push_back({ gpuLabel, value });
-                    tempSensorCount++;
-                    if (!sensor->Value.HasValue) invalidTempCount++;
-                    if (sensor->Value.HasValue) {
-                        Logger::Info("有效温度: " + gpuLabel + " = " + std::to_string(value));
-                    } else {
-                        Logger::Warning("[无效] 温度传感器: " + gpuLabel + ", Value: -9999.0 (HasValue == false)");
-                    }
-                }
-            }
-            if (!foundTempSensor) {
-                Logger::Warning("[诊断] 未发现GPU温度传感器: " + hwName);
-                missingSensorCount++;
-            }
-            gpuIndex++;
         }
     }
-
-    Logger::Info("采集到温度传感器数量: " + std::to_string(temps.size()));
-
-    // If all temperature sensors are invalid, log a warning for easier debugging
-    if (tempSensorCount > 0 && invalidTempCount == tempSensorCount) {
-        Logger::Warning("[诊断] 所有温度传感器均无效 (HasValue == false)。可能原因：驱动/权限/初始化问题。建议检查：1) 以管理员权限运行；2) 检查目标平台和依赖库；3) 传感器是否被其他软件占用。");
-    }
-    // If no temperature sensors found at all
-    if (tempSensorCount == 0) {
-        Logger::Warning("[诊断] 未发现任何温度传感器。请检查硬件支持、驱动、依赖库和权限。");
-    }
-
     return temps;
 }
 
-// 递归遍历所有hardware和其subHardware，详细输出所有Power类型传感器信息
+// 移除LogAllPowerSensors的详细Logger::Info输出，仅保留maxValue逻辑
 void LogAllPowerSensors(IHardware^ hardware, std::string prefix, double& maxValue, std::string& maxName) {
     hardware->Update();
-    std::string hardwareType = msclr::interop::marshal_as<std::string>(hardware->HardwareType.ToString());
-    std::string hardwareName = msclr::interop::marshal_as<std::string>(hardware->Name);
     for each (ISensor ^ sensor in hardware->Sensors) {
-        std::string sensorTypeStr = msclr::interop::marshal_as<std::string>(sensor->SensorType.ToString());
         if (sensor->SensorType == SensorType::Power) {
-            std::string name = prefix + msclr::interop::marshal_as<std::string>(sensor->Name);
             double value = sensor->Value.HasValue ? sensor->Value.GetValueOrDefault() : -1.0;
             bool hasValue = sensor->Value.HasValue;
-            std::string identifier = msclr::interop::marshal_as<std::string>(sensor->Identifier->ToString());
-            int index = sensor->Index;
-            double min = sensor->Min.HasValue ? sensor->Min.Value : 0.0;
-            double max = sensor->Max.HasValue ? sensor->Max.Value : 0.0;
-            Logger::Info("[调试] Power传感器: " + name +
-                         ", SensorType: " + sensorTypeStr +
-                         ", 所属硬件类型: " + hardwareType +
-                         ", 所属硬件名称: " + hardwareName +
-                         ", Identifier: " + identifier +
-                         ", Index: " + std::to_string(index) +
-                         ", 当前值: " + std::to_string(value) +
-                         ", HasValue: " + (hasValue ? "true" : "false") +
-                         ", Min: " + std::to_string(min) +
-                         ", Max: " + std::to_string(max));
+            std::string name = prefix + msclr::interop::marshal_as<std::string>(sensor->Name);
             if (hasValue && value > maxValue) {
                 maxValue = value;
                 maxName = name;
@@ -205,47 +171,12 @@ void LogAllPowerSensors(IHardware^ hardware, std::string prefix, double& maxValu
     }
 }
 
-// 新增：递归输出所有温度和功率传感器信息（辅助调试）
-void LogAllSensors(IHardware^ hardware, std::string prefix = "") {
+// 移除LogAllSensors的所有Logger::Info输出
+void LogAllSensors(IHardware^ hardware, std::string prefix) {
     hardware->Update();
-    std::string hardwareType = msclr::interop::marshal_as<std::string>(hardware->HardwareType.ToString());
-    std::string hardwareName = msclr::interop::marshal_as<std::string>(hardware->Name);
-    for each (ISensor ^ sensor in hardware->Sensors) {
-        std::string name = prefix + msclr::interop::marshal_as<std::string>(sensor->Name);
-        std::string type = msclr::interop::marshal_as<std::string>(sensor->SensorType.ToString());
-        double value = sensor->Value.HasValue ? sensor->Value.GetValueOrDefault() : -1.0;
-        bool hasValue = sensor->Value.HasValue;
-        std::string identifier = msclr::interop::marshal_as<std::string>(sensor->Identifier->ToString());
-        int index = sensor->Index;
-        double min = sensor->Min.HasValue ? sensor->Min.Value : 0.0;
-        double max = sensor->Max.HasValue ? sensor->Max.Value : 0.0;
-        Logger::Info("[调试] 传感器: " + name +
-                     ", 类型: " + type +
-                     ", 所属硬件类型: " + hardwareType +
-                     ", 所属硬件名称: " + hardwareName +
-                     ", Identifier: " + identifier +
-                     ", Index: " + std::to_string(index) +
-                     ", 当前值: " + std::to_string(value) +
-                     ", HasValue: " + (hasValue ? "true" : "false") +
-                     ", Min: " + std::to_string(min) +
-                     ", Max: " + std::to_string(max));
-    }
     for each (IHardware ^ sub in hardware->SubHardware) {
         LogAllSensors(sub, prefix + msclr::interop::marshal_as<std::string>(sub->Name) + "/");
     }
-}
-
-// 新增：诊断函数实现，递归输出所有硬件和传感器详细信息
-void LibreHardwareMonitorBridge::DiagnoseAllHardwareAndSensors() {
-    if (!initialized) {
-        Logger::Warning(L"[诊断] DiagnoseAllHardwareAndSensors: 尚未初始化，无法诊断。");
-        return;
-    }
-    Logger::Info(L"[诊断] 开始输出所有硬件和传感器详细信息：");
-    for each (IHardware ^ hardware in computer->Hardware) {
-        LogAllSensors(hardware, "[诊断]/");
-    }
-    Logger::Info(L"[诊断] 结束输出所有硬件和传感器详细信息。");
 }
 
 double LibreHardwareMonitorBridge::GetCpuPower() {
@@ -257,41 +188,41 @@ double LibreHardwareMonitorBridge::GetCpuPower() {
     bool anyPowerSensor = false;
     for each (IHardware ^ hardware in computer->Hardware) {
         if (hardware->HardwareType == HardwareType::Cpu) {
-            // 输出所有传感器信息，辅助调试
-            LogAllSensors(hardware, "[CPU]/");
             LogAllPowerSensors(hardware, "", maxCpuPower, maxName);
             anyPowerSensor = true;
         }
     }
-    if (!anyPowerSensor) {
-        Logger::Warning("[调试] 未发现任何CPU Power类型传感器");
-    }
-    Logger::Info("[调试] GetCpuPower 返回值: " + std::to_string(maxCpuPower));
     return maxCpuPower;
 }
 
 double LibreHardwareMonitorBridge::GetGpuPower() {
-    if (!initialized) return 0.0;
+    // 优先NVML
+    double nvmlPower = GpuInfo::GetGpuPowerNVML();
+    if (nvmlPower > 0 && !std::isnan(nvmlPower)) {
+        Logger::Info("[采集][NVML] GPU Power: " + std::to_string(nvmlPower) + " W");
+        return nvmlPower;
+    }
+
+    // NVML无效，尝试LibreHardwareMonitor
+    if (!initialized) return std::numeric_limits<double>::quiet_NaN();
     computer->Accept(visitor);
 
     double maxGpuPower = 0.0;
     std::string maxName;
-    bool anyPowerSensor = false;
     for each (IHardware ^ hardware in computer->Hardware) {
         if (hardware->HardwareType == HardwareType::GpuNvidia ||
             hardware->HardwareType == HardwareType::GpuAmd ||
             hardware->HardwareType == HardwareType::GpuIntel) {
-            // 输出所有传感器信息，辅助调试
-            LogAllSensors(hardware, "[GPU]/");
             LogAllPowerSensors(hardware, "", maxGpuPower, maxName);
-            anyPowerSensor = true;
         }
     }
-    if (!anyPowerSensor) {
-        Logger::Warning("[调试] 未发现任何GPU Power类型传感器");
+    if (maxGpuPower > 0) {
+        Logger::Info("[采集][Libre] GPU Power: " + std::to_string(maxGpuPower) + " W");
+        return maxGpuPower;
     }
-    Logger::Info("[调试] GetGpuPower 返回值: " + std::to_string(maxGpuPower));
-    return maxGpuPower;
+
+    // 都没有
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
 double LibreHardwareMonitorBridge::GetTotalPower() {
@@ -302,15 +233,8 @@ double LibreHardwareMonitorBridge::GetTotalPower() {
     std::string maxName;
     bool anyPowerSensor = false;
     for each (IHardware ^ hardware in computer->Hardware) {
-        // 输出所有传感器信息，辅助调试
-        LogAllSensors(hardware, "[ALL]/");
         LogAllPowerSensors(hardware, "", maxTotalPower, maxName);
         anyPowerSensor = true;
     }
-    if (!anyPowerSensor) {
-        Logger::Warning("[调试] 未发现任何总功率 Power类型传感器");
-    }
-    Logger::Info("[调试] GetTotalPower 返回值: " + std::to_string(maxTotalPower));
     return maxTotalPower;
 }
-

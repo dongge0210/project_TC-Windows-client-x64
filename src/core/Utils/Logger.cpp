@@ -8,6 +8,8 @@
 #include <io.h>
 #include <fcntl.h>
 #include <windows.h> // For MultiByteToWideChar
+#include <algorithm>
+#include <cctype>
 
 std::ofstream Logger::logFile;
 std::mutex Logger::logMutex;
@@ -86,6 +88,17 @@ static std::string WideStringToUtf8(const std::wstring& wstr) {
     return strTo;
 }
 
+// 新增：日志字符串清理，去除前后空白和不可见字符
+static std::string CleanLogString(const std::string& input) {
+    std::string s = input;
+    // 去除前后空白
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
+    // 替换不可见字符为普通空格
+    std::replace_if(s.begin(), s.end(), [](unsigned char ch) { return (ch == '\t' || ch == '\r' || ch == '\n' || ch == '\xa0'); }, ' ');
+    return s;
+}
+
 void Logger::WriteLog(const std::string& level, const std::string& message) {
     std::lock_guard<std::mutex> lock(logMutex);
 
@@ -142,7 +155,8 @@ void Logger::WriteLog(const std::string& level, const std::string& message) {
 }
 
 void Logger::Info(const std::string& message) {
-    WriteLog("INFO", message);
+    std::string cleanMsg = CleanLogString(message);
+    WriteLog("INFO", cleanMsg);
 }
 
 void Logger::Error(const std::string& message) {

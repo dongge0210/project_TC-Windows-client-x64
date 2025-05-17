@@ -115,6 +115,27 @@ void QtWidgetsTCmonitor::setupUI()
         powerLayout->addWidget(infoLabels["totalPower"]);
         mainLayout->addLayout(powerLayout);
     }
+    if (!infoLabels.contains("motherboardName")) {
+        infoLabels["motherboardName"] = new QLabel(this);
+        QHBoxLayout* mbLayout = new QHBoxLayout();
+        mbLayout->addWidget(new QLabel(tr("主板名称:"), this));
+        mbLayout->addWidget(infoLabels["motherboardName"]);
+        mainLayout->addLayout(mbLayout);
+    }
+    if (!infoLabels.contains("deviceName")) {
+        infoLabels["deviceName"] = new QLabel(this);
+        QHBoxLayout* devLayout = new QHBoxLayout();
+        devLayout->addWidget(new QLabel(tr("设备名称:"), this));
+        devLayout->addWidget(infoLabels["deviceName"]);
+        mainLayout->addLayout(devLayout);
+    }
+    if (!infoLabels.contains("osVersion")) {
+        infoLabels["osVersion"] = new QLabel(this);
+        QHBoxLayout* osLayout = new QHBoxLayout();
+        osLayout->addWidget(new QLabel(tr("系统版本:"), this));
+        osLayout->addWidget(infoLabels["osVersion"]);
+        mainLayout->addLayout(osLayout);
+    }
 }
 
 void QtWidgetsTCmonitor::createCpuSection()
@@ -122,7 +143,6 @@ void QtWidgetsTCmonitor::createCpuSection()
     cpuGroupBox = new QGroupBox(tr("处理器信息"), this);
     QGridLayout* layout = new QGridLayout(cpuGroupBox);
 
-    // Add labels
     int row = 0;
     layout->addWidget(new QLabel(tr("名称:"), this), row, 0);
     infoLabels["cpuName"] = new QLabel(this);
@@ -148,9 +168,9 @@ void QtWidgetsTCmonitor::createCpuSection()
     infoLabels["cpuUsage"] = new QLabel(this);
     layout->addWidget(infoLabels["cpuUsage"], row++, 1);
 
-    layout->addWidget(new QLabel(tr("CPU功率:"), this), row, 0); // 新增
-    infoLabels["cpuPower"] = new QLabel(this);                  // 新增
-    layout->addWidget(infoLabels["cpuPower"], row++, 1);        // 新增
+    layout->addWidget(new QLabel(tr("CPU功率:"), this), row, 0);
+    infoLabels["cpuPower"] = new QLabel(this);
+    layout->addWidget(infoLabels["cpuPower"], row++, 1);
 
     layout->addWidget(new QLabel(tr("超线程:"), this), row, 0);
     infoLabels["hyperThreading"] = new QLabel(this);
@@ -179,6 +199,10 @@ void QtWidgetsTCmonitor::createMemorySection()
     infoLabels["availableMemory"] = new QLabel(this);
     layout->addWidget(infoLabels["availableMemory"], row++, 1);
 
+    layout->addWidget(new QLabel(tr("内存频率:"), this), row, 0); // 新增
+    infoLabels["memoryFrequency"] = new QLabel(this);            // 新增
+    layout->addWidget(infoLabels["memoryFrequency"], row++, 1);  // 新增
+
     layout->addWidget(new QLabel(tr("内存使用率:"), this), row, 0);
     infoLabels["memoryUsage"] = new QLabel(this);
     layout->addWidget(infoLabels["memoryUsage"], row++, 1);
@@ -190,25 +214,35 @@ void QtWidgetsTCmonitor::createGpuSection()
     QGridLayout* layout = new QGridLayout(gpuGroupBox);
 
     int row = 0;
+
+    // 添加 GPU 选择下拉框 - 在第一行
+    layout->addWidget(new QLabel(tr("选择显卡:"), this), row, 0);
+    gpuSelector = new QComboBox(this);
+    // 添加选择改变时的槽函数
+    connect(gpuSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this, &QtWidgetsTCmonitor::onGpuSelectionChanged);
+    layout->addWidget(gpuSelector, row++, 1);
+
+    // 原有的 GPU 信息布局继续
     layout->addWidget(new QLabel(tr("名称:"), this), row, 0);
     infoLabels["gpuName"] = new QLabel(this);
     layout->addWidget(infoLabels["gpuName"], row++, 1);
 
-    layout->addWidget(new QLabel(tr("品牌:"), this), row, 0);
-    infoLabels["gpuBrand"] = new QLabel(this);
-    layout->addWidget(infoLabels["gpuBrand"], row++, 1);
+    layout->addWidget(new QLabel(tr("专用显存:"), this), row, 0); // 修改标签
+    infoLabels["gpuVram"] = new QLabel(this);                   // 修改变量名
+    layout->addWidget(infoLabels["gpuVram"], row++, 1);         // 修改变量名
 
-    layout->addWidget(new QLabel(tr("显存:"), this), row, 0);
-    infoLabels["gpuMemory"] = new QLabel(this);
-    layout->addWidget(infoLabels["gpuMemory"], row++, 1);
+    layout->addWidget(new QLabel(tr("共享内存:"), this), row, 0);  // 新增
+    infoLabels["gpuSharedMem"] = new QLabel(this);              // 新增
+    layout->addWidget(infoLabels["gpuSharedMem"], row++, 1);    // 新增
 
     layout->addWidget(new QLabel(tr("核心频率:"), this), row, 0);
     infoLabels["gpuCoreFreq"] = new QLabel(this);
     layout->addWidget(infoLabels["gpuCoreFreq"], row++, 1);
 
-    layout->addWidget(new QLabel(tr("GPU功率:"), this), row, 0); // 新增
-    infoLabels["gpuPower"] = new QLabel(this);                  // 新增
-    layout->addWidget(infoLabels["gpuPower"], row++, 1);        // 新增
+    layout->addWidget(new QLabel(tr("GPU功率:"), this), row, 0);
+    infoLabels["gpuPower"] = new QLabel(this);
+    layout->addWidget(infoLabels["gpuPower"], row++, 1);
 }
 
 void QtWidgetsTCmonitor::createTemperatureSection()
@@ -366,15 +400,32 @@ void QtWidgetsTCmonitor::updateSystemInfo(const SystemInfo& sysInfo)
     infoLabels["totalMemory"]->setText(formatSize(sysInfo.totalMemory));
     infoLabels["usedMemory"]->setText(formatSize(sysInfo.usedMemory));
     infoLabels["availableMemory"]->setText(formatSize(sysInfo.availableMemory));
+    infoLabels["memoryFrequency"]->setText(QString("%1 MHz").arg(sysInfo.memoryFrequency)); // 新增
 
     double memoryUsagePercent = static_cast<double>(sysInfo.usedMemory) / sysInfo.totalMemory * 100.0;
     infoLabels["memoryUsage"]->setText(formatPercentage(memoryUsagePercent));
 
     // Update GPU info
-    infoLabels["gpuName"]->setText(QString::fromStdString(sysInfo.gpuName));
-    infoLabels["gpuBrand"]->setText(QString::fromStdString(sysInfo.gpuBrand));
-    infoLabels["gpuMemory"]->setText(formatSize(sysInfo.gpuMemory));
-    infoLabels["gpuCoreFreq"]->setText(formatFrequency(sysInfo.gpuCoreFreq));
+    if (!sysInfo.gpus.empty()) {
+        // 检查是否需要更新 GPU 选择器
+        static int lastGpuCount = 0;
+        if (sysInfo.gpus.size() != lastGpuCount) {
+            updateGpuSelector(sysInfo.gpus.size());
+            lastGpuCount = sysInfo.gpus.size();
+        }
+
+        // 确保索引在有效范围内
+        if (currentGpuIndex >= 0 && currentGpuIndex < sysInfo.gpus.size()) {
+            infoLabels["gpuName"]->setText(QString::fromStdString(sysInfo.gpus[currentGpuIndex].name));
+            infoLabels["gpuVram"]->setText(formatSize(sysInfo.gpus[currentGpuIndex].vram));
+            infoLabels["gpuCoreFreq"]->setText(formatFrequency(sysInfo.gpus[currentGpuIndex].coreClock));
+        }
+    }
+    else {
+        infoLabels["gpuName"]->setText(tr("无数据"));
+        infoLabels["gpuVram"]->setText(tr("无数据"));
+        infoLabels["gpuCoreFreq"]->setText(tr("无数据"));
+    }
 
     // Convert temperature data to float for updateTemperatureData
     std::vector<std::pair<std::string, float>> tempFloats;
@@ -424,7 +475,7 @@ void QtWidgetsTCmonitor::updateSystemInfo(const SystemInfo& sysInfo)
 
     // Add disk info
     for (const auto& disk : sysInfo.disks) {
-        QString diskLabel = QString("%1: %2").arg(disk.letter).arg(tr("驱动器"));
+        QString diskLabel = QString("%1: %2").arg(QChar(disk.letter)).arg(tr("驱动器"));
         if (!disk.label.empty()) {
             diskLabel += QString(" (%1)").arg(QString::fromStdString(disk.label));
         }
@@ -535,6 +586,99 @@ QString QtWidgetsTCmonitor::formatFrequency(double value)
     }
 }
 
+void QtWidgetsTCmonitor::updateGpuSelector(int gpuCount)
+{
+    if (!gpuSelector || gpuCount <= 0) return;
+
+    // 暂时断开信号连接，防止触发不必要的更新
+    gpuSelector->blockSignals(true);
+
+    // 保存当前选择的项目名称，用于尝试恢复选择
+    QString currentSelection;
+    if (gpuSelector->currentIndex() >= 0) {
+        currentSelection = gpuSelector->currentText();
+    }
+
+    // 清除现有项目
+    gpuSelector->clear();
+    gpuIndices.clear();
+
+    // 从共享内存缓冲区获取 GPU 数据
+    SharedMemoryBlock* pBuffer = SharedMemoryManager::GetBuffer();
+    if (!pBuffer) return;
+
+    // 构建 GPU 索引数组，按计算能力排序
+    struct GpuInfo {
+        int index;
+        std::wstring name;
+        int computeCapability;  // 计算能力 = major*100 + minor
+    };
+
+    std::vector<GpuInfo> gpuInfos;
+    for (int i = 0; i < gpuCount; ++i) {
+        GpuInfo info;
+        info.index = i;
+        info.name = std::wstring(pBuffer->gpus[i].name);
+
+        // 提取计算能力，这里假设该信息位于 name 字符串中
+        // 如 "NVIDIA GeForce RTX 4060 (Compute 8.9)"
+        // 简单实现，实际应从 GpuInfo 类获取计算能力
+        int computeCapability = 0;
+
+        // 对于 NVIDIA 显卡，我们尝试从名称中提取计算能力
+        // 优先级：NVIDIA > AMD > Intel
+        if (info.name.find(L"NVIDIA") != std::wstring::npos) {
+            computeCapability = 1000;  // 基础分高
+        }
+        else if (info.name.find(L"AMD") != std::wstring::npos ||
+            info.name.find(L"Radeon") != std::wstring::npos) {
+            computeCapability = 500;
+        }
+        else if (info.name.find(L"Intel") != std::wstring::npos) {
+            computeCapability = 100;
+        }
+
+        // 额外考虑： RTX > GTX > 其他
+        if (info.name.find(L"RTX") != std::wstring::npos) {
+            computeCapability += 300;
+        }
+        else if (info.name.find(L"GTX") != std::wstring::npos) {
+            computeCapability += 200;
+        }
+
+        info.computeCapability = computeCapability;
+        gpuInfos.push_back(info);
+    }
+
+    // 按计算能力排序，最强大的显卡排在最前面
+    std::sort(gpuInfos.begin(), gpuInfos.end(),
+        [](const GpuInfo& a, const GpuInfo& b) {
+            return a.computeCapability > b.computeCapability;
+        });
+
+    // 将排序后的 GPU 添加到选择器中
+    for (const auto& info : gpuInfos) {
+        QString displayName = WinUtils::WstringToQString(info.name);
+        gpuSelector->addItem(displayName);
+        gpuIndices.push_back(info.index);  // 保存索引映射
+    }
+
+    // 尝试恢复之前的选择，如果不存在则选择第一个（最强大的）
+    int newIndex = 0;  // 默认选择第一个
+    if (!currentSelection.isEmpty()) {
+        int foundIndex = gpuSelector->findText(currentSelection);
+        if (foundIndex >= 0) {
+            newIndex = foundIndex;
+        }
+    }
+
+    gpuSelector->setCurrentIndex(newIndex);
+    currentGpuIndex = gpuIndices[newIndex];
+
+    // 恢复信号连接
+    gpuSelector->blockSignals(false);
+}
+
 // Ensure data is read from shared memory and updates the UI
 void QtWidgetsTCmonitor::updateFromSharedMemory() {
     SharedMemoryBlock* pBuffer = SharedMemoryManager::GetBuffer();
@@ -579,23 +723,100 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
         infoLabels["totalMemory"]->setText(formatSize(pBuffer->totalMemory));
         infoLabels["usedMemory"]->setText(formatSize(pBuffer->usedMemory));
         infoLabels["availableMemory"]->setText(formatSize(pBuffer->availableMemory));
+        infoLabels["memoryFrequency"]->setText(QString("%1 MHz").arg(pBuffer->memoryFrequency)); // 新增
         
         double memoryUsagePercent = static_cast<double>(pBuffer->usedMemory) / pBuffer->totalMemory * 100.0;
         infoLabels["memoryUsage"]->setText(formatPercentage(memoryUsagePercent));
 
-        // Update GPU information
+        // 在 updateFromSharedMemory 方法中
+        // GPU 信息更新部分
         if (pBuffer->gpuCount > 0) {
-            if (infoLabels.contains("gpuName") && infoLabels["gpuName"] &&
-                isWCharArrayNullTerminated(pBuffer->gpus[0].name, 128)) {
-                infoLabels["gpuName"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->gpus[0].name)));
+            // 检查是否需要更新 GPU 选择器
+            static int lastGpuCount = 0;
+            if (pBuffer->gpuCount != lastGpuCount) {
+                updateGpuSelector(pBuffer->gpuCount);
+                lastGpuCount = pBuffer->gpuCount;
             }
-            if (infoLabels.contains("gpuBrand") && infoLabels["gpuBrand"] &&
-                isWCharArrayNullTerminated(pBuffer->gpus[0].brand, 128)) {
-                infoLabels["gpuBrand"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->gpus[0].brand)));
+
+            // 确保索引在有效范围内
+            if (currentGpuIndex >= 0 && currentGpuIndex < pBuffer->gpuCount) {
+                // 名称
+                if (infoLabels.contains("gpuName") && infoLabels["gpuName"] &&
+                    isWCharArrayNullTerminated(pBuffer->gpus[currentGpuIndex].name, 128)) {
+                    infoLabels["gpuName"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->gpus[currentGpuIndex].name)));
+                }
+
+                // 专用显存 (VRAM)
+                if (infoLabels.contains("gpuVram") && infoLabels["gpuVram"]) {
+                    if (pBuffer->gpus[currentGpuIndex].vram > 0) {
+                        infoLabels["gpuVram"]->setText(formatSize(pBuffer->gpus[currentGpuIndex].vram));
+                    }
+                    else {
+                        infoLabels["gpuVram"]->setText(tr("未知"));
+                    }
+                }
+
+                // 共享内存
+                if (infoLabels.contains("gpuSharedMem") && infoLabels["gpuSharedMem"]) {
+                    if (pBuffer->gpus[currentGpuIndex].sharedMemory > 0) {
+                        infoLabels["gpuSharedMem"]->setText(formatSize(pBuffer->gpus[currentGpuIndex].sharedMemory));
+                    }
+                    else {
+                        infoLabels["gpuSharedMem"]->setText(tr("无"));
+                    }
+                }
+
+                // 核心频率
+                if (infoLabels.contains("gpuCoreFreq") && infoLabels["gpuCoreFreq"]) {
+                    infoLabels["gpuCoreFreq"]->setText(formatFrequency(pBuffer->gpus[currentGpuIndex].coreClock));
+                }
             }
-            infoLabels["gpuMemory"]->setText(formatSize(pBuffer->gpus[0].memory));
-            infoLabels["gpuCoreFreq"]->setText(formatFrequency(pBuffer->gpus[0].coreClock));
+
+            if (infoLabels.contains("gpuPower") && infoLabels["gpuPower"]) {
+                float totalGpuPower = 0.0f;
+                int validGpuCount = 0;
+                for (int i = 0; i < pBuffer->gpuCount; ++i) {
+                    float power = pBuffer->gpus[i].power;
+                    if (!std::isnan(power) && power > 0) {
+                        totalGpuPower += power;
+                        ++validGpuCount;
+                    }
+                }
+                if (validGpuCount == 0) {
+                    infoLabels["gpuPower"]->setText(tr("未支持"));
+                }
+                else if (validGpuCount == 1) {
+                    infoLabels["gpuPower"]->setText(QString::number(totalGpuPower, 'f', 1) + " W");
+                }
+                else {
+                    infoLabels["gpuPower"]->setText(
+                        QString("%1 W (%2)").arg(totalGpuPower, 0, 'f', 1).arg(tr("多卡合计，可能不准确"))
+                    );
+                }
+            }
         }
+        else {
+            // GPU信息不可用时的处理
+            if (infoLabels.contains("gpuName") && infoLabels["gpuName"]) {
+                infoLabels["gpuName"]->setText(tr("无数据"));
+            }
+            if (infoLabels.contains("gpuBrand") && infoLabels["gpuBrand"]) {
+                infoLabels["gpuBrand"]->setText(tr("无数据"));
+            }
+            if (infoLabels.contains("gpuVram") && infoLabels["gpuVram"]) {
+                infoLabels["gpuVram"]->setText(tr("无数据"));
+            }
+            if (infoLabels.contains("gpuSharedMem") && infoLabels["gpuSharedMem"]) {
+                infoLabels["gpuSharedMem"]->setText(tr("无数据"));
+            }
+            if (infoLabels.contains("gpuCoreFreq") && infoLabels["gpuCoreFreq"]) {
+                infoLabels["gpuCoreFreq"]->setText(tr("无数据"));
+            }
+            if (infoLabels.contains("gpuPower") && infoLabels["gpuPower"]) {
+                infoLabels["gpuPower"]->setText(tr("未支持"));
+            }
+        }
+
 
         // Update temperature data and charts
         float cpuTemp = 0;
@@ -605,28 +826,32 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
 
         // Parse temperature sensors to find CPU and GPU temperatures
         for (int i = 0; i < pBuffer->tempCount; i++) {
-            // Defensive: Check sensorName pointer and null-termination
-            if (!isWCharArrayNullTerminated(pBuffer->temperatures[i].sensorName, 128))
-                continue;
-            std::wstring wideSensorName(pBuffer->temperatures[i].sensorName);
-            std::string sensorName = WinUtils::WstringToString(wideSensorName);
+            // 直接用wchar_t[32]，并调试输出
+            std::wstring ws(pBuffer->temperatures[i].sensorName, 32);
+            // 去除多余尾部0
+            ws = ws.c_str();
+            qDebug() << "TempSensorName:" << WinUtils::WstringToQString(ws)
+                     << "Value:" << pBuffer->temperatures[i].temperature;
 
-            double temperature = pBuffer->temperatures[i].temperature;
-
-            if (sensorName.find("CPU Package") != std::string::npos || 
-                sensorName.find("CPU Temperature") != std::string::npos || 
-                sensorName.find("CPU") != std::string::npos) {
-                cpuTemp = static_cast<float>(temperature);
+            // 判断名称是否为"CPU温度"或"GPU温度"
+            if (ws == L"CPU温度") {
+                float value = pBuffer->temperatures[i].temperature;
+                if (std::isnan(value)) {
+                    infoLabels["cpuTemp"]->setText(tr("无数据"));
+                } else {
+                    infoLabels["cpuTemp"]->setText(formatTemperature(value));
+                }
+                cpuTemp = value;
                 cpuFound = true;
-                if (infoLabels.contains("cpuTemp") && infoLabels["cpuTemp"])
-                    infoLabels["cpuTemp"]->setText(formatTemperature(cpuTemp));
-            }
-            else if (sensorName.find("GPU Core") != std::string::npos ||
-                     sensorName.find("GPU") != std::string::npos) {
-                gpuTemp = static_cast<float>(temperature);
+            } else if (ws == L"GPU温度") {
+                float value = pBuffer->temperatures[i].temperature;
+                if (std::isnan(value)) {
+                    infoLabels["gpuTemp"]->setText(tr("无数据"));
+                } else {
+                    infoLabels["gpuTemp"]->setText(formatTemperature(value));
+                }
+                gpuTemp = value;
                 gpuFound = true;
-                if (infoLabels.contains("gpuTemp") && infoLabels["gpuTemp"])
-                    infoLabels["gpuTemp"]->setText(formatTemperature(gpuTemp));
             }
         }
 
@@ -639,31 +864,62 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
         }
 
         // Update temperature history for charts
-        if (cpuFound) {
+        if (cpuFound && !std::isnan(cpuTemp)) {
             cpuTempHistory.push(cpuTemp);
             if (cpuTempHistory.size() > MAX_DATA_POINTS) {
                 cpuTempHistory.pop();
             }
         }
 
-        if (gpuFound) {
+        if (gpuFound && !std::isnan(gpuTemp)) {
             gpuTempHistory.push(gpuTemp);
             if (gpuTempHistory.size() > MAX_DATA_POINTS) {
                 gpuTempHistory.pop();
             }
         }
 
-        // CPU功率
+        // CPU功率显示
         if (infoLabels.contains("cpuPower") && infoLabels["cpuPower"]) {
-            infoLabels["cpuPower"]->setText(QString("%1 W").arg(pBuffer->cpuPower, 0, 'f', 2));
+            float cpuPower = pBuffer->cpuPower;
+            if (std::isnan(cpuPower) || cpuPower <= 0) {
+                infoLabels["cpuPower"]->setText(tr("-- W"));
+            } else {
+                infoLabels["cpuPower"]->setText(QString::number(cpuPower, 'f', 1) + " W");
+            }
         }
-        // GPU功率
+
+        // GPU功率显示
         if (infoLabels.contains("gpuPower") && infoLabels["gpuPower"]) {
-            infoLabels["gpuPower"]->setText(QString("%1 W").arg(pBuffer->gpuPower, 0, 'f', 2));
+            float gpuPower = pBuffer->gpuPower;
+            if (std::isnan(gpuPower) || gpuPower <= 0) {
+                infoLabels["gpuPower"]->setText(tr("未支持"));
+            } else {
+                infoLabels["gpuPower"]->setText(QString::number(gpuPower, 'f', 1) + " W");
+            }
         }
+
         // 整机功率
         if (infoLabels.contains("totalPower") && infoLabels["totalPower"]) {
             infoLabels["totalPower"]->setText(QString("%1 W").arg(pBuffer->totalPower, 0, 'f', 2));
+        }
+
+        if (infoLabels.contains("motherboardName") && infoLabels["motherboardName"]) {
+            if (isWCharArrayNullTerminated(pBuffer->motherboardName, 128))
+                infoLabels["motherboardName"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->motherboardName)));
+            else
+                infoLabels["motherboardName"]->setText(tr("无数据"));
+        }
+        if (infoLabels.contains("deviceName") && infoLabels["deviceName"]) {
+            if (isWCharArrayNullTerminated(pBuffer->deviceName, 128))
+                infoLabels["deviceName"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->deviceName)));
+            else
+                infoLabels["deviceName"]->setText(tr("无数据"));
+        }
+        if (infoLabels.contains("osVersion") && infoLabels["osVersion"]) {
+            if (isWCharArrayNullTerminated(pBuffer->osDetailedVersion, 256))
+                infoLabels["osVersion"]->setText(WinUtils::WstringToQString(std::wstring(pBuffer->osDetailedVersion)));
+            else
+                infoLabels["osVersion"]->setText(tr("无数据"));
         }
 
         // Update disk information
@@ -731,7 +987,7 @@ void QtWidgetsTCmonitor::updateDiskInfo(SharedMemoryBlock* pBuffer) {
     // Add disk info for each disk in shared memory
     for (int i = 0; i < pBuffer->diskCount; i++) {
         auto& disk = pBuffer->disks[i];
-        QString diskLabel = QString("%1: %2").arg(disk.letter).arg(tr("驱动器"));
+        QString diskLabel = QString("%1: %2").arg(QChar(disk.letter)).arg(tr("驱动器"));
         
         QString label = isWCharArrayNullTerminated(disk.label, 128)
             ? WinUtils::WstringToQString(std::wstring(disk.label))
@@ -794,6 +1050,14 @@ void QtWidgetsTCmonitor::UpdateDiskInfoUI() {
         ui->diskTable->setItem(i, 4, new QTableWidgetItem(QString("%1 GB").arg(d.usedSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
         ui->diskTable->setItem(i, 5, new QTableWidgetItem(QString("%1 GB").arg(d.freeSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
     }
+}
+
+void QtWidgetsTCmonitor::onGpuSelectionChanged(int index)
+{
+    if (index < 0 || index >= gpuIndices.size()) return;
+    currentGpuIndex = gpuIndices[index];
+    // 立即刷新GPU相关显示
+    updateFromSharedMemory();
 }
 
 // 在合适的地方调用 UpdateDiskInfoUI()，如定时刷新或窗口初始化时

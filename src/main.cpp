@@ -22,6 +22,11 @@
 #include <io.h>
 #include <fcntl.h>
 #include <msclr/marshal_cppstd.h>
+#include <shellapi.h> // 新增：用于ShellExecute
+
+// 保证没有与comutil.h冲突的全局符号、宏、using等
+// 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
+// 不要定义GpuInfo(const char*)等与comutil.h构造函数冲突的内容
 
 //QT已在本体软件因为COM证实为无效，QTUI将单独UI通过内存共享显示
 
@@ -150,18 +155,68 @@ static void PrintInfoItem(const std::string& label, const std::string& value, in
 // 将SystemInfo转换为共享内存格式
 void ConvertToSharedData(const SystemInfo& sysInfo, SharedMemoryBlock& sharedData) {
     wcscpy_s(sharedData.cpuName, sizeof(sharedData.cpuName) / sizeof(wchar_t), WinUtils::StringToWstring(sysInfo.cpuName).c_str());
+    wcscpy_s(sharedData.motherboardName, sizeof(sharedData.motherboardName) / sizeof(wchar_t),
+        WinUtils::StringToWstring(sysInfo.motherboardName).c_str());
+    wcscpy_s(sharedData.deviceName, sizeof(sharedData.deviceName) / sizeof(wchar_t),
+        WinUtils::StringToWstring(sysInfo.deviceName).c_str());
 
     if (!sysInfo.gpus.empty()) {
         // Use the correct types and properly calculate the size for wcscpy_s
         wcscpy_s(sharedData.gpus[0].name, sizeof(sharedData.gpus[0].name) / sizeof(wchar_t),
-                 WinUtils::StringToWstring(sysInfo.gpuName).c_str());
+                 WinUtils::StringToWstring(sysInfo.gpus[0].name).c_str());
         wcscpy_s(sharedData.gpus[0].brand, sizeof(sharedData.gpus[0].brand) / sizeof(wchar_t),
-                 WinUtils::StringToWstring(sysInfo.gpuBrand).c_str());
+                 WinUtils::StringToWstring(sysInfo.gpus[0].brand).c_str());
+    }
+}
+
+// 检查是否为管理员
+bool IsRunAsAdmin() {
+    BOOL isAdmin = FALSE;
+    PSID adminGroup = NULL;
+    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+    if (AllocateAndInitializeSid(&NtAuthority, 2,
+        SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
+        0, 0, 0, 0, 0, 0, &adminGroup)) {
+        CheckTokenMembership(NULL, adminGroup, &isAdmin);
+        FreeSid(adminGroup);
+    }
+    return isAdmin;
+}
+
+// 请求以管理员权限重新启动自身
+void RelaunchAsAdmin(int argc, char* argv[]) {
+    wchar_t exePath[MAX_PATH];
+    GetModuleFileNameW(NULL, exePath, MAX_PATH);
+
+    // 构造命令行参数
+    std::wstring cmdLine;
+    for (int i = 1; i < argc; ++i) {
+        cmdLine += L" \"";
+        int len = MultiByteToWideChar(CP_UTF8, 0, argv[i], -1, NULL, 0);
+        std::wstring warg(len, 0);
+        MultiByteToWideChar(CP_UTF8, 0, argv[i], -1, &warg[0], len);
+        cmdLine += warg.c_str();
+        cmdLine += L"\"";
+    }
+
+    SHELLEXECUTEINFOW sei = { sizeof(sei) };
+    sei.lpVerb = L"runas";
+    sei.lpFile = exePath;
+    sei.lpParameters = cmdLine.c_str();
+    sei.nShow = SW_SHOWNORMAL;
+    if (!ShellExecuteExW(&sei)) {
+        MessageBoxW(NULL, L"需要管理员权限，请右键以管理员身份运行。", L"权限不足", MB_ICONERROR);
     }
 }
 
 //主要函数
 int main(int argc, char* argv[]) {
+    // ====== 管理员权限检测与自提权 ======
+    if (!IsRunAsAdmin()) {
+        RelaunchAsAdmin(argc, argv);
+        return 0;
+    }
+
     // 在 main 函数开始处添加
     wchar_t runtimePath[MAX_PATH] = L"";
     GetEnvironmentVariableW(L"ProgramFiles", runtimePath, MAX_PATH);
@@ -265,51 +320,39 @@ int main(int argc, char* argv[]) {
             sysInfo.gpuPower = LibreHardwareMonitorBridge::GetGpuPower();
             sysInfo.totalPower = LibreHardwareMonitorBridge::GetTotalPower();
 
-            Logger::Info("CPU功率: " + FormatPower(sysInfo.cpuPower));
-            Logger::Info("GPU功率: " + FormatPower(sysInfo.gpuPower));
-            Logger::Info("整机功率: " + FormatPower(sysInfo.totalPower));
-
             // 内存信息
             MemoryInfo mem;
             sysInfo.totalMemory = mem.GetTotalPhysical();
             sysInfo.usedMemory = mem.GetTotalPhysical() - mem.GetAvailablePhysical();
             sysInfo.availableMemory = mem.GetAvailablePhysical();
+            sysInfo.memoryFrequency = mem.GetMemoryFrequency(); // 新增：内存频率
 
             // GPU信息
             GpuInfo gpuInfo(wmiManager);
-            const auto& gpus = gpuInfo.GetGpuData();
-            if (!gpus.empty()) {
-                const auto& gpu = gpus[0];
-                sysInfo.gpuName = WinUtils::WstringToString(gpu.name);
-                sysInfo.gpuBrand = GetGpuBrand(gpu.name);
-                sysInfo.gpuMemory = gpu.dedicatedMemory;
-                sysInfo.gpuCoreFreq = gpu.coreClock;
+            sysInfo.gpus.clear();
+            for (const auto& g : gpuInfo.GetGpuData()) {
+                GPUData gd;
+                gd.name = WinUtils::WstringToString(g.name);
+                gd.brand = WinUtils::WstringToString(g.brand);
+                gd.vram = g.vram;               // 正确传递专用显存
+                gd.sharedMemory = g.sharedMemory; // 传递共享内存
+                gd.coreClock = g.coreClock;
+                sysInfo.gpus.push_back(gd);
             }
 
             // 网络适配器信息
             NetworkAdapter network(wmiManager);
-            const auto& adapters = network.GetAdapters();
-            if (!adapters.empty()) {
-                const auto& adapter = adapters[0];
-                sysInfo.networkAdapterName = WinUtils::WstringToString(adapter.name);
-                sysInfo.networkAdapterMac = WinUtils::WstringToString(adapter.mac);
-                sysInfo.networkAdapterSpeed = adapter.speed;
+            sysInfo.adapters.clear();
+            for (const auto& a : network.GetAdapters()) {
+                NetworkAdapterData nd;
+                nd.name = WinUtils::WstringToString(a.name);
+                nd.mac = WinUtils::WstringToString(a.mac);
+                nd.speed = a.speed;
+                sysInfo.adapters.push_back(nd);
             }
 
             auto temps = LibreHardwareMonitorBridge::GetTemperatures();
             sysInfo.temperatures = temps;
-            // 新增调试日志：输出原始温度数据
-            for (const auto& t : temps) {
-                Logger::Info("原始温度: " + t.first + " = " + std::to_string(t.second));
-            }
-            // 新增调试日志：输出有效温度数据
-            for (const auto& t : temps) {
-                Logger::Info("有效温度: " + t.first + " = " + std::to_string(t.second));
-            }
-
-            // 新增Logger输出系统架构和详细系统版本
-            Logger::Info("操作系统架构: " + sysInfo.cpuArch);
-            Logger::Info("系统详细版本: " + sysInfo.osDetailedVersion);
 
             // 只显示物理磁盘
             sysInfo.disks.clear();
@@ -318,6 +361,10 @@ int main(int argc, char* argv[]) {
                     sysInfo.disks.push_back(disk);
                 }
             }
+
+            sysInfo.motherboardName = os.GetMotherboardName();
+            sysInfo.deviceName = os.GetDeviceName();
+            Logger::Info("主板名: " + sysInfo.motherboardName + " 设备名: " + sysInfo.deviceName);
 
             // 写入共享内存，使用 SharedMemoryManager 代替
             if (!SharedMemoryManager::GetBuffer() && !SharedMemoryManager::InitSharedMemory()) {

@@ -7,6 +7,9 @@
 #include <QDebug> // 显式包含QDebug，防止QDebug未定义
 #endif
 
+// 保证没有与comutil.h冲突的类型、宏、using等
+// 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
+
 // Utility class for Windows-specific operations
 class WinUtils {
 public:
