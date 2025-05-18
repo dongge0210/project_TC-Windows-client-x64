@@ -98,6 +98,7 @@ void QtWidgetsTCmonitor::setupUI()
     createGpuSection();
     createTemperatureSection();
     createDiskSection();
+    createNetworkSection();
 
     // Add to main layout
     mainLayout->addWidget(cpuGroupBox);
@@ -106,6 +107,7 @@ void QtWidgetsTCmonitor::setupUI()
     mainLayout->addWidget(temperatureGroupBox);
     mainLayout->addWidget(diskGroupBox);
     mainLayout->addStretch();
+    mainLayout->addWidget(networkGroupBox);
 
     // 在主布局最后添加总功率显示
     if (!infoLabels.contains("totalPower")) {
@@ -199,9 +201,9 @@ void QtWidgetsTCmonitor::createMemorySection()
     infoLabels["availableMemory"] = new QLabel(this);
     layout->addWidget(infoLabels["availableMemory"], row++, 1);
 
-    layout->addWidget(new QLabel(tr("内存频率:"), this), row, 0); // 新增
-    infoLabels["memoryFrequency"] = new QLabel(this);            // 新增
-    layout->addWidget(infoLabels["memoryFrequency"], row++, 1);  // 新增
+    layout->addWidget(new QLabel(tr("内存频率:"), this), row, 0);
+    infoLabels["memoryFrequency"] = new QLabel(this);
+    layout->addWidget(infoLabels["memoryFrequency"], row++, 1);
 
     layout->addWidget(new QLabel(tr("内存使用率:"), this), row, 0);
     infoLabels["memoryUsage"] = new QLabel(this);
@@ -228,13 +230,13 @@ void QtWidgetsTCmonitor::createGpuSection()
     infoLabels["gpuName"] = new QLabel(this);
     layout->addWidget(infoLabels["gpuName"], row++, 1);
 
-    layout->addWidget(new QLabel(tr("专用显存:"), this), row, 0); // 修改标签
-    infoLabels["gpuVram"] = new QLabel(this);                   // 修改变量名
-    layout->addWidget(infoLabels["gpuVram"], row++, 1);         // 修改变量名
+    layout->addWidget(new QLabel(tr("专用显存:"), this), row, 0);
+    infoLabels["gpuVram"] = new QLabel(this);                
+    layout->addWidget(infoLabels["gpuVram"], row++, 1);       
 
-    layout->addWidget(new QLabel(tr("共享内存:"), this), row, 0);  // 新增
-    infoLabels["gpuSharedMem"] = new QLabel(this);              // 新增
-    layout->addWidget(infoLabels["gpuSharedMem"], row++, 1);    // 新增
+    layout->addWidget(new QLabel(tr("共享内存:"), this), row, 0);
+    infoLabels["gpuSharedMem"] = new QLabel(this);
+    layout->addWidget(infoLabels["gpuSharedMem"], row++, 1);
 
     layout->addWidget(new QLabel(tr("核心频率:"), this), row, 0);
     infoLabels["gpuCoreFreq"] = new QLabel(this);
@@ -328,6 +330,31 @@ void QtWidgetsTCmonitor::createDiskSection()
     // Disk info container
     QWidget* diskContainer = new QWidget();
     layout->addWidget(diskContainer);
+}
+
+void QtWidgetsTCmonitor::createNetworkSection()
+{
+    networkGroupBox = new QGroupBox(tr("网络适配器"), this);
+    QGridLayout* layout = new QGridLayout(networkGroupBox);
+
+    int row = 0;
+    layout->addWidget(new QLabel(tr("选择适配器:"), this), row, 0);
+    networkSelector = new QComboBox(this);
+    connect(networkSelector, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this, &QtWidgetsTCmonitor::onNetworkSelectionChanged);
+    layout->addWidget(networkSelector, row++, 1);
+
+    layout->addWidget(new QLabel(tr("名称:"), this), row, 0);
+    networkNameLabel = new QLabel(this);
+    layout->addWidget(networkNameLabel, row++, 1);
+
+    layout->addWidget(new QLabel(tr("MAC地址:"), this), row, 0);
+    networkMacLabel = new QLabel(this);
+    layout->addWidget(networkMacLabel, row++, 1);
+
+    layout->addWidget(new QLabel(tr("速度:"), this), row, 0);
+    networkSpeedLabel = new QLabel(this);
+    layout->addWidget(networkSpeedLabel, row++, 1);
 }
 
 void QtWidgetsTCmonitor::updateTemperatureData(const std::vector<std::pair<std::string, float>>& temperatures)
@@ -470,10 +497,8 @@ void QtWidgetsTCmonitor::updateSystemInfo(const SystemInfo& sysInfo)
         delete diskContainer->layout();
     }
 
-    // Create new layout
     QVBoxLayout* diskLayout = new QVBoxLayout(diskContainer);
 
-    // Add disk info
     for (const auto& disk : sysInfo.disks) {
         QString diskLabel = QString("%1: %2").arg(QChar(disk.letter)).arg(tr("驱动器"));
         if (!disk.label.empty()) {
@@ -922,6 +947,29 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
                 infoLabels["osVersion"]->setText(tr("无数据"));
         }
 
+        // 网络适配器信息
+        if (pBuffer->adapterCount > 0) {
+            static int lastAdapterCount = 0;
+            if (pBuffer->adapterCount != lastAdapterCount) {
+                updateNetworkSelector(pBuffer->adapterCount, pBuffer);
+                lastAdapterCount = pBuffer->adapterCount;
+            }
+            if (currentNetworkIndex >= 0 && currentNetworkIndex < pBuffer->adapterCount) {
+                const auto& adapter = pBuffer->adapters[currentNetworkIndex];
+                networkNameLabel->setText(isWCharArrayNullTerminated(adapter.name, 128)
+                    ? WinUtils::WstringToQString(std::wstring(adapter.name)) : tr("未知"));
+                networkMacLabel->setText(isWCharArrayNullTerminated(adapter.mac, 32)
+                    ? WinUtils::WstringToQString(std::wstring(adapter.mac)) : tr("未知"));
+                networkSpeedLabel->setText(QString("%1 Mbps").arg(adapter.speed / 1000000.0, 0, 'f', 1));
+            }
+        }
+        else {
+            networkNameLabel->setText(tr("无数据"));
+            networkMacLabel->setText(tr("无数据"));
+            networkSpeedLabel->setText(tr("无数据"));
+        }
+
+
         // Update disk information
         updateDiskInfo(pBuffer);
         
@@ -1052,11 +1100,49 @@ void QtWidgetsTCmonitor::UpdateDiskInfoUI() {
     }
 }
 
+void QtWidgetsTCmonitor::updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer)
+{
+    if (!networkSelector || adapterCount <= 0) return;
+
+    networkSelector->blockSignals(true);
+
+    QString currentSelection;
+    if (networkSelector->currentIndex() >= 0)
+        currentSelection = networkSelector->currentText();
+
+    networkSelector->clear();
+    networkIndices.clear();
+
+    for (int i = 0; i < adapterCount; ++i) {
+        QString name = isWCharArrayNullTerminated(pBuffer->adapters[i].name, 128)
+            ? WinUtils::WstringToQString(std::wstring(pBuffer->adapters[i].name))
+            : tr("未知");
+        networkSelector->addItem(name);
+        networkIndices.push_back(i);
+    }
+
+    int newIndex = 0;
+    if (!currentSelection.isEmpty()) {
+        int foundIndex = networkSelector->findText(currentSelection);
+        if (foundIndex >= 0) newIndex = foundIndex;
+    }
+    networkSelector->setCurrentIndex(newIndex);
+    currentNetworkIndex = networkIndices[newIndex];
+
+    networkSelector->blockSignals(false);
+}
+
 void QtWidgetsTCmonitor::onGpuSelectionChanged(int index)
 {
     if (index < 0 || index >= gpuIndices.size()) return;
     currentGpuIndex = gpuIndices[index];
-    // 立即刷新GPU相关显示
+    updateFromSharedMemory();
+}
+
+void QtWidgetsTCmonitor::onNetworkSelectionChanged(int index)
+{
+    if (index < 0 || index >= networkIndices.size()) return;
+    currentNetworkIndex = networkIndices[index];
     updateFromSharedMemory();
 }
 

@@ -364,14 +364,11 @@ int main(int argc, char* argv[]) {
 
             sysInfo.motherboardName = os.GetMotherboardName();
             sysInfo.deviceName = os.GetDeviceName();
-            Logger::Info("主板名: " + sysInfo.motherboardName + " 设备名: " + sysInfo.deviceName);
 
             // 写入共享内存，使用 SharedMemoryManager 代替
             if (!SharedMemoryManager::GetBuffer() && !SharedMemoryManager::InitSharedMemory()) {
                 // Handle shared memory initialization failure
                 Logger::Error("Failed to initialize shared memory: " + SharedMemoryManager::GetSharedMemoryError());
-                // Continue with program execution even if shared memory fails
-                // This prevents the program from crashing but logs the error
             } else {
                 SharedMemoryManager::WriteToSharedMemory(sysInfo);
             }

@@ -11,6 +11,7 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QPushButton>
+#include <QtWidgets/QComboBox>
 #include <QtCharts/QChart>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
@@ -19,13 +20,14 @@
 #include <QTimer>
 #include <queue>
 #include <map>
-#include <sstream>
-#include <iomanip>
-#include "../src/core/DataStruct/DataStruct.h" // Include header for SystemInfo
+#include <vector>
+#include <QString>
+#include <QMap>
+#include <QVector>
+#include "../src/core/DataStruct/DataStruct.h"
 #include "../src/core/utils/Logger.h"
-#include "ui_QtWidgetsTCmonitor.h" // 添加此行以包含UI类声明
+#include "ui_QtWidgetsTCmonitor.h"
 
-// Define the maximum number of data points for charts
 #ifndef MAX_DATA_POINTS
 #define MAX_DATA_POINTS 1000
 #endif
@@ -35,10 +37,9 @@ class QtWidgetsTCmonitor : public QMainWindow
     Q_OBJECT
 
 public:
-    QtWidgetsTCmonitor(QWidget *parent = nullptr);
+    QtWidgetsTCmonitor(QWidget* parent = nullptr);
     ~QtWidgetsTCmonitor();
 
-    // Updates system information display with provided data
     void updateSystemInfo(const SystemInfo& sysInfo);
     void updateTemperatureData(const std::vector<std::pair<std::string, float>>& temperatures);
 
@@ -46,56 +47,69 @@ private slots:
     void updateCharts();
     void on_pushButton_clicked();
     void updateFromSharedMemory();
+    void onGpuSelectionChanged(int index);
+    void onNetworkSelectionChanged(int index);
 
 private:
-    // UI setup functions
+    // UI setup
     void setupUI();
     void createCpuSection();
     void createMemorySection();
     void createGpuSection();
     void createTemperatureSection();
     void createDiskSection();
-    void onGpuSelectionChanged(int index);
+    void createNetworkSection();
     void updateGpuSelector(int gpuCount);
-    
-    // Add the missing updateDiskInfo method
+    void updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer);
     void updateDiskInfo(SharedMemoryBlock* pBuffer);
+    void UpdateDiskInfoUI();
 
-    // Formatting helper functions
+    // Formatting helpers
     QString formatSize(uint64_t bytes);
     QString formatPercentage(double value);
     QString formatTemperature(double value);
     QString formatFrequency(double value);
 
     // UI components
-    QTimer *updateTimer;
+    QTimer* updateTimer = nullptr;
 
     // Main UI containers
-    QGroupBox *cpuGroupBox;
-    QGroupBox *memoryGroupBox;
-    QGroupBox *gpuGroupBox;
-    QGroupBox *temperatureGroupBox;
-    QGroupBox *diskGroupBox;
+    QGroupBox* cpuGroupBox = nullptr;
+    QGroupBox* memoryGroupBox = nullptr;
+    QGroupBox* gpuGroupBox = nullptr;
+    QGroupBox* temperatureGroupBox = nullptr;
+    QGroupBox* diskGroupBox = nullptr;
+    QGroupBox* networkGroupBox = nullptr;
 
     // Chart components
-    QChart *cpuTempChart;
-    QChartView *cpuTempChartView;
-    QLineSeries *cpuTempSeries;
-    QChart *gpuTempChart;
-    QChartView *gpuTempChartView;
-    QLineSeries *gpuTempSeries;
+    QChart* cpuTempChart = nullptr;
+    QChartView* cpuTempChartView = nullptr;
+    QLineSeries* cpuTempSeries = nullptr;
+    QChart* gpuTempChart = nullptr;
+    QChartView* gpuTempChartView = nullptr;
+    QLineSeries* gpuTempSeries = nullptr;
+
+    // GPU
     QComboBox* gpuSelector = nullptr;
+    std::vector<int> gpuIndices;
+    int currentGpuIndex = 0;
+
+    // Network
+    QWidget* networkContainer = nullptr;
+    QComboBox* networkSelector = nullptr;
+    QVector<int> networkIndices;
+    int currentNetworkIndex = 0;
+    QLabel* networkNameLabel = nullptr;
+    QLabel* networkMacLabel = nullptr;
+    QLabel* networkSpeedLabel = nullptr;
+
+    // Info labels
+    QMap<QString, QLabel*> infoLabels;
 
     // Data containers
-    std::map<std::string, QLabel*> infoLabels;
     std::queue<float> cpuTempHistory;
     std::queue<float> gpuTempHistory;
     SystemInfo currentSysInfo;
-    int currentGpuIndex = 0;  // 当前选中的 GPU 索引
-    std::vector<int> gpuIndices;
 
-    void UpdateDiskInfoUI();
-
-    Ui_QtWidgetsTCmonitorClass *ui = nullptr; // 添加ui指针成员
+    Ui_QtWidgetsTCmonitorClass* ui = nullptr;
 };
-

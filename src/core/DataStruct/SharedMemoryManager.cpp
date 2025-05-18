@@ -321,6 +321,8 @@ bool SharedMemoryManager::WriteToSharedMemory(SystemInfo& sysInfo) {
 
         // OS info
         wcsncpy_s(pBuffer->osDetailedVersion, _countof(pBuffer->osDetailedVersion), WinUtils::StringToWstring(sysInfo.osDetailedVersion).c_str(), _TRUNCATE);
+        wcsncpy_s(pBuffer->motherboardName, _countof(pBuffer->motherboardName), WinUtils::StringToWstring(sysInfo.motherboardName).c_str(), _TRUNCATE);
+        wcsncpy_s(pBuffer->deviceName, _countof(pBuffer->deviceName), WinUtils::StringToWstring(sysInfo.deviceName).c_str(), _TRUNCATE);
 
         // GPU power
         pBuffer->gpuPower = static_cast<float>(sysInfo.gpuPower);
@@ -409,6 +411,8 @@ void SharedMemoryManager::ReadSystemInfoFromSharedMemory(SystemInfo& sysInfo) {
 
         // OS info
         sysInfo.osDetailedVersion = WinUtils::WstringToString(pBuffer->osDetailedVersion);
+        sysInfo.motherboardName = WinUtils::WstringToString(pBuffer->motherboardName);
+        sysInfo.deviceName = WinUtils::WstringToString(pBuffer->deviceName);
 
         // GPU power
         sysInfo.gpuPower = static_cast<double>(pBuffer->gpuPower);
