@@ -6,61 +6,9 @@
 
 额，为了方便，项目暂时全局调整为 GPLv3
 
-## 此项目使用的子仓库
-
-本项目使用了以下仓库：
-
-- [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor)  
-  - **协议**: [Mozilla Public License v2.0 (MPL-2.0)](https://mozilla.org/MPL/2.0/)  
-  - **使用方式**: 本项目直接使用了 LibreHardwareMonitor 的 `net8` 版本编译后的库（动态链接库 DLL 文件），未对其源代码进行修改。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) 中找到完整的源代码及其协议文件。
-
-- [curl](https://github.com/curl/curl)  
-  - **协议**: 没有  
-  - **使用方式**: 本项目将其作为 Git 子模块引入，用于处理 URL 数据传输。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/curl/curl) 中找到完整的源代码及其协议文件。
-
-- [nlohmann/json](https://github.com/nlohmann/json)  
-  - **协议**: [MIT License](https://github.com/nlohmann/json/blob/develop/LICENSE.MIT)  
-  - **使用方式**: 本项目将其作为 Git 子模块引入，用于 JSON 数据处理。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/nlohmann/json) 中找到完整的源代码及其协议文件。
-
-- [openssl](https://github.com/openssl/openssl)  
-  - **协议**: [Apache License 2.0](https://github.com/openssl/openssl/blob/master/LICENSE.txt)  
-  - **使用方式**: 本项目将其作为 Git 子模块引入，用于 TLS/SSL 和加密功能。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/openssl/openssl) 中找到完整的源代码及其协议文件。
-
-- [PDCurses](https://github.com/wmcbrine/PDCurses)  
-  - **协议**: 没有  
-  - **使用方式**: 本项目将其作为 Git 子模块引入，用于终端界面处理。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/wmcbrine/PDCurses) 中找到完整的源代码及其协议文件。
-
-- [zlib](https://github.com/madler/zlib)  
-  - **协议**: 其他  
-  - **使用方式**: 本项目将其作为 Git 子模块引入，用于数据压缩。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/madler/zlib) 中找到完整的源代码及其协议文件。
-
-- [FFmpeg](https://github.com/FFmpeg/FFmpeg)  
-  - **协议**: 请参考仓库中的 `LICENSE` 文件或相关协议说明。  
-  - **使用方式**: 可能不会使用，预留。  
-  - **源代码获取**: 您可以在其 [GitHub 仓库](https://github.com/FFmpeg/FFmpeg) 中找到完整的源代码及其协议文件。
-
-- [Libwebsockets](https://github.com/warmcat/libwebsockets)  
-  - **协议**: 整体为[MIT License](https://github.com/warmcat/libwebsockets/blob/main/LICENSE)  
-  - **使用方式**: 作为 Git 子模块用于 WebSocket 通信功能。  
-  - **源代码获取**: [GitHub 仓库](https://github.com/warmcat/libwebsockets)
-
-- [Qt](https://www.qt.io/)  
-  - **协议**: [GNU Lesser General Public License v3 (LGPL-3.0)](https://www.gnu.org/licenses/lgpl-3.0.html) 或 [GNU General Public License v3 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html)  
-  - **使用方式**: 用于提供一定的 UI 支持。  
-  - **源代码获取**: [GitHub 仓库](https://github.com/qt/qtbase)
-
-- [Boost](https://github.com/boostorg/boost)  
-  - **协议**: [Boost Software License 1.0(BSL-1.0)](https://www.boost.org/users/license.html)  
-  - **使用方式**: 作为 C++ 标准库的扩展，用于提供多种功能（如智能指针、多线程、正则表达式、序列化等）。  
-  - **源代码获取**: [GitHub 仓库](https://github.com/boostorg/boost)
+撤销显示使用的仓库，待到项目结束恢复声明
 
 ### 环境要求
-- C++17 或更高版本
-- CMake 3.15 或更高版本
+- C++20
 - 支持的操作系统: Windows
+- 架构: x64
