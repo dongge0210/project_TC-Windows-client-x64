@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <windows.h>
 #include <limits>
+#include <Wbemidl.h>
 
 // 保证没有与comutil.h冲突的全局符号、宏、using等
 // 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
@@ -66,22 +67,79 @@ void GpuInfo::DetectGpusViaWmi() {
 
         if (SUCCEEDED(pclsObj->Get(L"AdapterRAM", 0, &vtAdapterRAM, 0, 0)) && vtAdapterRAM.vt == VT_UI4) {
             data.vram = static_cast<uint64_t>(vtAdapterRAM.uintVal);
+        } else {
+            data.vram = 0; // 明确为0
         }
+
+        // 新增：尝试获取共享内存
+        // 这里可以通过DXGI或WMI进一步完善
+        data.sharedMemory = 0; // 若后续能获取则赋值
 
         if (SUCCEEDED(pclsObj->Get(L"CurrentClockSpeed", 0, &vtCurrentClockSpeed, 0, 0)) && vtCurrentClockSpeed.vt == VT_UI4) {
             data.coreClock = static_cast<double>(vtCurrentClockSpeed.uintVal) / 1e6;
         }
 
+        // Expand virtual GPU detection with more keywords (add your screenshot's name if needed)
         bool isVirtual = (
             data.name.find(L"Todesk Virtual Display Adapter") != std::wstring::npos ||
-            data.name.find(L"Microsoft Basic Display Adapter") != std::wstring::npos
+            data.name.find(L"Microsoft Basic Display Adapter") != std::wstring::npos ||
+            data.name.find(L"VMware") != std::wstring::npos ||
+            data.name.find(L"VirtualBox") != std::wstring::npos ||
+            data.name.find(L"VBox") != std::wstring::npos ||
+            data.name.find(L"Parallels") != std::wstring::npos ||
+            data.name.find(L"QEMU") != std::wstring::npos ||
+            data.name.find(L"Virtual GPU") != std::wstring::npos ||
+            data.name.find(L"Citrix") != std::wstring::npos ||
+            data.name.find(L"Hyper-V") != std::wstring::npos ||
+            data.name.find(L"VIRTIO") != std::wstring::npos ||
+            data.name.find(L"Basic Display") != std::wstring::npos ||
+            data.name.find(L"AskLinkIddDriver Device") != std::wstring::npos ||
+            data.name.find(L"Microsoft Remote Display Adapter") != std::wstring::npos
         );
 
-        if (!isVirtual) {
+        if (isVirtual) {
+            // Log skipped virtual GPU for debugging
+            std::wstring wname = data.name;
+            std::string name(wname.begin(), wname.end());
+            Logger::Info("检测到虚拟显卡，已跳过: " + name);
+        } else {
             data.isNvidia = (data.name.find(L"NVIDIA") != std::wstring::npos);
             data.isAmd = (data.name.find(L"AMD") != std::wstring::npos ||
                           data.name.find(L"Radeon") != std::wstring::npos);
             data.isIntegrated = (data.deviceId.find(L"VEN_8086") != std::wstring::npos);
+
+            // 新增：查询 Win32_PnPSignedDriver 获取驱动信息
+            IEnumWbemClassObject* pDrvEnum = nullptr;
+            std::wstring wql = L"SELECT * FROM Win32_PnPSignedDriver WHERE DeviceID='" + data.deviceId + L"'";
+            HRESULT drvRes = pSvc->ExecQuery(
+                bstr_t("WQL"),
+                bstr_t(wql.c_str()),
+                WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+                nullptr,
+                &pDrvEnum
+            );
+            if (SUCCEEDED(drvRes) && pDrvEnum) {
+                IWbemClassObject* pDrvObj = nullptr;
+                ULONG drvRet = 0;
+                if (pDrvEnum->Next(WBEM_INFINITE, 1, &pDrvObj, &drvRet) == S_OK) {
+                    VARIANT vtDrvVer, vtDrvDate, vtDrvProvider;
+                    VariantInit(&vtDrvVer);
+                    VariantInit(&vtDrvDate);
+                    VariantInit(&vtDrvProvider);
+                    if (SUCCEEDED(pDrvObj->Get(L"DriverVersion", 0, &vtDrvVer, 0, 0)) && vtDrvVer.vt == VT_BSTR)
+                        data.driverVersion = vtDrvVer.bstrVal;
+                    if (SUCCEEDED(pDrvObj->Get(L"DriverDate", 0, &vtDrvDate, 0, 0)) && vtDrvDate.vt == VT_BSTR)
+                        data.driverDate = vtDrvDate.bstrVal;
+                    if (SUCCEEDED(pDrvObj->Get(L"DriverProviderName", 0, &vtDrvProvider, 0, 0)) && vtDrvProvider.vt == VT_BSTR)
+                        data.driverProvider = vtDrvProvider.bstrVal;
+                    VariantClear(&vtDrvVer);
+                    VariantClear(&vtDrvDate);
+                    VariantClear(&vtDrvProvider);
+                    pDrvObj->Release();
+                }
+                pDrvEnum->Release();
+            }
+
             gpuList.push_back(data);
         }
 
@@ -207,7 +265,6 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         result = nvmlDeviceGetMemoryInfo(device, &memory);
         if (NVML_SUCCESS == result) {
             gpuList[index].vram = memory.total;     // 将 NVML 获取的显存赋值给 vram
-            // 移除显存日志输出
         }
 
         // 获取核心频率
@@ -223,6 +280,16 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         if (NVML_SUCCESS == result) {
             gpuList[index].computeCapabilityMajor = major;
             gpuList[index].computeCapabilityMinor = minor;
+        }
+
+        // 获取驱动版本（NVML）
+        char driverVersion[80] = {0};
+        result = nvmlSystemGetDriverVersion(driverVersion, sizeof(driverVersion));
+        if (NVML_SUCCESS == result) {
+            // 转换为wstring
+            std::string drvStr(driverVersion);
+            std::wstring drvWstr(drvStr.begin(), drvStr.end());
+            gpuList[index].driverVersion = drvWstr;
         }
 
         // GPU功率日志输出，单位为W，不带百分号

@@ -54,6 +54,46 @@
       </layout>
      </widget>
     </item>
+    <item>
+     <widget class="QGroupBox" name="gpuGroupBox">
+      <property name="title">
+       <string>显卡信息</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayoutGpu">
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelGpuSelectorTitle">
+         <property name="text">
+          <string>选择显卡:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="gpuSelector"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelGpuNameTitle">
+         <property name="text">
+          <string>名称:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="labelGpuName"/>
+       </item>
+       <!-- 依次添加 gpuVram, gpuSharedMem, gpuCoreFreq, gpuPower -->
+       <item row="2" column="0">
+        <widget class="QLabel" name="labelGpuDriverVersionTitle">
+         <property name="text">
+          <string>驱动版本:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="labelGpuDriverVersion"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">

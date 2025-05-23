@@ -54,20 +54,22 @@
 #include <sstream>
 #include <stdexcept>
 
-// Helper conversion functions for POD <-> STL types
-
 static void ToGPUDataSM(const GPUData & src, GPUDataSM & dst) {
     wcsncpy_s(dst.name, 128, WinUtils::StringToWstring(src.name).c_str(), _TRUNCATE);
     wcsncpy_s(dst.brand, 64, WinUtils::StringToWstring(src.brand).c_str(), _TRUNCATE);
     dst.vram = src.vram;           // 专用显存
     dst.sharedMemory = src.sharedMemory; // 共享内存
     dst.coreClock = src.coreClock;
+    // 新增：驱动版本
+    wcsncpy_s(dst.driverVersion, 128, src.driverVersion.c_str(), _TRUNCATE);
 }
 
 static void ToNetworkAdapterDataSM(const NetworkAdapterData& src, NetworkAdapterDataSM& dst) {
     wcsncpy_s(dst.name, 128, WinUtils::StringToWstring(src.name).c_str(), _TRUNCATE);
     wcsncpy_s(dst.mac, 32, WinUtils::StringToWstring(src.mac).c_str(), _TRUNCATE);
     dst.speed = src.speed;
+    wcsncpy_s(dst.ip, 64, WinUtils::StringToWstring(src.ip).c_str(), _TRUNCATE); // 新增
+    dst.connected = src.connected; // 新增
 }
 
 static void ToSharedDiskData(const DiskInfoData& src, SharedDiskData& dst) {
@@ -104,6 +106,8 @@ static GPUData SharedGPUToGPUData(const GPUDataSM& gpu) {
     gd.vram = gpu.vram;           // 专用显存
     gd.sharedMemory = gpu.sharedMemory; // 共享内存
     gd.coreClock = gpu.coreClock;
+    // 新增：驱动版本
+    gd.driverVersion = gpu.driverVersion;
     return gd;
 }
 
@@ -113,6 +117,8 @@ static NetworkAdapterData SharedAdapterToAdapterData(const NetworkAdapterDataSM&
     nd.name = WinUtils::WstringToString(adapter.name);
     nd.mac = WinUtils::WstringToString(adapter.mac);
     nd.speed = adapter.speed;
+    nd.ip = WinUtils::WstringToString(adapter.ip);
+    nd.connected = adapter.connected;
     return nd;
 }
 

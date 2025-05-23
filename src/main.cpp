@@ -337,6 +337,8 @@ int main(int argc, char* argv[]) {
                 gd.vram = g.vram;               // 正确传递专用显存
                 gd.sharedMemory = g.sharedMemory; // 传递共享内存
                 gd.coreClock = g.coreClock;
+                // 新增：驱动版本
+                gd.driverVersion = g.driverVersion;
                 sysInfo.gpus.push_back(gd);
             }
 
@@ -348,8 +350,11 @@ int main(int argc, char* argv[]) {
                 nd.name = WinUtils::WstringToString(a.name);
                 nd.mac = WinUtils::WstringToString(a.mac);
                 nd.speed = a.speed;
+                nd.ip = WinUtils::WstringToString(a.ip);       
+                nd.connected = a.isConnected;                    
                 sysInfo.adapters.push_back(nd);
             }
+
 
             auto temps = LibreHardwareMonitorBridge::GetTemperatures();
             sysInfo.temperatures = temps;
@@ -392,6 +397,8 @@ int main(int argc, char* argv[]) {
         SetDllDirectory(L"F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net8.0");
 
         CoUninitialize();
+
+        Logger::Shutdown();
 
         Logger::Info("程序正常退出");
         return 0;

@@ -59,7 +59,7 @@ private:
     void createTemperatureSection();
     void createDiskSection();
     void createNetworkSection();
-    void updateGpuSelector(int gpuCount);
+    void updateGpuSelector(); // 保持声明
     void updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer);
     void updateDiskInfo(SharedMemoryBlock* pBuffer);
     void UpdateDiskInfoUI();
@@ -93,6 +93,8 @@ private:
     QComboBox* gpuSelector = nullptr;
     std::vector<int> gpuIndices;
     int currentGpuIndex = 0;
+    QLabel* gpuDriverVersionLabel = nullptr;
+    int cachedGpuCount = 0; // 初始化为0，保证每次都能刷新
 
     // Network
     QWidget* networkContainer = nullptr;
@@ -102,6 +104,8 @@ private:
     QLabel* networkNameLabel = nullptr;
     QLabel* networkMacLabel = nullptr;
     QLabel* networkSpeedLabel = nullptr;
+    QLabel* networkStatusLabel = nullptr;
+    QLabel* networkIpLabel = nullptr;
 
     // Info labels
     QMap<QString, QLabel*> infoLabels;

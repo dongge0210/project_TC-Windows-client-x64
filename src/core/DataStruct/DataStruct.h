@@ -16,8 +16,11 @@ struct GPUDataSM {
     wchar_t brand[64];
     uint64_t vram;           // 专用显存 (VRAM)
     uint64_t sharedMemory;   // 可用共享内存
-    uint32_t coreClock;
+    double coreClock;        // 修改: 核心时钟类型为 double
     float power;
+    wchar_t driverVersion[128];   // 新增: 驱动版本
+    wchar_t driverDate[128];      // 新增: 驱动日期
+    wchar_t driverProvider[128];  // 新增: 驱动提供商
 };
 
 // Network adapter information structure for shared memory
@@ -25,6 +28,8 @@ struct NetworkAdapterDataSM {
     wchar_t name[128];
     wchar_t mac[32];
     uint64_t speed;
+    bool connected; // 新增
+    wchar_t ip[64]; // 建议同步支持IP显示
 };
 
 // Disk information structure for shared memory
@@ -68,7 +73,7 @@ struct SharedMemoryBlock {
     uint32_t memoryFrequency;
 
     // GPU information
-    GPUDataSM gpus[2];
+    GPUDataSM gpus[2]; // 保证driverVersion同步
     int gpuCount;
     float gpuPower;
     float totalPower;
@@ -95,15 +100,20 @@ struct SharedMemoryBlock {
 struct GPUData {
     std::string name;
     std::string brand;
-    uint64_t vram;          // 专用显存
-    uint64_t sharedMemory;  // 共享内存
-    uint32_t coreClock;
+    uint64_t vram = 0;          // 修改: 默认值为 0
+    uint64_t sharedMemory = 0;  // 修改: 默认值为 0
+    double coreClock = 0;       // 修改: 核心时钟类型为 double，默认值为 0
+    std::wstring driverVersion;   // 修改: 驱动版本
+    std::wstring driverDate;      // 修改: 驱动日期
+    std::wstring driverProvider;  // 修改: 驱动提供商
 };
 
 struct NetworkAdapterData {
     std::string name;
     std::string mac;
     uint64_t speed;
+    bool connected;
+    std::string ip;
 };
 
 struct DiskInfoData {

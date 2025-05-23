@@ -23,14 +23,17 @@ public:
         std::wstring name;
         std::wstring deviceId;
         std::wstring brand;
-        uint64_t vram = 0;          // 更名自 dedicatedMemory
-        uint64_t sharedMemory = 0;  // 更名自 memory
+        uint64_t vram = 0;          // 专用显存
+        uint64_t sharedMemory = 0;  // 共享内存
         double coreClock = 0;
         bool isNvidia = false;
         bool isAmd = false;
         bool isIntegrated = false;
         int computeCapabilityMajor = 0;
         int computeCapabilityMinor = 0;
+        std::wstring driverVersion;   // 保持为wstring
+        std::wstring driverDate;      // 保持为wstring
+        std::wstring driverProvider;  // 保持为wstring
     };
     GpuInfo(WmiManager& manager);
     ~GpuInfo();
