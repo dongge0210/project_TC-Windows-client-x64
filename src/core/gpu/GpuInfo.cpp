@@ -10,12 +10,18 @@
 #include <windows.h>
 #include <limits>
 #include <Wbemidl.h>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <iostream>
 
 // 保证没有与comutil.h冲突的全局符号、宏、using等
 // 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
 
 // 避免重复日志的静态变量
 static bool firstGpuDetection = true;
+
+bool GpuInfo::nvmlInited = false;
 
 GpuInfo::GpuInfo(WmiManager& manager) : wmiManager(manager) {
     if (!wmiManager.IsInitialized()) {
@@ -32,6 +38,63 @@ GpuInfo::~GpuInfo() {
     if (firstGpuDetection) {
         firstGpuDetection = false;
     }
+}
+
+bool GpuInfo::IsVirtualGPU(const std::string& name) {
+    static const char* virtualKeywords[] = {
+        "Microsoft Basic Display", "Virtual", "Todesk", "IddDriver", "Remote", "VMware", "VBox", "QEMU"
+    };
+    for (const auto& kw : virtualKeywords) {
+        if (name.find(kw) != std::string::npos) return true;
+    }
+    return false;
+}
+
+bool GpuInfo::InitNVML() {
+    if (nvmlInited) return true;
+    nvmlReturn_t result = nvmlInit();
+    if (result == NVML_SUCCESS) {
+        nvmlInited = true;
+        return true;
+    }
+    nvmlInited = false;
+    return false;
+}
+
+std::vector<GpuInfo::GpuData> GpuInfo::EnumPhysicalGPUs() {
+    std::vector<GpuData> gpus;
+
+    // 1. 通过Windows设备管理器枚举GPU
+    DISPLAY_DEVICEA dd;
+    dd.cb = sizeof(dd);
+    int deviceIndex = 0;
+    while (EnumDisplayDevicesA(NULL, deviceIndex, &dd, 0)) {
+        GpuData info;
+        info.name = dd.DeviceString;
+        info.deviceId = dd.DeviceID;
+        info.status = (dd.StateFlags & DISPLAY_DEVICE_ACTIVE) ? "Active" : "Inactive";
+        info.isVirtual = IsVirtualGPU(info.name);
+        info.isAvailable = !info.isVirtual;
+        // 2. 获取驱动版本
+        DISPLAY_DEVICEA dd2;
+        dd2.cb = sizeof(dd2);
+        if (EnumDisplayDevicesA(dd.DeviceName, 0, &dd2, 0)) {
+            info.vendor = dd2.DeviceString;
+        }
+        // 3. 过滤虚拟显卡
+        if (!info.isVirtual) {
+            gpus.push_back(info);
+        }
+        deviceIndex++;
+    }
+
+    // 4. 可选：NVML枚举补充（如有NVML可用时）
+    if (InitNVML()) {
+        // 这里只做NVML初始化和可用性标记，不采集温度/功率
+        // 可根据需要补充nvmlDeviceGetCount等
+    }
+
+    return gpus;
 }
 
 void GpuInfo::DetectGpusViaWmi() {
@@ -83,22 +146,7 @@ void GpuInfo::DetectGpusViaWmi() {
         }
 
         // Expand virtual GPU detection with more keywords (add your screenshot's name if needed)
-        bool isVirtual = (
-            data.name.find(L"Todesk Virtual Display Adapter") != std::wstring::npos ||
-            data.name.find(L"Microsoft Basic Display Adapter") != std::wstring::npos ||
-            data.name.find(L"VMware") != std::wstring::npos ||
-            data.name.find(L"VirtualBox") != std::wstring::npos ||
-            data.name.find(L"VBox") != std::wstring::npos ||
-            data.name.find(L"Parallels") != std::wstring::npos ||
-            data.name.find(L"QEMU") != std::wstring::npos ||
-            data.name.find(L"Virtual GPU") != std::wstring::npos ||
-            data.name.find(L"Citrix") != std::wstring::npos ||
-            data.name.find(L"Hyper-V") != std::wstring::npos ||
-            data.name.find(L"VIRTIO") != std::wstring::npos ||
-            data.name.find(L"Basic Display") != std::wstring::npos ||
-            data.name.find(L"AskLinkIddDriver Device") != std::wstring::npos ||
-            data.name.find(L"Microsoft Remote Display Adapter") != std::wstring::npos
-        );
+        bool isVirtual = IsVirtualGPU(std::string(data.name.begin(), data.name.end()));
 
         if (isVirtual) {
             // Log skipped virtual GPU for debugging

@@ -260,4 +260,13 @@ struct PhysicalDiskInfo {
     // For now, assuming partitions are handled separately or via logical disks.
 };
 
+// Add GPUInfo struct definition
+struct GPUInfo {
+    std::string name;
+    std::string status;
+    double temperature = 0.0;
+    bool available = false;
+    // Add other fields as needed
+};
+
 #pragma pack(pop)

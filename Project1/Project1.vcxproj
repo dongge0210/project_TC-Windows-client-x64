@@ -199,6 +199,7 @@
     <ClInclude Include="..\src\core\Utils\TimeUtils.h" />
     <ClInclude Include="..\src\core\Utils\WinUtils.h" />
     <ClInclude Include="..\src\core\Utils\WMIManager.h" />
+    <ClInclude Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.h" />
     <ClInclude Include="src\core\Utils\ComInitializationHelper.h" />
   </ItemGroup>
   <ItemGroup>
@@ -223,6 +224,7 @@
     <ClCompile Include="..\src\core\Utils\WinUtils.cpp" />
     <ClCompile Include="..\src\core\Utils\WMIManager.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="HidSharp">
@@ -239,6 +241,7 @@
     <None Include="..\Project1.vcxproj.filters" />
     <None Include="..\Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.pro" />
     <None Include="docs\RuntimeRequirements.md" />
+    <None Include="Qt-Widgets-TC-monitor\Qt-Widgets-TC-monitor.vcxproj" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(QtMsBuild)\qt.targets" Condition="Exists('$(QtMsBuild)\qt.targets')" />

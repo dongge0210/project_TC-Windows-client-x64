@@ -78,7 +78,14 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QLabel" name="labelGpuName"/>
+        <widget class="QLabel" name="labelGpuName">
+         <property name="text">
+          <string>无数据</string>
+         </property>
+         <property name="toolTip">
+          <string>未检测到可用显卡或驱动未安装</string>
+         </property>
+        </widget>
        </item>
        <!-- 依次添加 gpuVram, gpuSharedMem, gpuCoreFreq, gpuPower -->
        <item row="2" column="0">
@@ -90,6 +97,34 @@
        </item>
        <item row="2" column="1">
         <widget class="QLabel" name="labelGpuDriverVersion"/>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="labelGpuStatusTitle">
+         <property name="text">
+          <string>状态:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLabel" name="labelGpuStatus">
+         <property name="text">
+          <string>无数据</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="labelGpuTempTitle">
+         <property name="text">
+          <string>温度:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLabel" name="labelGpuTemp">
+         <property name="text">
+          <string>无数据</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

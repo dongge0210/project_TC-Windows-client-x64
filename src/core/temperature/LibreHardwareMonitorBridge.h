@@ -45,6 +45,11 @@ public:
     static double GetTotalPower();
     static std::vector<PhysicalDiskInfoBridge> GetPhysicalDisksWithSmart();
     static std::vector<SmartAttribute> GetSmartAttributes(const std::string& physicalDiskName);
+    static bool InitNVML();
+    static void EnsureNVML();
+    static bool nvmlEnabled;
+    void DetectGPUs();
+    void QueryNvidiaInfo();
 private:
     static bool initialized;
     // 不在头文件暴露任何CLR类型和gcroot成员

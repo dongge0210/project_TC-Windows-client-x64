@@ -19,6 +19,19 @@
 // 确保没有与comutil.h冲突的类型、宏、using等
 // 不要定义Data_t、operator=、operator+等与comutil.h同名的内容
 
+// GPU基本信息结构体（不含温度和功率）
+struct GPUDeviceInfo {
+    std::string name;
+    std::string vendor;
+    std::string driverVersion;
+    std::string deviceId;
+    std::string status;
+    std::string busId;
+    bool isVirtual = false;
+    bool isAvailable = false;
+    // 温度和功率字段不在此结构体
+};
+
 class GpuInfo {
 public:
     struct GpuData {
@@ -44,6 +57,16 @@ public:
     void QueryNvidiaGpuInfo(int index);
     static double GetGpuPowerNVML();
     const std::vector<GpuData>& GetGpuData() const;
+
+    // 获取所有物理GPU信息（不含温度和功率）
+    static std::vector<GPUDeviceInfo> EnumPhysicalGPUs();
+
+    // 判断是否为虚拟显卡
+    static bool IsVirtualGPU(const std::string& name);
+
+    // NVML初始化（如需主程序调用）
+    static bool InitNVML();
+    static bool nvmlInited;
 
 private:
     WmiManager& wmiManager;

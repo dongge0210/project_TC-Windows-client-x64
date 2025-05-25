@@ -75,15 +75,18 @@ bool WinUtils::IsRunAsAdmin() {
     // Create SID for the Administrators group
     if (!AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
         DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminGroupSid)) {
+        Logger::Info("AllocateAndInitializeSid failed in IsRunAsAdmin");
         return false;
     }
     
     // Check if the current user is a member of the Administrators group
     if (!CheckTokenMembership(NULL, adminGroupSid, &isAdmin)) {
+        Logger::Info("CheckTokenMembership failed in IsRunAsAdmin");
         isAdmin = FALSE;
     }
     
     FreeSid(adminGroupSid);
+    Logger::Info(std::string("IsRunAsAdmin: ") + (isAdmin ? "true" : "false"));
     return (isAdmin != FALSE);
 }
 
