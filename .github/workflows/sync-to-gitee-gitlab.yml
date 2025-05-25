@@ -17,8 +17,6 @@ jobs:
   sync:
     if: github.event_name == 'push'  # 仅在 push 事件触发时运行
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       # Step 1: 检出代码
@@ -95,8 +93,6 @@ jobs:
   build-sln:
     if: github.event_name != 'push'  # 避免在 push 事件中触发，只运行定时任务
     runs-on: windows-latest
-    permissions:
-      contents: read
 
     steps:
       # Step 1: 检出代码
