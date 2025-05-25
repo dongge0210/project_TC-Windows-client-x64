@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -199,8 +199,6 @@
     <ClInclude Include="..\src\core\Utils\TimeUtils.h" />
     <ClInclude Include="..\src\core\Utils\WinUtils.h" />
     <ClInclude Include="..\src\core\Utils\WMIManager.h" />
-    <ClInclude Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.h" />
-    <ClInclude Include="src\core\Utils\ComInitializationHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\core\cpu\CpuInfo.cpp" />
@@ -223,8 +221,6 @@
     <ClCompile Include="..\src\core\Utils\TimeUtils.cpp" />
     <ClCompile Include="..\src\core\Utils\WinUtils.cpp" />
     <ClCompile Include="..\src\core\Utils\WMIManager.cpp" />
-    <ClCompile Include="..\src\main.cpp" />
-    <ClCompile Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="HidSharp">
