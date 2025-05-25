@@ -67,11 +67,11 @@ jobs:
           git config --global user.name "dongge0210"
           git config --global user.email "dongge0210@163.com"
           # 添加 Gitee 远程仓库
-          git remote add gitee https://DonggeML:${{ secrets.GITEE_TOKEN }}@gitee.com/DonggeML/project-monitor-TC.git
+          git remote add gitee https://DonggeML:${{ secrets.GITEE_TOKEN }}@gitee.com/DonggeML/project_TC-Windows-client-x64.git
           # 添加 GitLab 远程仓库
-          git remote add gitlab https://dongge0210:${{ secrets.GITLAB_TOKEN }}@gitlab.com/dongge0210/project-monitor-TC.git
+          git remote add gitlab https://dongge0210:${{ secrets.GITLAB_TOKEN }}@gitlab.com/dongge0210/project_TC-Windows-client-x64.git
           # 添加 Gitea 作者 远程仓库
-          git remote add gitea_author_local http://dongge0210:${{ secrets.GITEA_LOCAL_TOKEN }}@115.231.176.235:3000/dongge0210/project-monitor-TC
+          git remote add gitea_author_local http://dongge0210:${{ secrets.GITEA_LOCAL_TOKEN }}@115.231.176.235:3000/dongge0210/project_TC-Windows-client-x64.git
 
       # Step 5: 推送到 Gitee
       - name: Push to Gitee
