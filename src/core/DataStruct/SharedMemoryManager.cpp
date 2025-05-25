@@ -704,7 +704,20 @@ void SharedMemoryManager::SetGlobalPrivilegeEnabled(bool enabled) {
 }
 
 void SharedMemoryManager::UpdateDiskInfo() {
-    g_systemData.disks = DiskInfo::GetAllDisks();
+    auto disks = DiskInfo::GetAllPhysicalDisks();
+    std::vector<DiskInfoData> diskDataList;
+    for (const auto& disk : disks) {
+        DiskInfoData diskData;
+        diskData.letter = 0; // or map if possible
+        diskData.label = disk.name;
+        diskData.fileSystem = "";
+        diskData.totalSize = disk.totalSize;
+        diskData.usedSpace = 0;
+        diskData.freeSpace = 0;
+        diskData.isPhysical = true;
+        diskDataList.push_back(diskData);
+    }
+    g_systemData.disks = diskDataList;
 }
 
 SystemData& SharedMemoryManager::GetSystemData() {

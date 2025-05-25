@@ -55,6 +55,9 @@ public:
     // 添加在其他转换函数附近
     static std::string WstringToUtf8String(const std::wstring& wstr);
 
+    // Add this function declaration if missing
+    static std::string WstringToStdString(const std::wstring& wstr);
+
     // Check if the current process is elevated
     static bool IsProcessElevated();
 

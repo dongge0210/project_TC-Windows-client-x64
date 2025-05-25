@@ -8,6 +8,10 @@
 
 #pragma pack(push, 1) // 确保内存对齐
 
+// Define maximums for shared memory arrays
+#define MAX_SMART_ATTRIBUTES_PER_DISK 30
+#define MAX_PHYSICAL_DISKS_SM 4
+
 // POD types for shared memory (no std::string, std::vector, etc.)
 
 // GPU information structure for shared memory
@@ -32,7 +36,7 @@ struct NetworkAdapterDataSM {
     wchar_t ip[64]; // 建议同步支持IP显示
 };
 
-// Disk information structure for shared memory
+// Disk information structure for shared memory (Logical Disks/Partitions)
 struct SharedDiskData {
     wchar_t letter;
     wchar_t label[128];
@@ -46,6 +50,33 @@ struct SharedDiskData {
 struct TemperatureData {
     wchar_t sensorName[128];
     float temperature;
+};
+
+// SMART Attribute structure for shared memory
+struct SmartAttributeSM {
+    int id;
+    wchar_t name[64]; // Ensure sufficient size
+    int value;
+    int worst;
+    int threshold;
+    long long rawValue; // Changed from 'raw' to avoid conflict, ensure type matches
+};
+
+// Physical Disk information structure for shared memory, including SMART attributes
+struct PhysicalDiskDataSM {
+    wchar_t name[128];          // e.g., "\\\\.\\PHYSICALDRIVE0"
+    wchar_t model[128];         // Disk model
+    wchar_t serialNumber[128];  // Serial number
+    wchar_t firmwareRevision[64]; // Firmware revision
+    uint64_t totalSize;         // Total size in bytes
+    wchar_t smartStatus[64];    // e.g., "OK", "Pred Fail"
+    wchar_t protocol[32];       // e.g., "NVMe", "SATA"
+    wchar_t type[32];           // e.g., "Fixed", "Removable"
+
+    int smartAttributeCount;
+    SmartAttributeSM smartAttributes[MAX_SMART_ATTRIBUTES_PER_DISK];
+    // Note: Partitions are not included here for simplicity,
+    // but could be added if needed in shared memory.
 };
 
 // Shared memory block structure (POD only)
@@ -82,9 +113,9 @@ struct SharedMemoryBlock {
     NetworkAdapterDataSM adapters[4];
     int adapterCount;
 
-    // Disk information
-    SharedDiskData disks[8];
-    int diskCount;
+    // Disk information (Logical Disks/Partitions)
+    SharedDiskData disks[8]; // This is for logical drives
+    int diskCount;           // Count of logical drives
 
     // Temperature sensors
     TemperatureData temperatures[10];
@@ -95,6 +126,16 @@ struct SharedMemoryBlock {
     SYSTEMTIME lastUpdate; 
     wchar_t motherboardName[128];
     wchar_t deviceName[128];
+
+    // NEW: Physical Disk and SMART information
+    int physicalDiskCountSM; // Renamed to avoid conflict if physicalDiskCount is used elsewhere
+    PhysicalDiskDataSM physicalDisksSM[MAX_PHYSICAL_DISKS_SM];
+
+    // Placeholder for future refactoring to include SMART data
+    /*
+    int physicalDiskCount;
+    PhysicalDiskDataSm disksSm[MAX_PHYSICAL_DISKS_SM]; // Define MAX_PHYSICAL_DISKS_SM
+    */
 };
 
 struct GPUData {
@@ -177,6 +218,46 @@ struct SystemData {
     std::vector<std::pair<std::string, double>> temperatures;
     std::string osVersion;
     SYSTEMTIME lastUpdate;
+};
+
+// 确保DriveInfo和SmartAttribute只在此定义一次，供DiskInfo.h等头文件引用
+struct DriveInfo {
+    char letter;
+    std::string label;
+    std::string fileSystem;
+    uint64_t totalSize;
+    uint64_t usedSpace;
+    uint64_t freeSpace;
+    bool isPhysical;
+};
+
+#ifndef SMART_ATTRIBUTE_STRUCT_DEFINED
+#define SMART_ATTRIBUTE_STRUCT_DEFINED
+struct SmartAttribute {
+    int id;
+    std::string name;
+    int value;
+    int worst;
+    int threshold;
+    long long raw; // Keep as 'raw' for std::vector<SmartAttribute>
+};
+#endif
+
+// This is the structure DiskInfo.h (UI side) will work with.
+// It should be similar to PhysicalDiskInfoBridge but use std::string.
+// We'll ensure DiskInfo.cpp populates this from PhysicalDiskDataSM.
+struct PhysicalDiskInfo {
+    std::string name; // e.g., "\\\\.\\PHYSICALDRIVE0" or a friendlier name like "Samsung SSD 970 EVO"
+    std::string model;
+    std::string serialNumber;
+    std::string firmwareRevision;
+    std::string type;     // e.g., "Fixed", "Removable"
+    std::string protocol; // e.g., "NVMe", "SATA"
+    uint64_t totalSize;
+    std::string smartStatus; // e.g., "OK", "Pred Fail"
+    std::vector<SmartAttribute> smartAttributes;
+    // Partitions could be a std::vector<PartitionInfo> if needed by UI directly on PhysicalDiskInfo
+    // For now, assuming partitions are handled separately or via logical disks.
 };
 
 #pragma pack(pop)

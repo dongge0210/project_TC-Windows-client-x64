@@ -2,78 +2,50 @@
 
 #include <string>
 #include <vector>
-#include <utility> // For std::pair
-#include <memory>  // For std::unique_ptr
-#include <msclr/gcroot.h>
+#include <utility>
+#include <memory>
+#include <map>
 
-// Forward declare .NET types
-namespace LibreHardwareMonitor { namespace Hardware {
-    ref class Computer;
-    ref class UpdateVisitor;
-    interface class IVisitor; // 修正：interface class 而不是 ref class
-} } // 注意：补全命名空间括号
+#include "../DataStruct/DataStruct.h"
+
+struct PartitionInfoBridge {
+    std::string letter;
+    std::string label;
+    std::string fileSystem;
+    std::string partitionTable;
+    uint64_t totalSize;
+    uint64_t usedSpace;
+};
+
+struct PhysicalDiskInfoBridge {
+    std::string name;
+    std::string model;
+    std::string serialNumber;
+    std::string firmwareRevision;
+    uint64_t totalSize;
+    std::string smartStatus;
+    std::string protocol;
+    std::string type;
+    std::vector<PartitionInfoBridge> partitions;
+    std::vector<SmartAttribute> smartAttributes;
+};
 
 /**
  * @brief LibreHardwareMonitor桥接类
  *
- * 提供对LibreHardwareMonitor库的访问功能，用于获取系统温度和其他硬件信息。
- * 使用PIMPL设计模式将CLR/.NET代码与C++代码隔离，提高兼容性。
+ * 只暴露纯C++接口，不出现任何CLR相关类型
  */
 class LibreHardwareMonitorBridge {
 public:
-    /**
-     * @brief 初始化LibreHardwareMonitor
-     *
-     * 尝试加载LibreHardwareMonitor库并初始化硬件监控功能。
-     * 如果已经初始化，则不进行任何操作。
-     */
     static void Initialize();
-
-    /**
-     * @brief 清理资源
-     *
-     * 释放所有分配的资源并关闭硬件监控功能。
-     */
     static void Cleanup();
-
-    /**
-     * @brief 获取温度数据
-     *
-     * Returns a vector of (sensor name, temperature) pairs, filtering out invalid or missing values.
-     * 返回的温度值为NaN（std::numeric_limits<double>::quiet_NaN()）时，表示传感器无效或libre输出-9999。
-     * 调用方应判断std::isnan(value)以识别无效温度。
-     * @return 包含传感器名称和温度值(°C)的向量
-     */
     static std::vector<std::pair<std::string, double>> GetTemperatures();
-
-    /**
-     * @brief 获取CPU功耗
-     *
-     * @return CPU功耗值(瓦特)
-     */
     static double GetCpuPower();
-
-    /**
-     * @brief 获取GPU功耗
-     *
-     * @return GPU功耗值(瓦特)
-     */
     static double GetGpuPower();
-
-    /**
-     * @brief 获取总功耗
-     *
-     * @return 总功耗值(瓦特)
-     */
     static double GetTotalPower();
-
-    ref class UpdateVisitor;
+    static std::vector<PhysicalDiskInfoBridge> GetPhysicalDisksWithSmart();
+    static std::vector<SmartAttribute> GetSmartAttributes(const std::string& physicalDiskName);
 private:
-    // 初始化状态标志
-    static bool initialized;    
-
-    // .NET对象的托管指针
-    static msclr::gcroot<LibreHardwareMonitor::Hardware::Computer^> computer;
-    // Use IVisitor^ for compatibility with Accept()
-    static msclr::gcroot<LibreHardwareMonitor::Hardware::IVisitor^> visitor;
+    static bool initialized;
+    // 不在头文件暴露任何CLR类型和gcroot成员
 };

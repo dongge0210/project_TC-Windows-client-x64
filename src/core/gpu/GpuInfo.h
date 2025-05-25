@@ -4,7 +4,9 @@
 #include <d3d11.h>
 
 #if defined(SUPPORT_NVIDIA_GPU)
+#ifdef USE_NVML
 #include <nvml.h>
+#endif
 #endif
 
 #if defined(SUPPORT_DIRECTX)

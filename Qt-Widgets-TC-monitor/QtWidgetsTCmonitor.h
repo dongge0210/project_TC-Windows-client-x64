@@ -25,6 +25,9 @@
 #include <QMap>
 #include <QVector>
 #include <QTreeWidget>
+#include <QPushButton>
+#include <QDialog>
+#include <QTableWidget>
 #include "../src/core/DataStruct/DataStruct.h"
 #include "../src/core/utils/Logger.h"
 #include "ui_QtWidgetsTCmonitor.h"
@@ -65,6 +68,7 @@ private:
     void updateDiskInfo(SharedMemoryBlock* pBuffer);
     void UpdateDiskInfoUI();
     void updateDiskTreeWidget(); // 新增：刷新磁盘树形控件
+    void showSmartDetails(const QString& diskName); // 新增：显示SMART详情弹窗
 
     // Formatting helpers
     QString formatSize(uint64_t bytes);

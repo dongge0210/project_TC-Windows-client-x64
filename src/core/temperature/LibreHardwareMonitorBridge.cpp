@@ -9,6 +9,8 @@
 #include <locale>
 #include <algorithm> // 新增：安全字符串转换和清理工具
 #include <sstream> // 修复 stringstream 未定义
+#include <string> // 确保string可见
+#include "../DataStruct/DataStruct.h" // 包含DataStruct.h
 #using "F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor\\bin\\Debug\\net472\\LibreHardwareMonitorLib.dll"
 
 using namespace LibreHardwareMonitor::Hardware;
@@ -16,23 +18,26 @@ using namespace System;
 using namespace System::Collections::Generic;
 using namespace msclr::interop;
 
-// 定义静态成员
+// CLR相关静态成员和类型只在cpp文件内声明
+static msclr::gcroot<Computer^> computer;
+static msclr::gcroot<IVisitor^> visitor;
+
+// Define the static member - ensure this is the only definition.
 bool LibreHardwareMonitorBridge::initialized = false;
-msclr::gcroot<Computer^> LibreHardwareMonitorBridge::computer;
-msclr::gcroot<IVisitor^> LibreHardwareMonitorBridge::visitor;
 
 public ref class UpdateVisitor : public IVisitor
 {
 public:
-    virtual void VisitComputer(IComputer^ computer) override {}
-    virtual void VisitHardware(IHardware^ hardware) override
+    // Ensure 'override' specifier is removed from all methods here
+    virtual void VisitComputer(IComputer^ computer) {}
+    virtual void VisitHardware(IHardware^ hardware)
     {
         hardware->Update();
         for each (IHardware ^ subHardware in hardware->SubHardware)
             subHardware->Accept(this);
     }
-    virtual void VisitSensor(ISensor^ sensor) override {}
-    virtual void VisitParameter(IParameter^ parameter) override {}
+    virtual void VisitSensor(ISensor^ sensor) {}
+    virtual void VisitParameter(IParameter^ parameter) {}
 };
 
 // 辅助函数：去除字符串前后空白和不可见字符
@@ -237,4 +242,85 @@ double LibreHardwareMonitorBridge::GetTotalPower() {
         anyPowerSensor = true;
     }
     return maxTotalPower;
+}
+
+// 获取所有物理磁盘及其SMART信息
+std::vector<PhysicalDiskInfoBridge> LibreHardwareMonitorBridge::GetPhysicalDisksWithSmart() {
+    std::vector<PhysicalDiskInfoBridge> result;
+    if (!initialized) return result;
+    computer->Accept(visitor);
+
+    for each (IHardware ^ hardware in computer->Hardware) {
+        // 只处理物理磁盘
+        if (hardware->HardwareType == HardwareType::Storage) {
+            PhysicalDiskInfoBridge info;
+            info.name = msclr::interop::marshal_as<std::string>(hardware->Name);
+            // 类型、协议等信息无法直接获取，留空或用占位符
+            info.type = "";      // 可通过WMI或其它方式补充
+            info.protocol = "";  // 可通过WMI或其它方式补充
+            // 容量通过Sensors查找
+            info.totalSize = 0;
+            info.smartStatus = ""; // SMART健康状态无法直接获取，后续可通过ISmart接口补充
+
+            // 遍历Sensors，查找容量相关信息
+            for each (ISensor ^ sensor in hardware->Sensors) {
+                if (sensor->SensorType == SensorType::Data) {
+                    std::string sname = msclr::interop::marshal_as<std::string>(sensor->Name);
+                    if (sname.find("Capacity") != std::string::npos && sensor->Value.HasValue) {
+                        info.totalSize = static_cast<uint64_t>(sensor->Value.GetValueOrDefault());
+                    }
+                }
+                // 无SensorType::Health，无法直接获取健康状态
+            }
+
+            // SMART属性
+            info.smartAttributes = GetSmartAttributes(info.name);
+
+            // 分区信息无法直接通过LibreHardwareMonitor获取，可通过WMI/WinAPI补充
+            // 留空
+            result.push_back(info);
+        }
+    }
+    return result;
+}
+
+// 获取指定物理磁盘的SMART详细属性
+std::vector<SmartAttribute> LibreHardwareMonitorBridge::GetSmartAttributes(const std::string& physicalDiskName) {
+    std::vector<SmartAttribute> attrs;
+    if (!initialized) return attrs;
+    computer->Accept(visitor);
+
+    for each (IHardware ^ hardware in computer->Hardware) {
+        if (hardware->HardwareType == HardwareType::Storage &&
+            msclr::interop::marshal_as<std::string>(hardware->Name) == physicalDiskName) {
+            // 遍历所有Sensors，筛选SMART相关
+            for each (ISensor ^ sensor in hardware->Sensors) {
+                if (sensor->SensorType == SensorType::Data) {
+                    SmartAttribute a;
+                    // 尝试从Name中解析ID和名称
+                    std::string sname = msclr::interop::marshal_as<std::string>(sensor->Name);
+                    // 例： "05 Reallocated Sectors Count"
+                    size_t spacePos = sname.find(' ');
+                    if (spacePos != std::string::npos) {
+                        try {
+                            a.id = std::stoi(sname.substr(0, spacePos));
+                        } catch (...) {
+                            a.id = 0;
+                        }
+                        a.name = sname.substr(spacePos + 1);
+                    } else {
+                        a.id = 0;
+                        a.name = sname;
+                    }
+                    a.value = sensor->Value.HasValue ? static_cast<int>(sensor->Value.GetValueOrDefault()) : 0;
+                    a.worst = 0;     // LibreHardwareMonitor未直接提供
+                    a.threshold = 0; // LibreHardwareMonitor未直接提供
+                    a.raw = 0;       // LibreHardwareMonitor未直接提供
+                    attrs.push_back(a);
+                }
+            }
+            break;
+        }
+    }
+    return attrs;
 }

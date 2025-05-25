@@ -2,7 +2,9 @@
 #include "../Utils/Logger.h"
 #include "WmiManager.h"
 #include <comutil.h>
+#ifdef USE_NVML
 #include <nvml.h>
+#endif
 #include <sstream>
 #include <iomanip>
 #include <windows.h>
@@ -20,7 +22,8 @@ GpuInfo::GpuInfo(WmiManager& manager) : wmiManager(manager) {
         Logger::Error("WMI服务未初始化");
         return;
     }
-    pSvc = wmiManager.GetWmiService();
+    // Revert to using GetWmiService() or the correct public accessor
+    pSvc = wmiManager.GetWmiService(); 
     DetectGpusViaWmi();
 }
 
@@ -236,6 +239,7 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         return;
     }
 
+#ifdef USE_NVML
     try {
         static bool nvmlInitialized = false;
         // 合并显存与计算能力日志的标记，避免重复打印
@@ -246,7 +250,8 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
         if (!nvmlInitialized) {
             nvmlReturn_t initResult = nvmlInit();
             if (NVML_SUCCESS != initResult) {
-                Logger::Error("NVML 初始化失败: " + std::string(nvmlErrorString(initResult)));
+                // Fix C2678 by explicitly constructing std::string
+                Logger::Error(std::string("NVML 初始化失败: ") + std::string(nvmlErrorString(initResult)));
                 return;
             }
             nvmlInitialized = true;
@@ -254,9 +259,10 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
 
         // 设备句柄获取
         nvmlDevice_t device;
-        nvmlReturn_t result = nvmlDeviceGetHandleByIndex(0, &device);
+        nvmlReturn_t result = nvmlDeviceGetHandleByIndex(0, &device); // Assuming index 0 for simplicity, adjust if multiple NVIDIA GPUs are handled differently
         if (NVML_SUCCESS != result) {
-            Logger::Error("获取 NVIDIA 设备句柄失败: " + std::string(nvmlErrorString(result)));
+            // Fix C2678
+            Logger::Error(std::string("获取 NVIDIA 设备句柄失败: ") + std::string(nvmlErrorString(result)));
             return;
         }
 
@@ -299,6 +305,7 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
             Logger::Info("GPU功率: " + std::to_string(power) + " W");
         }
         // 保留 NVML 资源以便后续使用
+        // nvmlShutdown(); // Consider shutdown strategy, perhaps in destructor or a dedicated cleanup method if NVML is used extensively.
 
     }
     catch (const std::exception& e) {
@@ -307,22 +314,28 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
     catch (...) {
         Logger::Error("查询 NVIDIA GPU 信息时发生未知异常");
     }
+#else
+    // Optional: Log that NVML is not used or handle NVIDIA GPU info differently
+    Logger::Info("NVIDIA GPU 信息查询跳过 (NVML 未启用).");
+#endif
 }
 
 double GpuInfo::GetGpuPowerNVML() {
-#ifdef _WIN32
+#if defined(_WIN32) && defined(USE_NVML) // Ensure USE_NVML is also checked here
     static bool loggedNotSupported = false; // 防止重复刷屏
     nvmlReturn_t result;
     result = nvmlInit_v2();
     if (result != NVML_SUCCESS) {
-        Logger::Error(std::string("NVML 初始化失败: ") + nvmlErrorString(result));
+        // Fix C2678
+        Logger::Error(std::string("NVML 初始化失败: ") + std::string(nvmlErrorString(result)));
         return std::numeric_limits<double>::quiet_NaN();
     }
 
     nvmlDevice_t device;
     result = nvmlDeviceGetHandleByIndex_v2(0, &device); // 取第一个GPU
     if (result != NVML_SUCCESS) {
-        Logger::Error(std::string("NVML 获取设备句柄失败: ") + nvmlErrorString(result));
+        // Fix C2678
+        Logger::Error(std::string("NVML 获取设备句柄失败: ") + std::string(nvmlErrorString(result)));
         nvmlShutdown();
         return std::numeric_limits<double>::quiet_NaN();
     }
@@ -330,7 +343,8 @@ double GpuInfo::GetGpuPowerNVML() {
     nvmlEnableState_t pmSupported = NVML_FEATURE_DISABLED;
     result = nvmlDeviceGetPowerManagementMode(device, &pmSupported);
     if (result != NVML_SUCCESS) {
-        Logger::Error(std::string("NVML 检查功率管理支持失败: ") + nvmlErrorString(result));
+        // Fix C2678
+        Logger::Error(std::string("NVML 检查功率管理支持失败: ") + std::string(nvmlErrorString(result)));
         nvmlShutdown();
         return std::numeric_limits<double>::quiet_NaN();
     }
@@ -349,7 +363,8 @@ double GpuInfo::GetGpuPowerNVML() {
     result = nvmlDeviceGetPowerUsage(device, &power_mw);
     if (result != NVML_SUCCESS) {
         if (!loggedNotSupported) {
-            Logger::Warning("NVML: 设备支持功率管理，但获取GPU功率失败: " + std::string(nvmlErrorString(result)));
+            // Fix C2678
+            Logger::Warning(std::string("NVML: 设备支持功率管理，但获取GPU功率失败: ") + std::string(nvmlErrorString(result)));
             loggedNotSupported = true;
         }
         nvmlShutdown();

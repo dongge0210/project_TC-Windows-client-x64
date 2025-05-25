@@ -18,6 +18,7 @@
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QTableWidget>
+#include <QtWidgets/QTreeWidget>
 #include "../src/core/DataStruct/SharedMemoryManager.h"
 
 QT_BEGIN_NAMESPACE
@@ -29,6 +30,7 @@ public:
     QVBoxLayout *verticalLayout;
     QPushButton *pushButton;
     QTableWidget *diskTable;
+    QTreeWidget *treeWidgetDiskInfo;
     QMenuBar *menuBar;
     QStatusBar *statusBar;
 
@@ -55,6 +57,11 @@ public:
         diskTable->setHorizontalHeaderLabels(QStringList() << "盘符" << "卷标" << "文件系统" << "总容量" << "已用空间" << "可用空间");
 
         verticalLayout->addWidget(diskTable);
+
+        treeWidgetDiskInfo = new QTreeWidget(centralWidget);
+        treeWidgetDiskInfo->setObjectName("treeWidgetDiskInfo");
+
+        verticalLayout->addWidget(treeWidgetDiskInfo);
 
         // 修正：设置中心部件
         QtWidgetsTCmonitorClass->setCentralWidget(centralWidget);

@@ -155,6 +155,25 @@ std::string WinUtils::WstringToUtf8String(const std::wstring& wstr) {
     return utf8Str;
 }
 
+std::string WinUtils::WstringToStdString(const std::wstring& wstr) {
+    if (wstr.empty()) return std::string();
+
+    int bufferSize = WideCharToMultiByte(
+        CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()),
+        nullptr, 0, nullptr, nullptr
+    );
+
+    if (bufferSize <= 0) return std::string();
+
+    std::string str(bufferSize, 0);
+    WideCharToMultiByte(
+        CP_UTF8, 0, wstr.c_str(), static_cast<int>(wstr.length()),
+        &str[0], bufferSize, nullptr, nullptr
+    );
+
+    return str;
+}
+
 #ifdef QT_CORE_LIB
 QString WinUtils::WstringToQString(const std::wstring& wstr) {
     // 使用 QString::fromStdWString，Qt 内部已处理好对齐

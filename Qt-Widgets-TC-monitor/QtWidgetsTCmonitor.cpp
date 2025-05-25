@@ -4,7 +4,7 @@
 #include <windows.h>
 #include "../src/core/DataStruct/SharedMemoryManager.h"
 #include "../src/core/Utils/WinUtils.h"  // Include WinUtils for string conversion
-#include "src/core/disk/DiskInfo.h" // Include DiskInfo for disk-related operations
+#include "../src/core/disk/DiskInfo.h" // Include DiskInfo for disk-related operations
 
 #include <QtWidgets/QScrollArea>
 #include <QtWidgets/QSplitter>
@@ -937,36 +937,37 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
 
 void QtWidgetsTCmonitor::updateDiskTreeWidget()
 {
+    if (!ui->treeWidgetDiskInfo) return; 
     ui->treeWidgetDiskInfo->clear();
 
-    // 获取物理磁盘信息
-    auto physicalDisks = DiskInfo::GetAllPhysicalDisks(); // 你需要在DiskInfo中实现此方法
+    // Get physical disk information (now from shared memory via DiskInfo class)
+    auto physicalDisks = DiskInfo::GetAllPhysicalDisks(); // This now reads from shared memory
 
     for (const auto& pdisk : physicalDisks) {
-        // 父节点：物理磁盘
         QTreeWidgetItem* diskItem = new QTreeWidgetItem(ui->treeWidgetDiskInfo);
-        diskItem->setText(0, QString::fromStdString(pdisk.name));
-        diskItem->setText(1, QString::fromStdString(pdisk.type));
-        diskItem->setText(2, QString::fromStdString(pdisk.protocol));
-        diskItem->setText(3, QString::fromStdString(DiskInfo::FormatSize(pdisk.totalSize)));
-        diskItem->setText(4, ""); // 物理磁盘不显示已用
-        diskItem->setText(5, ""); // 物理磁盘不显示百分比
-        diskItem->setText(6, QString::fromStdString(pdisk.smartStatus));
-
-        // 子节点：分区/逻辑驱动器
-        for (const auto& part : pdisk.partitions) {
-            QTreeWidgetItem* partItem = new QTreeWidgetItem(diskItem);
-            partItem->setText(0, QString::fromStdString(part.letter + " " + part.label));
-            partItem->setText(1, QString::fromStdString(part.fileSystem));
-            partItem->setText(2, QString::fromStdString(part.partitionTable));
-            partItem->setText(3, QString::fromStdString(DiskInfo::FormatSize(part.totalSize)));
-            partItem->setText(4, QString::fromStdString(DiskInfo::FormatSize(part.usedSpace)));
-            double percent = part.totalSize > 0 ? (double)part.usedSpace / part.totalSize * 100.0 : 0.0;
-            partItem->setText(5, QString("%1%").arg(percent, 0, 'f', 1));
-            partItem->setText(6, ""); // SMART仅物理磁盘显示
+        QString displayName = QString::fromStdString(pdisk.model);
+        if (displayName.isEmpty()) {
+            displayName = QString::fromStdString(pdisk.name);
         }
+        diskItem->setText(0, displayName); // Column 0: Name/Model
+        diskItem->setText(1, QString::fromStdString(pdisk.type));     // Column 1: Type (e.g. Fixed)
+        diskItem->setText(2, QString::fromStdString(pdisk.protocol)); // Column 2: Protocol (e.g. NVMe, SATA)
+        diskItem->setText(3, QString::fromStdString(DiskInfo::FormatSize(pdisk.totalSize))); // Column 3: Total Capacity
+        diskItem->setText(4, ""); // Column 4: Used Space (N/A for physical disk aggregate)
+        diskItem->setText(5, ""); // Column 5: Usage % (N/A for physical disk aggregate)
+        diskItem->setText(6, QString::fromStdString(pdisk.smartStatus)); // Column 6: SMART Status
+
+        QPushButton* btn = new QPushButton(tr("SMART详情"), ui->treeWidgetDiskInfo);
+        ui->treeWidgetDiskInfo->setItemWidget(diskItem, 6, btn); // Place button in SMART status column or a new one
+        
+        connect(btn, &QPushButton::clicked, this, [this, diskIdentifier = pdisk.name]() {
+            showSmartDetails(QString::fromStdString(diskIdentifier));
+        });
     }
     ui->treeWidgetDiskInfo->expandAll();
+    for(int i = 0; i < ui->treeWidgetDiskInfo->columnCount(); ++i) {
+        ui->treeWidgetDiskInfo->resizeColumnToContents(i);
+    }
 }
 
 void QtWidgetsTCmonitor::updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer)
@@ -1013,5 +1014,34 @@ void QtWidgetsTCmonitor::onNetworkSelectionChanged(int index)
     if (index < 0 || index >= networkIndices.size()) return;
     currentNetworkIndex = networkIndices[index];
     updateFromSharedMemory();
+}
+
+void QtWidgetsTCmonitor::showSmartDetails(const QString& diskIdentifier)
+{
+    auto attrs = DiskInfo::GetSmartAttributes(diskIdentifier.toStdString()); 
+    QDialog dlg(this);
+    dlg.setWindowTitle(tr("SMART详细信息 - %1").arg(diskIdentifier)); 
+    QVBoxLayout* layout = new QVBoxLayout(&dlg);
+
+    QTableWidget* table = new QTableWidget(static_cast<int>(attrs.size()), 6, &dlg);
+    table->setHorizontalHeaderLabels({tr("ID"), tr("名称"), tr("当前值"), tr("最差值"), tr("阈值"), tr("原始值")});
+    int row = 0;
+    for (const auto& a : attrs) {
+        table->setItem(row, 0, new QTableWidgetItem(QString::number(a.id)));
+        table->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(a.name)));
+        table->setItem(row, 2, new QTableWidgetItem(QString::number(a.value)));
+        table->setItem(row, 3, new QTableWidgetItem(QString::number(a.worst)));
+        table->setItem(row, 4, new QTableWidgetItem(QString::number(a.threshold)));
+        table->setItem(row, 5, new QTableWidgetItem(QString::number(a.raw))); 
+        ++row;
+    }
+    table->resizeColumnsToContents();
+    layout->addWidget(table);
+
+    QPushButton* closeBtn = new QPushButton(tr("关闭"), &dlg);
+    connect(closeBtn, &QPushButton::clicked, &dlg, &QDialog::accept);
+    layout->addWidget(closeBtn);
+
+    dlg.exec();
 }
 

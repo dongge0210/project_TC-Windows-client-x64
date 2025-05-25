@@ -361,54 +361,64 @@ int main(int argc, char* argv[]) {
 
             // 只显示物理磁盘
             sysInfo.disks.clear();
-            for (const auto& disk : DiskInfo::GetAllDisks()) {
-                if (disk.isPhysical) { // 只添加物理磁盘
-                    sysInfo.disks.push_back(disk);
-                }
+            for (const auto& disk : DiskInfo::GetAllPhysicalDisks()) {
+                // Convert PhysicalDiskInfo to DiskInfoData for sysInfo.disks
+                DiskInfoData diskData;
+                diskData.letter = 0; // or use a helper if you can map name to letter
+                diskData.label = disk.name; // or disk.model if you prefer
+                diskData.fileSystem = ""; // Not available in PhysicalDiskInfo
+                diskData.totalSize = disk.totalSize;
+                diskData.usedSpace = 0; // Not available in PhysicalDiskInfo
+                diskData.freeSpace = 0; // Not available in PhysicalDiskInfo
+                diskData.isPhysical = true;
+                sysInfo.disks.push_back(diskData);
             }
 
             sysInfo.motherboardName = os.GetMotherboardName();
             sysInfo.deviceName = os.GetDeviceName();
 
             // 写入共享内存，使用 SharedMemoryManager 代替
-            if (!SharedMemoryManager::GetBuffer() && !SharedMemoryManager::InitSharedMemory()) {
-                // Handle shared memory initialization failure
-                Logger::Error("Failed to initialize shared memory: " + SharedMemoryManager::GetSharedMemoryError());
-            } else {
-                SharedMemoryManager::WriteToSharedMemory(sysInfo);
+            SharedMemoryBlock* pBuffer = SharedMemoryManager::GetBuffer(); // Get buffer once
+            if (pBuffer) { // Ensure buffer is valid before writing
+                auto physicalDisksFromBridge = LibreHardwareMonitorBridge::GetPhysicalDisksWithSmart();
+                pBuffer->physicalDiskCountSM = static_cast<int>(physicalDisksFromBridge.size());
+                if (pBuffer->physicalDiskCountSM > MAX_PHYSICAL_DISKS_SM) {
+                    pBuffer->physicalDiskCountSM = MAX_PHYSICAL_DISKS_SM; // Cap at max
+                    Logger::Warning("Too many physical disks detected, capping at " + std::to_string(MAX_PHYSICAL_DISKS_SM));
+                }
+
+                for (int i = 0; i < pBuffer->physicalDiskCountSM; ++i) {
+                    const auto& bridgeDisk = physicalDisksFromBridge[i];
+                    PhysicalDiskDataSM& smDisk = pBuffer->physicalDisksSM[i];
+
+                    // Convert and copy PhysicalDiskInfoBridge to PhysicalDiskDataSM
+                    wcsncpy_s(smDisk.name, sizeof(smDisk.name) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.name).c_str(), _TRUNCATE);
+                    wcsncpy_s(smDisk.model, sizeof(smDisk.model) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.model).c_str(), _TRUNCATE);
+                    wcsncpy_s(smDisk.serialNumber, sizeof(smDisk.serialNumber) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.serialNumber).c_str(), _TRUNCATE);
+                    wcsncpy_s(smDisk.firmwareRevision, sizeof(smDisk.firmwareRevision) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.firmwareRevision).c_str(), _TRUNCATE);
+                    smDisk.totalSize = bridgeDisk.totalSize;
+                    wcsncpy_s(smDisk.smartStatus, sizeof(smDisk.smartStatus) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.smartStatus).c_str(), _TRUNCATE);
+                    wcsncpy_s(smDisk.protocol, sizeof(smDisk.protocol) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.protocol).c_str(), _TRUNCATE);
+                    wcsncpy_s(smDisk.type, sizeof(smDisk.type) / sizeof(wchar_t), WinUtils::StringToWstring(bridgeDisk.type).c_str(), _TRUNCATE);
+                    
+                    smDisk.smartAttributeCount = static_cast<int>(bridgeDisk.smartAttributes.size());
+                    if (smDisk.smartAttributeCount > MAX_SMART_ATTRIBUTES_PER_DISK) {
+                        smDisk.smartAttributeCount = MAX_SMART_ATTRIBUTES_PER_DISK; // Cap
+                    }
+
+                    for (int j = 0; j < smDisk.smartAttributeCount; ++j) {
+                        const auto& bridgeAttr = bridgeDisk.smartAttributes[j];
+                        // Additional processing for SMART attributes can be added here
+                    }
+                }
             }
-
-            // 等待1秒
-            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-            
-        // 清理资源
-        LibreHardwareMonitorBridge::Cleanup();
-        SharedMemoryManager::CleanupSharedMemory();
-
-        // Add .NET 8 runtime path to DLL search paths
-        wchar_t runtimePath[MAX_PATH] = L"";
-        GetEnvironmentVariableW(L"ProgramFiles", runtimePath, MAX_PATH);
-
-        // Add to DLL search path
-        AddDllDirectory(runtimePath);
-
-        // Set LibreHardwareMonitor DLL path
-        SetDllDirectory(L"F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net8.0");
-
-        CoUninitialize();
-
-        Logger::Shutdown();
-
-        Logger::Info("程序正常退出");
-        return 0;
-    }
-    catch (System::Exception^ ex) {
-        std::wstring wstr = msclr::interop::marshal_as<std::wstring>(ex->Message);
-        Logger::Warning(wstr);
     }
     catch (const std::exception& e) {
-        Logger::Error("程序发生致命错误: " + std::string(e.what()));
+        Logger::Error("程序运行时发生异常: " + std::string(e.what()));
+        QMessageBox::critical(nullptr, "错误", "程序运行时发生异常，程序将退出。");
         return 1;
     }
+
+    return 0;
 }

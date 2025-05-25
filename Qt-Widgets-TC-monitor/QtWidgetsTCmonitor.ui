@@ -131,6 +131,7 @@
         <string>SMART状态</string>
        </property>
       </column>
+      <!-- 磁盘信息区域：treeWidgetDiskInfo的第7列用于SMART状态和按钮，按钮由代码动态插入 -->
      </widget>
     </item>
    </layout>
