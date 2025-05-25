@@ -94,6 +94,45 @@
       </layout>
      </widget>
     </item>
+    <item>
+     <widget class="QTreeWidget" name="treeWidgetDiskInfo">
+      <column>
+       <property name="text">
+        <string>名称</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>类型/文件系统</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>连接协议/分区表</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>总容量</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>已用容量</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>使用率</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>SMART状态</string>
+       </property>
+      </column>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">

@@ -9,7 +9,7 @@
 #include <locale>
 #include <algorithm> // 新增：安全字符串转换和清理工具
 #include <sstream> // 修复 stringstream 未定义
-#using "F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor-0.9.4\\bin\\Debug\\net472\\LibreHardwareMonitorLib.dll"
+#using "F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor\\bin\\Debug\\net472\\LibreHardwareMonitorLib.dll"
 
 using namespace LibreHardwareMonitor::Hardware;
 using namespace System;

@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "../src/core/DataStruct/SharedMemoryManager.h"
 #include "../src/core/Utils/WinUtils.h"  // Include WinUtils for string conversion
+#include "src/core/disk/DiskInfo.h" // Include DiskInfo for disk-related operations
 
 #include <QtWidgets/QScrollArea>
 #include <QtWidgets/QSplitter>
@@ -334,9 +335,13 @@ void QtWidgetsTCmonitor::createDiskSection()
     diskGroupBox = new QGroupBox(tr("磁盘信息"), this);
     QVBoxLayout* layout = new QVBoxLayout(diskGroupBox);
 
-    // Disk info container
-    QWidget* diskContainer = new QWidget();
-    layout->addWidget(diskContainer);
+    // Disk info tree widget
+    ui->treeWidgetDiskInfo = new QTreeWidget(this);
+    ui->treeWidgetDiskInfo->setColumnCount(7);
+    QStringList headers;
+    headers << tr("名称") << tr("类型") << tr("协议") << tr("总容量") << tr("已用空间") << tr("使用率") << tr("SMART状态");
+    ui->treeWidgetDiskInfo->setHeaderLabels(headers);
+    layout->addWidget(ui->treeWidgetDiskInfo);
 }
 
 void QtWidgetsTCmonitor::createNetworkSection()
@@ -477,74 +482,7 @@ void QtWidgetsTCmonitor::updateSystemInfo(const SystemInfo& sysInfo)
     updateTemperatureData(tempFloats);
 
     // Update disk info
-    // Need to clear existing disk info layout first
-    QLayout* currentLayout = diskGroupBox->layout();
-    QWidget* diskContainer = nullptr;
-
-    if (currentLayout) {
-        // Get disk container from current layout
-        for (int i = 0; i < currentLayout->count(); ++i) {
-            QWidget* widget = currentLayout->itemAt(i)->widget();
-            if (widget) {
-                diskContainer = widget;
-                break;
-            }
-        }
-    }
-
-    // If container not found, create a new one
-    if (!diskContainer) {
-        diskContainer = new QWidget(diskGroupBox);
-        static_cast<QVBoxLayout*>(currentLayout)->addWidget(diskContainer);
-    }
-
-    // Delete existing layout
-    if (diskContainer->layout()) {
-        QLayoutItem* child;
-        while ((child = diskContainer->layout()->takeAt(0)) != nullptr) {
-            if (child->widget()) {
-                child->widget()->deleteLater();
-            }
-            delete child;
-        }
-        delete diskContainer->layout();
-    }
-
-    QVBoxLayout* diskLayout = new QVBoxLayout(diskContainer);
-
-    for (const auto& disk : sysInfo.disks) {
-        QString diskLabel = QString("%1: %2").arg(QChar(disk.letter)).arg(tr("驱动器"));
-        if (!disk.label.empty()) {
-            diskLabel += QString(" (%1)").arg(QString::fromStdString(disk.label));
-        }
-
-        QGroupBox* diskBox = new QGroupBox(diskLabel);
-        QGridLayout* diskInfoLayout = new QGridLayout(diskBox);
-
-        int row = 0;
-        if (!disk.fileSystem.empty()) {
-            diskInfoLayout->addWidget(new QLabel(tr("文件系统:"), diskBox), row, 0);
-            diskInfoLayout->addWidget(new QLabel(QString::fromStdString(disk.fileSystem), diskBox), row++, 1);
-        }
-
-        diskInfoLayout->addWidget(new QLabel(tr("总容量:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatSize(disk.totalSize), diskBox), row++, 1);
-
-        diskInfoLayout->addWidget(new QLabel(tr("已用空间:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatSize(disk.usedSpace), diskBox), row++, 1);
-
-        uint64_t freeSpace = disk.totalSize - disk.usedSpace;
-        diskInfoLayout->addWidget(new QLabel(tr("可用空间:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatSize(freeSpace), diskBox), row++, 1);
-
-        double usagePercent = static_cast<double>(disk.usedSpace) / disk.totalSize * 100.0;
-        diskInfoLayout->addWidget(new QLabel(tr("使用率:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatPercentage(usagePercent), diskBox), row++, 1);
-
-        diskLayout->addWidget(diskBox);
-    }
-
-    diskLayout->addStretch();
+    updateDiskTreeWidget();
 }
 
 void QtWidgetsTCmonitor::updateCharts()
@@ -976,7 +914,7 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
         }
 
         // Update disk information
-        updateDiskInfo(pBuffer);
+        updateDiskTreeWidget();
         
         // Update charts
         updateCharts();
@@ -997,112 +935,38 @@ void QtWidgetsTCmonitor::updateFromSharedMemory() {
     }
 }
 
-// New helper method to update disk information
-void QtWidgetsTCmonitor::updateDiskInfo(SharedMemoryBlock* pBuffer) {
-    if (!pBuffer || pBuffer->diskCount <= 0) return;
+void QtWidgetsTCmonitor::updateDiskTreeWidget()
+{
+    ui->treeWidgetDiskInfo->clear();
 
-    // Need to clear existing disk info layout first
-    QLayout* currentLayout = diskGroupBox->layout();
-    QWidget* diskContainer = nullptr;
+    // 获取物理磁盘信息
+    auto physicalDisks = DiskInfo::GetAllPhysicalDisks(); // 你需要在DiskInfo中实现此方法
 
-    if (currentLayout) {
-        // Get disk container from current layout
-        for (int i = 0; i < currentLayout->count(); ++i) {
-            QWidget* widget = currentLayout->itemAt(i)->widget();
-            if (widget) {
-                diskContainer = widget;
-                break;
-            }
+    for (const auto& pdisk : physicalDisks) {
+        // 父节点：物理磁盘
+        QTreeWidgetItem* diskItem = new QTreeWidgetItem(ui->treeWidgetDiskInfo);
+        diskItem->setText(0, QString::fromStdString(pdisk.name));
+        diskItem->setText(1, QString::fromStdString(pdisk.type));
+        diskItem->setText(2, QString::fromStdString(pdisk.protocol));
+        diskItem->setText(3, QString::fromStdString(DiskInfo::FormatSize(pdisk.totalSize)));
+        diskItem->setText(4, ""); // 物理磁盘不显示已用
+        diskItem->setText(5, ""); // 物理磁盘不显示百分比
+        diskItem->setText(6, QString::fromStdString(pdisk.smartStatus));
+
+        // 子节点：分区/逻辑驱动器
+        for (const auto& part : pdisk.partitions) {
+            QTreeWidgetItem* partItem = new QTreeWidgetItem(diskItem);
+            partItem->setText(0, QString::fromStdString(part.letter + " " + part.label));
+            partItem->setText(1, QString::fromStdString(part.fileSystem));
+            partItem->setText(2, QString::fromStdString(part.partitionTable));
+            partItem->setText(3, QString::fromStdString(DiskInfo::FormatSize(part.totalSize)));
+            partItem->setText(4, QString::fromStdString(DiskInfo::FormatSize(part.usedSpace)));
+            double percent = part.totalSize > 0 ? (double)part.usedSpace / part.totalSize * 100.0 : 0.0;
+            partItem->setText(5, QString("%1%").arg(percent, 0, 'f', 1));
+            partItem->setText(6, ""); // SMART仅物理磁盘显示
         }
     }
-
-    // If container not found, create a new one
-    if (!diskContainer) {
-        diskContainer = new QWidget(diskGroupBox);
-        static_cast<QVBoxLayout*>(currentLayout)->addWidget(diskContainer);
-    }
-
-    // Delete existing layout
-    if (diskContainer->layout()) {
-        QLayoutItem* child;
-        while ((child = diskContainer->layout()->takeAt(0)) != nullptr) {
-            if (child->widget()) {
-                child->widget()->deleteLater();
-            }
-            delete child;
-        }
-        delete diskContainer->layout();
-    }
-
-    // Create new layout
-    QVBoxLayout* diskLayout = new QVBoxLayout(diskContainer);
-
-    // Add disk info for each disk in shared memory
-    for (int i = 0; i < pBuffer->diskCount; i++) {
-        auto& disk = pBuffer->disks[i];
-        QString diskLabel = QString("%1: %2").arg(QChar(disk.letter)).arg(tr("驱动器"));
-        
-        QString label = isWCharArrayNullTerminated(disk.label, 128)
-            ? WinUtils::WstringToQString(std::wstring(disk.label))
-            : QString();
-        if (!label.isEmpty()) {
-            diskLabel += QString(" (%1)").arg(label);
-        }
-
-        QGroupBox* diskBox = new QGroupBox(diskLabel);
-        QGridLayout* diskInfoLayout = new QGridLayout(diskBox);
-
-        int row = 0;
-        QString fileSystem = isWCharArrayNullTerminated(disk.fileSystem, 32)
-            ? WinUtils::WstringToQString(std::wstring(disk.fileSystem))
-            : QString();
-        if (!fileSystem.isEmpty()) {
-            diskInfoLayout->addWidget(new QLabel(tr("文件系统:"), diskBox), row, 0);
-            diskInfoLayout->addWidget(new QLabel(fileSystem, diskBox), row++, 1);
-        }
-
-        diskInfoLayout->addWidget(new QLabel(tr("总容量:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatSize(disk.totalSize), diskBox), row++, 1);
-
-        diskInfoLayout->addWidget(new QLabel(tr("已用空间:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatSize(disk.usedSpace), diskBox), row++, 1);
-
-        uint64_t freeSpace = disk.freeSpace;
-        diskInfoLayout->addWidget(new QLabel(tr("可用空间:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatSize(freeSpace), diskBox), row++, 1);
-
-        double usagePercent = static_cast<double>(disk.usedSpace) / disk.totalSize * 100.0;
-        diskInfoLayout->addWidget(new QLabel(tr("使用率:"), diskBox), row, 0);
-        diskInfoLayout->addWidget(new QLabel(formatPercentage(usagePercent), diskBox), row++, 1);
-
-        // Add progress bar for visual representation
-        QProgressBar* usageBar = new QProgressBar(diskBox);
-        usageBar->setValue(static_cast<int>(usagePercent));
-        usageBar->setTextVisible(false);
-        if (usagePercent > 90)
-            usageBar->setStyleSheet("QProgressBar::chunk { background-color: #FF4136; }"); // Red for high usage
-        else if (usagePercent > 70)
-            usageBar->setStyleSheet("QProgressBar::chunk { background-color: #FF851B; }"); // Orange for medium-high usage
-        diskInfoLayout->addWidget(usageBar, row++, 0, 1, 2);
-
-        diskLayout->addWidget(diskBox);
-    }
-
-    diskLayout->addStretch();
-}
-
-void QtWidgetsTCmonitor::UpdateDiskInfoUI() {
-    const auto& disks = SharedMemoryManager::GetSystemData().disks;
-    ui->diskTable->setRowCount(static_cast<int>(disks.size()));
-    for (int i = 0; i < disks.size(); ++i) {
-        const auto& d = disks[i];
-        ui->diskTable->setItem(i, 0, new QTableWidgetItem(QString(d.letter)));
-        ui->diskTable->setItem(i, 1, new QTableWidgetItem(WinUtils::Utf8StringToQString(d.label)));
-        ui->diskTable->setItem(i, 2, new QTableWidgetItem(WinUtils::Utf8StringToQString(d.fileSystem)));
-        ui->diskTable->setItem(i, 3, new QTableWidgetItem(QString("%1 GB").arg(d.totalSize / (1024 * 1024 * 1024.0), 0, 'f', 2)));
-        ui->diskTable->setItem(i, 4, new QTableWidgetItem(QString("%1 GB").arg(d.usedSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
-        ui->diskTable->setItem(i, 5, new QTableWidgetItem(QString("%1 GB").arg(d.freeSpace / (1024 * 1024 * 1024.0), 0, 'f', 2)));
-    }
+    ui->treeWidgetDiskInfo->expandAll();
 }
 
 void QtWidgetsTCmonitor::updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer)
@@ -1150,6 +1014,4 @@ void QtWidgetsTCmonitor::onNetworkSelectionChanged(int index)
     currentNetworkIndex = networkIndices[index];
     updateFromSharedMemory();
 }
-
-// 在合适的地方调用 UpdateDiskInfoUI()，如定时刷新或窗口初始化时
 

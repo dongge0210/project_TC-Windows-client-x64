@@ -4,6 +4,10 @@
 #include <windows.h>
 #include <algorithm>
 #include "../Utils/Logger.h"
+#include <vector>
+#include <string>
+#include <sstream>
+#include <iomanip>
 
 // 新增：单位换算辅助函数
 static std::string FormatSize(uint64_t bytes) {
@@ -23,6 +27,20 @@ static std::string FormatSize(uint64_t bytes) {
     else
         snprintf(buf, sizeof(buf), "%llu B", bytes);
     return buf;
+}
+
+// 简单格式化容量
+std::string DiskInfo::FormatSize(uint64_t size) {
+    double dsize = static_cast<double>(size);
+    const char* units[] = { "B", "KB", "MB", "GB", "TB" };
+    int unit = 0;
+    while (dsize >= 1024 && unit < 4) {
+        dsize /= 1024;
+        ++unit;
+    }
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(1) << dsize << units[unit];
+    return oss.str();
 }
 
 // 构造函数实现
@@ -118,4 +136,43 @@ std::vector<DiskInfoData> DiskInfo::GetAllDisks() {
         Logger::Warning("未检测到任何磁盘");
     }
     return disks;
+}
+
+// 新增：获取所有物理磁盘及其分区信息
+std::vector<PhysicalDiskInfo> DiskInfo::GetAllPhysicalDisks() {
+    std::vector<PhysicalDiskInfo> result;
+    // 这里仅为示例，实际应调用Windows API获取物理磁盘、分区、SMART等信息
+    // 你可用DeviceIoControl、WMI等方式完善
+
+    // 示例：模拟两个物理磁盘
+    PhysicalDiskInfo disk1;
+    disk1.name = "WDC WD10EZEX-08WN4A0";
+    disk1.type = "HDD";
+    disk1.protocol = "SATA";
+    disk1.totalSize = 1000ull * 1024 * 1024 * 1024;
+    disk1.smartStatus = "良好";
+
+    PartitionInfo part1;
+    part1.letter = "C:";
+    part1.label = "系统";
+    part1.fileSystem = "NTFS";
+    part1.partitionTable = "GPT";
+    part1.totalSize = 500ull * 1024 * 1024 * 1024;
+    part1.usedSpace = 300ull * 1024 * 1024 * 1024;
+
+    PartitionInfo part2;
+    part2.letter = "D:";
+    part2.label = "数据";
+    part2.fileSystem = "NTFS";
+    part2.partitionTable = "GPT";
+    part2.totalSize = 500ull * 1024 * 1024 * 1024;
+    part2.usedSpace = 100ull * 1024 * 1024 * 1024;
+
+    disk1.partitions.push_back(part1);
+    disk1.partitions.push_back(part2);
+
+    result.push_back(disk1);
+
+    // 你可以继续添加更多物理磁盘的真实采集逻辑
+    return result;
 }

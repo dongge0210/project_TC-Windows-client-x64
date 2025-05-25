@@ -24,6 +24,7 @@
 #include <QString>
 #include <QMap>
 #include <QVector>
+#include <QTreeWidget>
 #include "../src/core/DataStruct/DataStruct.h"
 #include "../src/core/utils/Logger.h"
 #include "ui_QtWidgetsTCmonitor.h"
@@ -63,6 +64,7 @@ private:
     void updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer);
     void updateDiskInfo(SharedMemoryBlock* pBuffer);
     void UpdateDiskInfoUI();
+    void updateDiskTreeWidget(); // 新增：刷新磁盘树形控件
 
     // Formatting helpers
     QString formatSize(uint64_t bytes);
