@@ -95,9 +95,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: confirm actions
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Confirm Upload Action
         uses: actions/upload-artifact@v3
-        uses: actions/checkout
 
       - name: Print Environment Info
         run: |
@@ -109,16 +111,16 @@ jobs:
       # Step 2: 恢复 NuGet 包（如果项目有依赖）
       - name: Restore NuGet packages
         run: |
-          nuget restore project-monitor-TC.sln
+          nuget restore ../project1/project1.sln
 
       # Step 3: 编译解决方案
       - name: Build Solution
         run: |
-          msbuild project-monitor-TC.sln /p:Configuration=Debug /p:Platform=x64
+          msbuild project1.sln /p:Configuration=Debug /p:Platform=x64
 
       # Step 4: 上传生成的文件（可选）
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: build-output
           path: ./bin/Debug/x64/
