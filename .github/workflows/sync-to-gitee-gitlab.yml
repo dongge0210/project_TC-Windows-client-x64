@@ -98,9 +98,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Confirm Upload Action
-        uses: actions/upload-artifact@v3
-
       - name: Print Environment Info
         run: |
           uname -a
