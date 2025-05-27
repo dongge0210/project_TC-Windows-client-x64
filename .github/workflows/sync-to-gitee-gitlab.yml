@@ -96,10 +96,8 @@ jobs:
 
     steps:
       - name: confirm actions
-        uses: actions/upload-artifact
-
-      - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/upload-artifact@v3
+        uses: actions/checkout
 
       - name: Print Environment Info
         run: |
