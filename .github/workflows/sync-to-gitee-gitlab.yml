@@ -97,7 +97,7 @@ jobs:
     steps:
       # Step 1: 检出代码
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
       # Step 2: 恢复 NuGet 包（如果项目有依赖）
       - name: Restore NuGet packages
