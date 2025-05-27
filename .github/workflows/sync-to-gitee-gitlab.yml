@@ -99,6 +99,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Print Environment Info
+        run: |
+          uname -a
+          echo $RUNNER_OS
+          echo $RUNNER_TEMP
+          echo $RUNNER_TOOL_CACHE
+
       # Step 2: 恢复 NuGet 包（如果项目有依赖）
       - name: Restore NuGet packages
         run: |
