@@ -1,4 +1,4 @@
-﻿#include "LibreHardwareMonitorBridge.h"
+#include "LibreHardwareMonitorBridge.h"
 #include "Logger.h"
 #include <msclr/marshal_cppstd.h>
 #include <iostream>
@@ -11,7 +11,7 @@
 #include <sstream> // 修复 stringstream 未定义
 #include <string> // 确保string可见
 #include "../DataStruct/DataStruct.h" // 包含DataStruct.h
-#using "F:\\Win_x64-10.lastest-sysMonitor\\src\\third_party\\LibreHardwareMonitor\\bin\\Debug\\net472\\LibreHardwareMonitorLib.dll"
+#using "..\\src\\third_party\\LibreHardwareMonitor\\bin\\Debug\\net472\\LibreHardwareMonitorLib.dll"
 
 using namespace LibreHardwareMonitor::Hardware;
 using namespace System;
