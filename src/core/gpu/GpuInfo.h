@@ -67,6 +67,7 @@ public:
     // NVML初始化（如需主程序调用）
     static bool InitNVML();
     static bool nvmlInited;
+    static bool IsNvmlEnabled() { return nvmlInited; } // 新增：提供NVML状态查询
 
 private:
     WmiManager& wmiManager;

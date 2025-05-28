@@ -25,6 +25,9 @@ struct GPUDataSM {
     wchar_t driverVersion[128];   // 新增: 驱动版本
     wchar_t driverDate[128];      // 新增: 驱动日期
     wchar_t driverProvider[128];  // 新增: 驱动提供商
+    int available;               // 新增: GPU是否可用，用int以便跨进程
+    wchar_t status[64];          // 新增: GPU状态
+    double temperature;          // 新增: GPU温度
 };
 
 // Network adapter information structure for shared memory
@@ -104,7 +107,7 @@ struct SharedMemoryBlock {
     uint32_t memoryFrequency;
 
     // GPU information
-    GPUDataSM gpus[2]; // 保证driverVersion同步
+    GPUDataSM gpus[8]; // 保证driverVersion同步
     int gpuCount;
     float gpuPower;
     float totalPower;
@@ -118,8 +121,8 @@ struct SharedMemoryBlock {
     int diskCount;           // Count of logical drives
 
     // Temperature sensors
-    TemperatureData temperatures[10];
     int tempCount;
+    TemperatureData temperatures[16]; // 修改为TemperatureData类型
 
     // System information
     wchar_t osDetailedVersion[256];
@@ -263,10 +266,13 @@ struct PhysicalDiskInfo {
 // Add GPUInfo struct definition
 struct GPUInfo {
     std::string name;
-    std::string status;
-    double temperature = 0.0;
-    bool available = false;
-    // Add other fields as needed
+    uint64_t vram = 0;
+    uint64_t sharedMemory = 0;
+    double coreClock = 0;
+    std::wstring driverVersion;
+    bool available = false; // 新增: GPU是否可用
+    std::string status;     // 新增: GPU状态
+    double temperature = 0.0; // 新增: GPU温度
 };
 
 #pragma pack(pop)

@@ -47,7 +47,6 @@ public:
     static std::vector<SmartAttribute> GetSmartAttributes(const std::string& physicalDiskName);
     static bool InitNVML();
     static void EnsureNVML();
-    static bool nvmlEnabled;
     void DetectGPUs();
     void QueryNvidiaInfo();
 private:

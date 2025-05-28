@@ -23,6 +23,23 @@ static bool firstGpuDetection = true;
 
 bool GpuInfo::nvmlInited = false;
 
+#ifdef USE_NVML
+bool GpuInfo::InitNVML() {
+    if (nvmlInited) return true;
+    nvmlReturn_t result = nvmlInit();
+    if (result == NVML_SUCCESS) {
+        nvmlInited = true;
+        Logger::Info("NVML 初始化成功");
+        return true;
+    }
+    nvmlInited = false;
+    Logger::Info("NVML 初始化失败: " + std::string(nvmlErrorString(result)));
+    return false;
+}
+#else
+bool GpuInfo::InitNVML() { return false; }
+#endif
+
 GpuInfo::GpuInfo(WmiManager& manager) : wmiManager(manager) {
     if (!wmiManager.IsInitialized()) {
         Logger::Error("WMI服务未初始化");
@@ -49,21 +66,6 @@ bool GpuInfo::IsVirtualGPU(const std::string& name) {
     }
     return false;
 }
-
-#ifdef USE_NVML
-bool GpuInfo::InitNVML() {
-    if (nvmlInited) return true;
-    nvmlReturn_t result = nvmlInit();
-    if (result == NVML_SUCCESS) {
-        nvmlInited = true;
-        return true;
-    }
-    nvmlInited = false;
-    return false;
-}
-#else
-bool GpuInfo::InitNVML() { return false; }
-#endif
 
 std::vector<GpuInfo::GpuData> GpuInfo::EnumPhysicalGPUs() {
     std::vector<GpuData> gpus;
@@ -102,6 +104,8 @@ std::vector<GpuInfo::GpuData> GpuInfo::EnumPhysicalGPUs() {
 }
 
 void GpuInfo::DetectGpusViaWmi() {
+    Logger::Info("开始WMI检测GPU");
+
     IEnumWbemClassObject* pEnumerator = nullptr;
     HRESULT hres = pSvc->ExecQuery(
         bstr_t("WQL"),
@@ -217,6 +221,8 @@ void GpuInfo::DetectGpusViaWmi() {
 
     pEnumerator->Release();
 
+    Logger::Info("WMI检测GPU结束，数量: " + std::to_string(gpuList.size()));
+
     if (gpuList.empty()) {
         Logger::Warning("未检测到有效的 GPU。");
     } else {
@@ -302,6 +308,10 @@ void GpuInfo::QueryNvidiaGpuInfo(int index) {
     }
 
 #ifdef USE_NVML
+    if (!GpuInfo::InitNVML()) {
+        Logger::Info("NVIDIA GPU 信息查询跳过 (NVML 未启用).");
+        return;
+    }
     try {
         static bool nvmlInitialized = false;
         // 合并显存与计算能力日志的标记，避免重复打印

@@ -54,14 +54,17 @@
 #include <sstream>
 #include <stdexcept>
 
-static void ToGPUDataSM(const GPUData & src, GPUDataSM & dst) {
+static void ToGPUDataSM(const GPUInfo & src, GPUDataSM & dst) {
     wcsncpy_s(dst.name, 128, WinUtils::StringToWstring(src.name).c_str(), _TRUNCATE);
     wcsncpy_s(dst.brand, 64, WinUtils::StringToWstring(src.brand).c_str(), _TRUNCATE);
     dst.vram = src.vram;           // 专用显存
     dst.sharedMemory = src.sharedMemory; // 共享内存
     dst.coreClock = src.coreClock;
-    // 新增：驱动版本
     wcsncpy_s(dst.driverVersion, 128, src.driverVersion.c_str(), _TRUNCATE);
+    // 新增
+    dst.available = src.available ? 1 : 0;
+    wcsncpy_s(dst.status, 64, WinUtils::StringToWstring(src.status).c_str(), _TRUNCATE);
+    dst.temperature = src.temperature;
 }
 
 static void ToNetworkAdapterDataSM(const NetworkAdapterData& src, NetworkAdapterDataSM& dst) {
@@ -98,16 +101,19 @@ static DiskInfoData SharedDiskToDiskInfoData(const SharedDiskData& disk) {
     return info;
 }
 
-// Helper function to convert GPUDataSM to GPUData
-static GPUData SharedGPUToGPUData(const GPUDataSM& gpu) {
-    GPUData gd;
+// Helper function to convert GPUDataSM to GPUInfo
+static GPUInfo SharedGPUToGPUData(const GPUDataSM& gpu) {
+    GPUInfo gd;
     gd.name = WinUtils::WstringToString(gpu.name);
     gd.brand = WinUtils::WstringToString(gpu.brand);
     gd.vram = gpu.vram;           // 专用显存
     gd.sharedMemory = gpu.sharedMemory; // 共享内存
     gd.coreClock = gpu.coreClock;
-    // 新增：驱动版本
     gd.driverVersion = gpu.driverVersion;
+    // 新增
+    gd.available = (gpu.available != 0);
+    gd.status = WinUtils::WstringToString(gpu.status);
+    gd.temperature = gpu.temperature;
     return gd;
 }
 
@@ -206,6 +212,7 @@ bool SharedMemoryManager::InitSharedMemory() {
                    << " (" << FallbackFormatWindowsErrorMessage(errorCode) << ")";
                 lastError = ss.str();
                 Logger::Error(lastError);
+                qDebug() << "[调试] 局部共享内存创建失败";
                 return false;
             }
         } else {
@@ -214,6 +221,7 @@ bool SharedMemoryManager::InitSharedMemory() {
                << " (" << FallbackFormatWindowsErrorMessage(errorCode) << ")";
             lastError = ss.str();
             Logger::Error(lastError);
+            qDebug() << "[调试] 共享内存创建失败";
             return false;
         }
     }
@@ -248,6 +256,7 @@ bool SharedMemoryManager::InitSharedMemory() {
            << ")";
         lastError = ss.str();
         Logger::Error(lastError);
+        qDebug() << "[调试] 无法访问共享内存";
 
         CloseHandle(hMapFile);
         hMapFile = NULL;
@@ -268,6 +277,7 @@ bool SharedMemoryManager::InitSharedMemory() {
     }
 
     Logger::Info("共享内存初始化完成");
+    qDebug() << "[调试] 共享内存初始化完成";
     return true;
 }
 
@@ -463,7 +473,13 @@ void SharedMemoryManager::ReadSystemInfoFromSharedMemory(SystemInfo& sysInfo) {
 }
 
 SharedMemoryBlock* SharedMemoryManager::GetBuffer() {
-    return pBuffer;
+    if (pBuffer != nullptr) {
+        qDebug() << "[调试] 成功获取共享内存Buffer";
+        return pBuffer;
+    } else {
+        qDebug() << "[调试] 获取共享内存Buffer失败";
+        return nullptr;
+    }
 }
 
 std::string SharedMemoryManager::GetSharedMemoryError() {

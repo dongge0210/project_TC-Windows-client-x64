@@ -33,7 +33,6 @@ static msclr::gcroot<IVisitor^> visitor;
 
 // Define the static member - ensure this is the only definition.
 bool LibreHardwareMonitorBridge::initialized = false;
-bool LibreHardwareMonitorBridge::nvmlEnabled = false;
 
 public ref class UpdateVisitor : public IVisitor
 {
@@ -106,7 +105,7 @@ void LibreHardwareMonitorBridge::Initialize() {
         // DiagnoseAllHardwareAndSensors(); // 注释掉未定义函数
 
         // 静态调用
-        LibreHardwareMonitorBridge::InitNVML();
+        GpuInfo::InitNVML(); // 只调用GpuInfo的初始化
     }
     catch (System::IO::FileNotFoundException^ ex) {
         Logger::Error(msclr::interop::marshal_as<std::wstring>(ex->Message));
@@ -126,25 +125,16 @@ void LibreHardwareMonitorBridge::Cleanup() {
     computer = nullptr;
     visitor = nullptr;
     initialized = false;
-    LibreHardwareMonitorBridge::nvmlEnabled = false;
 }
 
-// 静态实现
 bool LibreHardwareMonitorBridge::InitNVML() {
-    nvmlReturn_t result = nvmlInit();
-    if (result != NVML_SUCCESS) {
-        Logger::Info("NVML 初始化失败: " + std::string(nvmlErrorString(result)));
-        LibreHardwareMonitorBridge::nvmlEnabled = false;
-        return false;
-    }
-    LibreHardwareMonitorBridge::nvmlEnabled = true;
-    Logger::Info("NVML 初始化成功");
-    return true;
+    // 直接调用GpuInfo::InitNVML
+    return GpuInfo::InitNVML();
 }
 
 void LibreHardwareMonitorBridge::EnsureNVML() {
-    if (!LibreHardwareMonitorBridge::nvmlEnabled) {
-        LibreHardwareMonitorBridge::InitNVML();
+    if (!GpuInfo::IsNvmlEnabled()) {
+        GpuInfo::InitNVML();
     }
 }
 
@@ -236,7 +226,7 @@ double LibreHardwareMonitorBridge::GetCpuPower() {
 double LibreHardwareMonitorBridge::GetGpuPower() {
     // 优先NVML
     LibreHardwareMonitorBridge::EnsureNVML();
-    if (LibreHardwareMonitorBridge::nvmlEnabled) {
+    if (GpuInfo::IsNvmlEnabled()) {
         double nvmlPower = GpuInfo::GetGpuPowerNVML();
         if (nvmlPower > 0 && !std::isnan(nvmlPower)) {
             Logger::Info("[采集][NVML] GPU Power: " + std::to_string(nvmlPower) + " W");

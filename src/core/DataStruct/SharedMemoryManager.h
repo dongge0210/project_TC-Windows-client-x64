@@ -4,6 +4,7 @@
 #include <vector>
 #include <Windows.h>
 #include "DataStruct.h"
+#include <QDebug> // 建议在头文件中声明调试辅助函数（如有需要）
 
 // Forward declaration
 struct SystemInfo;
