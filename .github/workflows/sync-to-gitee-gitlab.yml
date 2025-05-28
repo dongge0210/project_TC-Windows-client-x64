@@ -56,6 +56,15 @@ jobs:
             echo "✅ All required secrets are available."
           fi
 
+      - name: Check Gitee Network Latency
+        run: |
+          ping -c 4 gitee.com || exit 1
+          avg_time=$(ping -c 4 gitee.com | tail -1| awk -F '/' '{print $5}')
+          if [ "$(echo "$avg_time > 200" | bc)" -eq 1 ]; then
+            echo "Network latency too high: $avg_time ms"
+            exit 1
+          fi
+
       # Step 3: 获取当前 commit SHA
       - name: Get current commit
         id: get_commit
