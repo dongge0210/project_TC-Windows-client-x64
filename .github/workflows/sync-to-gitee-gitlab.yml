@@ -56,14 +56,37 @@ jobs:
             echo "✅ All required secrets are available."
           fi
 
-      - name: Check Gitee Network Latency
+      - name: Check network latency for all remotes
+        id: check_network
         run: |
-          ping -c 4 gitee.com || exit 1
-          avg_time=$(ping -c 4 gitee.com | tail -1| awk -F '/' '{print $5}')
-          if [ "$(echo "$avg_time > 200" | bc)" -eq 1 ]; then
-            echo "Network latency too high: $avg_time ms"
-            exit 1
-          fi
+          # 定义远程地址
+          GITEE_DOMAIN="gitee.com"
+          GITLAB_DOMAIN="gitlab.com"
+          GITEA_DOMAIN="115.231.176.235"  # 你的 Gitea 地址
+
+          check_latency() {
+            domain=$1
+            name=$2
+            # ping 4 次，取平均值
+            avg_time=$(ping -c 4 -W 2 $domain | tail -1| awk -F '/' '{print $5}')
+            if [ -z "$avg_time" ]; then
+              echo "[$name] 网络异常，无法获取延迟。"
+              echo "::set-output name=network_$name::bad"
+              return 1
+            fi
+            echo "[$name] 平均延迟: ${avg_time}ms"
+            if [ "$(echo "$avg_time < 400" | bc)" -eq 1 ]; then
+              echo "[$name] 网络正常"
+              echo "::set-output name=network_$name::ok"
+            else
+              echo "[$name] 网络延迟过高，跳过该步"
+              echo "::set-output name=network_$name::bad"
+            fi
+          }
+
+          check_latency $GITEE_DOMAIN gitee
+          check_latency $GITLAB_DOMAIN gitlab
+          check_latency $GITEA_DOMAIN gitea
 
       # Step 3: 获取当前 commit SHA
       - name: Get current commit
