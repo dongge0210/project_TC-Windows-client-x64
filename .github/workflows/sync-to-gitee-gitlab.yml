@@ -57,6 +57,7 @@ jobs:
 
       - name: 检查三方网络延迟
         id: check_network
+        continue-on-error: true
         run: |
           GITEE_DOMAIN="gitee.com"
           GITLAB_DOMAIN="gitlab.com"
@@ -78,6 +79,7 @@ jobs:
               echo "[$name] 网络异常或延迟过高，${delay}ms"
               echo "network_${name}=bad" >> $GITHUB_OUTPUT
               echo "${name}_delay=${delay}" >> $GITHUB_OUTPUT
+              # 注意这里不要 exit 1
             fi
           }
 
