@@ -50,6 +50,7 @@ bool GpuInfo::IsVirtualGPU(const std::string& name) {
     return false;
 }
 
+#ifdef USE_NVML
 bool GpuInfo::InitNVML() {
     if (nvmlInited) return true;
     nvmlReturn_t result = nvmlInit();
@@ -60,39 +61,42 @@ bool GpuInfo::InitNVML() {
     nvmlInited = false;
     return false;
 }
+#else
+bool GpuInfo::InitNVML() { return false; }
+#endif
 
 std::vector<GpuInfo::GpuData> GpuInfo::EnumPhysicalGPUs() {
     std::vector<GpuData> gpus;
 
-    // 1. 通过Windows设备管理器枚举GPU
     DISPLAY_DEVICEA dd;
     dd.cb = sizeof(dd);
     int deviceIndex = 0;
     while (EnumDisplayDevicesA(NULL, deviceIndex, &dd, 0)) {
         GpuData info;
-        info.name = dd.DeviceString;
-        info.deviceId = dd.DeviceID;
-        info.status = (dd.StateFlags & DISPLAY_DEVICE_ACTIVE) ? "Active" : "Inactive";
-        info.isVirtual = IsVirtualGPU(info.name);
-        info.isAvailable = !info.isVirtual;
-        // 2. 获取驱动版本
+        // Convert CHAR[128] to std::wstring
+        info.name = std::wstring(dd.DeviceString, dd.DeviceString + strlen(dd.DeviceString));
+        info.deviceId = std::wstring(dd.DeviceID, dd.DeviceID + strlen(dd.DeviceID));
+
+        // Get driver version (optional, can be left blank or filled via WMI elsewhere)
         DISPLAY_DEVICEA dd2;
         dd2.cb = sizeof(dd2);
         if (EnumDisplayDevicesA(dd.DeviceName, 0, &dd2, 0)) {
-            info.vendor = dd2.DeviceString;
+            // Optionally store vendor string if you add a field
+            // info.vendor = std::wstring(dd2.DeviceString, dd2.DeviceString + strlen(dd2.DeviceString));
         }
-        // 3. 过滤虚拟显卡
-        if (!info.isVirtual) {
+        // Only push back if not a virtual GPU (use IsVirtualGPU with conversion)
+        std::string nameStr(dd.DeviceString);
+        if (!IsVirtualGPU(nameStr)) {
             gpus.push_back(info);
         }
         deviceIndex++;
     }
 
-    // 4. 可选：NVML枚举补充（如有NVML可用时）
+#ifdef USE_NVML
     if (InitNVML()) {
-        // 这里只做NVML初始化和可用性标记，不采集温度/功率
-        // 可根据需要补充nvmlDeviceGetCount等
+        // Optionally supplement with NVML enumeration
     }
+#endif
 
     return gpus;
 }
