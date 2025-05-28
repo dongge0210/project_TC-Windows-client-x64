@@ -88,14 +88,17 @@ jobs:
           check_latency $GITEA_DOMAIN gitea
 
       - name: 推送到 Gitee
+        continue-on-error: true
         if: steps.check_network.outputs.network_gitee == 'ok'
         run: git push gitee ${{ github.sha }}:refs/heads/T1-F-P --force
 
       - name: 推送到 GitLab
+        continue-on-error: true
         if: steps.check_network.outputs.network_gitlab == 'ok'
         run: git push gitlab ${{ github.sha }}:refs/heads/T1-F-P --force
 
       - name: 推送到 Gitea_local
+        continue-on-error: true
         if: steps.check_network.outputs.network_gitea == 'ok'
         run: git push gitea_author_local ${{ github.sha }}:refs/heads/T1-F-P --force
 
