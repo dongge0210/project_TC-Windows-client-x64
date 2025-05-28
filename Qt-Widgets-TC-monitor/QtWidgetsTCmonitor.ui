@@ -6,15 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>1000</width>
+    <height>700</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>System Monitor</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="mainVerticalLayout">
+    <!-- 操作按钮 -->
     <item>
      <widget class="QPushButton" name="pushButton">
       <property name="minimumSize">
@@ -28,159 +29,188 @@
       </property>
      </widget>
     </item>
+    <!-- CPU信息 -->
     <item>
      <widget class="QGroupBox" name="cpuGroupBox">
       <property name="title">
        <string>处理器信息</string>
       </property>
       <layout class="QGridLayout" name="gridLayoutCpu">
-       <!-- ...原有CPU信息行... -->
-       <!-- 新增：CPU功率 -->
-       <item row="8" column="0">
-        <widget class="QLabel" name="labelCpuPowerTitle">
-         <property name="text">
-          <string>CPU功率:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="8" column="1">
-        <widget class="QLabel" name="labelCpuPower">
-         <property name="text">
-          <string>-- W</string>
-         </property>
-        </widget>
-       </item>
-       <!-- ...如有其他内容... -->
+       <item row="0" column="0"><widget class="QLabel" name="labelCpuNameTitle"><property name="text"><string>名称:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QLabel" name="labelCpuName"><property name="text"><string>--</string></property></widget></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelPhysicalCoresTitle"><property name="text"><string>物理核心:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLabel" name="labelPhysicalCores"><property name="text"><string>--</string></property></widget></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelLogicalCoresTitle"><property name="text"><string>逻辑核心:</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLabel" name="labelLogicalCores"><property name="text"><string>--</string></property></widget></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelPerformanceCoresTitle"><property name="text"><string>性能核心:</string></property></widget></item>
+       <item row="3" column="1"><widget class="QLabel" name="labelPerformanceCores"><property name="text"><string>--</string></property></widget></item>
+       <item row="4" column="0"><widget class="QLabel" name="labelEfficiencyCoresTitle"><property name="text"><string>能效核心:</string></property></widget></item>
+       <item row="4" column="1"><widget class="QLabel" name="labelEfficiencyCores"><property name="text"><string>--</string></property></widget></item>
+       <item row="5" column="0"><widget class="QLabel" name="labelCpuUsageTitle"><property name="text"><string>CPU使用率:</string></property></widget></item>
+       <item row="5" column="1"><widget class="QLabel" name="labelCpuUsage"><property name="text"><string>-- %</string></property></widget></item>
+       <item row="6" column="0"><widget class="QLabel" name="labelHyperThreadingTitle"><property name="text"><string>超线程:</string></property></widget></item>
+       <item row="6" column="1"><widget class="QLabel" name="labelHyperThreading"><property name="text"><string>--</string></property></widget></item>
+       <item row="7" column="0"><widget class="QLabel" name="labelVirtualizationTitle"><property name="text"><string>虚拟化:</string></property></widget></item>
+       <item row="7" column="1"><widget class="QLabel" name="labelVirtualization"><property name="text"><string>--</string></property></widget></item>
+       <item row="8" column="0"><widget class="QLabel" name="labelCpuPowerTitle"><property name="text"><string>CPU功率:</string></property></widget></item>
+       <item row="8" column="1"><widget class="QLabel" name="labelCpuPower"><property name="text"><string>-- W</string></property></widget></item>
       </layout>
      </widget>
     </item>
+    <!-- 内存信息 -->
+    <item>
+     <widget class="QGroupBox" name="memoryGroupBox">
+      <property name="title">
+       <string>内存信息</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayoutMemory">
+       <item row="0" column="0"><widget class="QLabel" name="labelTotalMemoryTitle"><property name="text"><string>总内存:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QLabel" name="labelTotalMemory"><property name="text"><string>--</string></property></widget></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelUsedMemoryTitle"><property name="text"><string>已用内存:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLabel" name="labelUsedMemory"><property name="text"><string>--</string></property></widget></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelAvailableMemoryTitle"><property name="text"><string>可用内存:</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLabel" name="labelAvailableMemory"><property name="text"><string>--</string></property></widget></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelMemoryFrequencyTitle"><property name="text"><string>内存频率:</string></property></widget></item>
+       <item row="3" column="1"><widget class="QLabel" name="labelMemoryFrequency"><property name="text"><string>-- MHz</string></property></widget></item>
+       <item row="4" column="0"><widget class="QLabel" name="labelMemoryUsageTitle"><property name="text"><string>内存使用率:</string></property></widget></item>
+       <item row="4" column="1"><widget class="QLabel" name="labelMemoryUsage"><property name="text"><string>-- %</string></property></widget></item>
+      </layout>
+     </widget>
+    </item>
+    <!-- GPU信息 -->
     <item>
      <widget class="QGroupBox" name="gpuGroupBox">
       <property name="title">
        <string>显卡信息</string>
       </property>
       <layout class="QGridLayout" name="gridLayoutGpu">
-       <item row="0" column="0">
-        <widget class="QLabel" name="labelGpuSelectorTitle">
-         <property name="text">
-          <string>选择显卡:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QComboBox" name="gpuSelector"/>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="labelGpuNameTitle">
-         <property name="text">
-          <string>名称:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="labelGpuName">
-         <property name="text">
-          <string>无数据</string>
-         </property>
-         <property name="toolTip">
-          <string>未检测到可用显卡或驱动未安装</string>
-         </property>
-        </widget>
-       </item>
-       <!-- 依次添加 gpuVram, gpuSharedMem, gpuCoreFreq, gpuPower -->
-       <item row="2" column="0">
-        <widget class="QLabel" name="labelGpuDriverVersionTitle">
-         <property name="text">
-          <string>驱动版本:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLabel" name="labelGpuDriverVersion"/>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="labelGpuStatusTitle">
-         <property name="text">
-          <string>状态:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLabel" name="labelGpuStatus">
-         <property name="text">
-          <string>无数据</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="labelGpuTempTitle">
-         <property name="text">
-          <string>温度:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
-        <widget class="QLabel" name="labelGpuTemp">
-         <property name="text">
-          <string>无数据</string>
-         </property>
-        </widget>
-       </item>
+       <item row="0" column="0"><widget class="QLabel" name="labelGpuSelectorTitle"><property name="text"><string>选择显卡:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QComboBox" name="gpuSelector"/></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelGpuNameTitle"><property name="text"><string>名称:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLabel" name="labelGpuName"><property name="text"><string>无数据</string></property><property name="toolTip"><string>未检测到可用显卡或驱动未安装</string></property></widget></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelGpuVramTitle"><property name="text"><string>专用显存:</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLabel" name="labelGpuVram"><property name="text"><string>--</string></property></widget></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelGpuSharedMemTitle"><property name="text"><string>共享内存:</string></property></widget></item>
+       <item row="3" column="1"><widget class="QLabel" name="labelGpuSharedMem"><property name="text"><string>--</string></property></widget></item>
+       <item row="4" column="0"><widget class="QLabel" name="labelGpuCoreFreqTitle"><property name="text"><string>核心频率:</string></property></widget></item>
+       <item row="4" column="1"><widget class="QLabel" name="labelGpuCoreFreq"><property name="text"><string>--</string></property></widget></item>
+       <item row="5" column="0"><widget class="QLabel" name="labelGpuPowerTitle"><property name="text"><string>GPU功率:</string></property></widget></item>
+       <item row="5" column="1"><widget class="QLabel" name="labelGpuPower"><property name="text"><string>-- W</string></property></widget></item>
+       <item row="6" column="0"><widget class="QLabel" name="labelGpuDriverVersionTitle"><property name="text"><string>驱动版本:</string></property></widget></item>
+       <item row="6" column="1"><widget class="QLabel" name="labelGpuDriverVersion"><property name="text"><string>--</string></property></widget></item>
+       <item row="7" column="0"><widget class="QLabel" name="labelGpuStatusTitle"><property name="text"><string>状态:</string></property></widget></item>
+       <item row="7" column="1"><widget class="QLabel" name="labelGpuStatus"><property name="text"><string>无数据</string></property></widget></item>
+       <item row="8" column="0"><widget class="QLabel" name="labelGpuTempTitle"><property name="text"><string>温度:</string></property></widget></item>
+       <item row="8" column="1"><widget class="QLabel" name="labelGpuTemp"><property name="text"><string>无数据</string></property></widget></item>
       </layout>
      </widget>
     </item>
+    <!-- 磁盘信息：支持拖动和滚动 -->
     <item>
-     <widget class="QTreeWidget" name="treeWidgetDiskInfo">
-      <column>
-       <property name="text">
-        <string>名称</string>
+     <widget class="QSplitter" name="splitterDisk">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <widget class="QGroupBox" name="diskGroupBox">
+       <property name="title">
+        <string>磁盘信息</string>
        </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>类型/文件系统</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>连接协议/分区表</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>总容量</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>已用容量</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>使用率</string>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>SMART状态</string>
-       </property>
-      </column>
-      <!-- 磁盘信息区域：treeWidgetDiskInfo的第7列用于SMART状态和按钮，按钮由代码动态插入 -->
+       <layout class="QVBoxLayout" name="diskLayout">
+        <item>
+         <widget class="QScrollArea" name="scrollAreaDisk">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaDiskContent">
+           <layout class="QVBoxLayout" name="verticalLayoutDisk">
+            <item>
+             <widget class="QTreeWidget" name="treeWidgetDiskInfo">
+              <column><property name="text"><string>名称</string></property></column>
+              <column><property name="text"><string>类型/文件系统</string></property></column>
+              <column><property name="text"><string>连接协议/分区表</string></property></column>
+              <column><property name="text"><string>总容量</string></property></column>
+              <column><property name="text"><string>已用容量</string></property></column>
+              <column><property name="text"><string>使用率</string></property></column>
+              <column><property name="text"><string>SMART状态</string></property></column>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
+    </item>
+    <!-- 网络信息 -->
+    <item>
+     <widget class="QGroupBox" name="networkGroupBox">
+      <property name="title">
+       <string>网络适配器</string>
+      </property>
+      <layout class="QGridLayout" name="gridLayoutNetwork">
+       <item row="0" column="0"><widget class="QLabel" name="labelNetworkSelectorTitle"><property name="text"><string>选择适配器:</string></property></widget></item>
+       <item row="0" column="1"><widget class="QComboBox" name="networkSelector"/></item>
+       <item row="1" column="0"><widget class="QLabel" name="labelNetworkNameTitle"><property name="text"><string>名称:</string></property></widget></item>
+       <item row="1" column="1"><widget class="QLabel" name="labelNetworkName"><property name="text"><string>--</string></property></widget></item>
+       <item row="2" column="0"><widget class="QLabel" name="labelNetworkStatusTitle"><property name="text"><string>连接状态:</string></property></widget></item>
+       <item row="2" column="1"><widget class="QLabel" name="labelNetworkStatus"><property name="text"><string>--</string></property></widget></item>
+       <item row="3" column="0"><widget class="QLabel" name="labelNetworkIpTitle"><property name="text"><string>IP地址:</string></property></widget></item>
+       <item row="3" column="1"><widget class="QLabel" name="labelNetworkIp"><property name="text"><string>--</string></property></widget></item>
+       <item row="4" column="0"><widget class="QLabel" name="labelNetworkMacTitle"><property name="text"><string>MAC地址:</string></property></widget></item>
+       <item row="4" column="1"><widget class="QLabel" name="labelNetworkMac"><property name="text"><string>--</string></property></widget></item>
+       <item row="5" column="0"><widget class="QLabel" name="labelNetworkSpeedTitle"><property name="text"><string>速度:</string></property></widget></item>
+       <item row="5" column="1"><widget class="QLabel" name="labelNetworkSpeed"><property name="text"><string>--</string></property></widget></item>
+      </layout>
+     </widget>
+    </item>
+    <!-- 底部汇总信息区+本地时间同行 -->
+    <item>
+     <layout class="QHBoxLayout" name="summaryLayout">
+      <item><widget class="QLabel" name="labelTotalPowerTitle"><property name="text"><string>整机功率:</string></property></widget></item>
+      <item><widget class="QLabel" name="labelTotalPower"><property name="text"><string>-- W</string></property></widget></item>
+      <item>
+       <spacer name="horizontalSpacerSummary">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item><widget class="QLabel" name="labelMotherboardNameTitle"><property name="text"><string>主板名称:</string></property></widget></item>
+      <item><widget class="QLabel" name="labelMotherboardName"><property name="text"><string>--</string></property></widget></item>
+      <item>
+       <spacer name="horizontalSpacerSummary2">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item><widget class="QLabel" name="labelDeviceNameTitle"><property name="text"><string>设备名称:</string></property></widget></item>
+      <item><widget class="QLabel" name="labelDeviceName"><property name="text"><string>--</string></property></widget></item>
+      <item>
+       <spacer name="horizontalSpacerSummary3">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item><widget class="QLabel" name="labelOsVersionTitle"><property name="text"><string>系统版本:</string></property></widget></item>
+      <item><widget class="QLabel" name="labelOsVersion"><property name="text"><string>--</string></property></widget></item>
+      <item>
+       <spacer name="horizontalSpacerSummary4">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+        <property name="sizeHint"><size><width>40</width><height>20</height></size></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelLocalDateTime">
+        <property name="text"><string>2025-05-28 16:56:00</string></property>
+        <property name="alignment"><set>Qt::AlignRight|Qt::AlignVCenter</set></property>
+        <property name="minimumWidth"><number>180</number></property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
+  <widget class="QMenuBar" name="menuBar"/>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
