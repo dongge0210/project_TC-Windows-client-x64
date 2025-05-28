@@ -89,15 +89,15 @@ jobs:
 
       - name: 推送到 Gitee
         if: steps.check_network.outputs.network_gitee == 'ok'
-        run: git push gitee ${{ github.sha }}:refs/heads/T1-F-P --force
+        run: git push gitee ${{ github.sha }}:refs/heads/T1-F-P
 
       - name: 推送到 GitLab
         if: steps.check_network.outputs.network_gitlab == 'ok'
-        run: git push gitlab ${{ github.sha }}:refs/heads/T1-F-P --force
+        run: git push gitlab ${{ github.sha }}:refs/heads/T1-F-P
 
       - name: 推送到 Gitea_local
         if: steps.check_network.outputs.network_gitea == 'ok'
-        run: git push gitea_author_local ${{ github.sha }}:refs/heads/T1-F-P --force
+        run: git push gitea_author_local ${{ github.sha }}:refs/heads/T1-F-P
 
   # .sln 生成任务：每天中国时间 10:00 和 22:00 自动运行
   build-sln:
