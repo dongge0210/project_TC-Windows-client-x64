@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Qt-Widgets-TC-monitor", "..
 		{EB8E0379-D5D5-45E8-9F90-73216725C93A} = {EB8E0379-D5D5-45E8-9F90-73216725C93A}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibreHardwareMonitor", "..\src\third_party\LibreHardwareMonitor\LibreHardwareMonitor\LibreHardwareMonitor.csproj", "{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,18 @@ Global
 		{3E83EE46-6DAF-4904-8AA6-A77AB194AA87}.Release|x64.Build.0 = Release|x64
 		{3E83EE46-6DAF-4904-8AA6-A77AB194AA87}.Release|x86.ActiveCfg = Release|x64
 		{3E83EE46-6DAF-4904-8AA6-A77AB194AA87}.Release|x86.Build.0 = Release|x64
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Debug|x64.Build.0 = Debug|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Debug|x86.Build.0 = Debug|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Release|x64.ActiveCfg = Release|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Release|x64.Build.0 = Release|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Release|x86.ActiveCfg = Release|Any CPU
+		{33CCCC1C-6621-4549-03F7-FFF7FB0FE96B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

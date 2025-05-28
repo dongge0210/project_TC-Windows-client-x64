@@ -48,6 +48,7 @@ public:
         bool isNvidia = false;
         bool isAmd = false;
         bool isIntegrated = false;
+        std::wstring brand;           // GPU品牌: "NVIDIA", "AMD", "Intel", 等
     };
     GpuInfo(WmiManager& manager);
     ~GpuInfo();

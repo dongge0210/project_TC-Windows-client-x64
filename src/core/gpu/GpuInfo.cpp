@@ -163,6 +163,16 @@ void GpuInfo::DetectGpusViaWmi() {
                           data.name.find(L"Radeon") != std::wstring::npos);
             data.isIntegrated = (data.deviceId.find(L"VEN_8086") != std::wstring::npos);
 
+            // Set brand field
+            if (data.isNvidia)
+                data.brand = L"NVIDIA";
+            else if (data.isAmd)
+                data.brand = L"AMD";
+            else if (data.isIntegrated)
+                data.brand = L"Intel";
+            else
+                data.brand = L"未知";
+
             // 新增：查询 Win32_PnPSignedDriver 获取驱动信息
             IEnumWbemClassObject* pDrvEnum = nullptr;
             std::wstring wql = L"SELECT * FROM Win32_PnPSignedDriver WHERE DeviceID='" + data.deviceId + L"'";
