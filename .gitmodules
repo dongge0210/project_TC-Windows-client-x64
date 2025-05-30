@@ -34,6 +34,3 @@
 	path = src/third_party/boost	
 	url = https://github.com/boostorg/boost
 
-[submodule "CPP-parsers"]
-	path = CPP-parsers
-	url = https://github.com/dongge0210/CPP-parsers.git
