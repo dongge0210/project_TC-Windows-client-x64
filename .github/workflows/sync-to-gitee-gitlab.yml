@@ -1,30 +1,23 @@
-name: CI/CD Workflow
+name: Sync to Gitee, GitLab, Gitea
 
 on:
   push:
     branches:
-      - T1-F-P  # 分发功能监听 T1-F-P 分支的改动
-
-  schedule:
-    # 定时触发任务：每天中国时间（UTC+8）的 10:00 和 22:00
-    - cron: "0 2 * * *"   # 对应 UTC 时间 02:00（中国时间 10:00）
-    - cron: "0 14 * * *"  # 对应 UTC 时间 14:00（中国时间 22:00）
-
-  workflow_dispatch: # 允许手动触发任务
+      - T1-F-P
 
 jobs:
-  # 分发任务：监听仓库改动并推送到 Gitee、GitLab 和 Gitea
   sync:
-    if: github.event_name == 'push'  # 仅在 push 事件触发时运行
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: 检出代码
-      - name: Checkout code
+      - name: 检出代码
         uses: actions/checkout@v3
 
-      # Step 2: 验证密钥
-      - name: Validate Secrets
+      - name: 设置 Git 用户
+        run: |
+          git config --global user.name "dongge0210"
+          git config --global user.email "dongge0210@163.com"
+
+      - name: 校验 Secrets
         run: |
           missing_secrets=0
 
@@ -56,38 +49,58 @@ jobs:
             echo "✅ All required secrets are available."
           fi
 
-      # Step 3: 获取当前 commit SHA
-      - name: Get current commit
-        id: get_commit
-        run: echo "COMMIT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
-
-      # Step 4: 配置 Gitee 和 GitLab 的凭据
-      - name: Setup credentials
+      - name: 添加三方远程
         run: |
-          git config --global user.name "dongge0210"
-          git config --global user.email "dongge0210@163.com"
-          # 添加 Gitee 远程仓库
           git remote add gitee https://DonggeML:${{ secrets.GITEE_TOKEN }}@gitee.com/DonggeML/project-monitor-TC.git
-          # 添加 GitLab 远程仓库
-          git remote add gitlab https://dongge0210:${{ secrets.GITLAB_TOKEN }}@gitlab.com/dongge0210/project-monitor-TC.git
-          # 添加 Gitea 作者 远程仓库
+          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/dongge0210/project-monitor-TC.git
           git remote add gitea_author_local http://dongge0210:${{ secrets.GITEA_LOCAL_TOKEN }}@115.231.176.235:3000/dongge0210/project-monitor-TC.git
 
-      # Step 5: 推送到 Gitee
-      - name: Push to Gitee
+      - name: 检查三方网络延迟
+        id: check_network
+        continue-on-error: true
         run: |
-          git fetch --unshallow
-          git push gitee $COMMIT_SHA:refs/heads/T1-F-P --force
+          GITEE_DOMAIN="gitee.com"
+          GITLAB_DOMAIN="gitlab.com"
+          GITEA_DOMAIN="115.231.176.235"  # Gitea 的实际 IP
 
-      # Step 6: 推送到 GitLab
-      - name: Push to GitLab
-        run: |
-          git push gitlab $COMMIT_SHA:refs/heads/T1-F-P --force
+          check_latency() {
+            domain=$1
+            name=$2
+            start=$(date +%s%3N)
+            curl -I --max-time 5 https://$domain 2>/dev/null | grep "HTTP/"
+            status=$?
+            end=$(date +%s%3N)
+            delay=$((end - start))
+            if [ $status -eq 0 ] && [ $delay -lt 400 ]; then
+              echo "[$name] 网络正常，延迟 ${delay}ms"
+              echo "network_${name}=ok" >> $GITHUB_OUTPUT
+              echo "${name}_delay=${delay}" >> $GITHUB_OUTPUT
+            else
+              echo "[$name] 网络异常或延迟过高，${delay}ms"
+              echo "network_${name}=bad" >> $GITHUB_OUTPUT
+              echo "${name}_delay=${delay}" >> $GITHUB_OUTPUT
+              # 注意这里不要 exit 1
+            fi
+          }
 
-      # Step 7: 推送到 Gitea_local
-      - name: Push to Gitea_local
-        run: |
-          git push gitea_author_local $COMMIT_SHA:refs/heads/T1-F-P --force
+          check_latency $GITEE_DOMAIN gitee
+          check_latency $GITLAB_DOMAIN gitlab
+          check_latency $GITEA_DOMAIN gitea
+
+      - name: 推送到 Gitee
+        continue-on-error: true
+        if: steps.check_network.outputs.network_gitee == 'ok'
+        run: git push gitee ${{ github.sha }}:refs/heads/T1-F-P --force
+
+      - name: 推送到 GitLab
+        continue-on-error: true
+        if: steps.check_network.outputs.network_gitlab == 'ok'
+        run: git push gitlab ${{ github.sha }}:refs/heads/T1-F-P --force
+
+      - name: 推送到 Gitea_local
+        continue-on-error: true
+        if: steps.check_network.outputs.network_gitea == 'ok'
+        run: git push gitea_author_local ${{ github.sha }}:refs/heads/T1-F-P --force
 
   # .sln 生成任务：每天中国时间 10:00 和 22:00 自动运行
   build-sln:

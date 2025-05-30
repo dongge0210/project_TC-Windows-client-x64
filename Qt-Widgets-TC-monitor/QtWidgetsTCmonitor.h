@@ -1,4 +1,4 @@
-﻿// QtWidgetsTCmonitor.h
+// QtWidgetsTCmonitor.h
 #pragma once
 
 #include "stdafx.h"
@@ -28,6 +28,7 @@
 #include <QPushButton>
 #include <QDialog>
 #include <QTableWidget>
+#include <QDateTime>
 #include "../src/core/DataStruct/DataStruct.h"
 #include "../src/core/utils/Logger.h"
 #include "ui_QtWidgetsTCmonitor.h"
@@ -53,6 +54,7 @@ private slots:
     void updateFromSharedMemory();
     void onGpuSelectionChanged(int index);
     void onNetworkSelectionChanged(int index);
+    void updateLocalDateTime();
 
 private:
     // UI setup
@@ -63,23 +65,20 @@ private:
     void createTemperatureSection();
     void createDiskSection();
     void createNetworkSection();
-    void updateGpuSelector(); // 保持声明
+    void updateGpuSelector();
     void updateNetworkSelector(int adapterCount, SharedMemoryBlock* pBuffer);
     void updateDiskInfo(SharedMemoryBlock* pBuffer);
     void UpdateDiskInfoUI();
-    void updateDiskTreeWidget(); // 新增：刷新磁盘树形控件
-    void showSmartDetails(const QString& diskName); // 新增：显示SMART详情弹窗
+    void updateDiskTreeWidget();
+    void showSmartDetails(const QString& diskName);
 
-    // Formatting helpers
     QString formatSize(uint64_t bytes);
     QString formatPercentage(double value);
     QString formatTemperature(double value);
     QString formatFrequency(double value);
 
-    // UI components
     QTimer* updateTimer = nullptr;
 
-    // Main UI containers
     QGroupBox* cpuGroupBox = nullptr;
     QGroupBox* memoryGroupBox = nullptr;
     QGroupBox* gpuGroupBox = nullptr;
@@ -87,7 +86,6 @@ private:
     QGroupBox* diskGroupBox = nullptr;
     QGroupBox* networkGroupBox = nullptr;
 
-    // Chart components
     QChart* cpuTempChart = nullptr;
     QChartView* cpuTempChartView = nullptr;
     QLineSeries* cpuTempSeries = nullptr;
@@ -95,14 +93,12 @@ private:
     QChartView* gpuTempChartView = nullptr;
     QLineSeries* gpuTempSeries = nullptr;
 
-    // GPU
     QComboBox* gpuSelector = nullptr;
     std::vector<int> gpuIndices;
     int currentGpuIndex = 0;
     QLabel* gpuDriverVersionLabel = nullptr;
-    int cachedGpuCount = 0; // 初始化为0，保证每次都能刷新
+    int cachedGpuCount = 0;
 
-    // Network
     QWidget* networkContainer = nullptr;
     QComboBox* networkSelector = nullptr;
     QVector<int> networkIndices;
@@ -113,13 +109,12 @@ private:
     QLabel* networkStatusLabel = nullptr;
     QLabel* networkIpLabel = nullptr;
 
-    // Info labels
     QMap<QString, QLabel*> infoLabels;
 
-    // Data containers
     std::queue<float> cpuTempHistory;
     std::queue<float> gpuTempHistory;
     SystemInfo currentSysInfo;
 
     Ui_QtWidgetsTCmonitorClass* ui = nullptr;
+    QLabel* labelLocalDateTime = nullptr; // 新增：用于本地时间显示
 };
