@@ -57,13 +57,7 @@
     <ClInclude Include="..\src\core\DataStruct\SharedMemoryManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Utils\ComInitializationHelper.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\core\Utils\stdafx.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -113,14 +107,12 @@
     <ClCompile Include="..\src\core\Utils\ComInitializationHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Qt-Widgets-TC-monitor\QtWidgetsTCmonitor.pro" />
     <None Include="..\Project1.vcxproj.filters" />
     <None Include="docs\RuntimeRequirements.md" />
     <None Include="Qt-Widgets-TC-monitor\Qt-Widgets-TC-monitor.vcxproj" />
+    <None Include=".gitmodules" />
   </ItemGroup>
 </Project>
