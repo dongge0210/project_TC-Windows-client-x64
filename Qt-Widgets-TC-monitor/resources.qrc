@@ -1,0 +1,5 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/qml">
+    <file alias="minimal.qml">minimal.qml</file>
+</qresource>
+</RCC>

@@ -69,12 +69,11 @@ bld/
 [Bb]uild/
 
 # Custom ignore for third party libs
-*.dll
-*.lib
+!third_party/**/*.lib
+!third_party/**/*.dll
 
 /Windows Kits
 /Project1/system_monitor.log
-/src/CPP-parsers
 
 .fake
 .DS_Store

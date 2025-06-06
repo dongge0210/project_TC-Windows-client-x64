@@ -127,7 +127,6 @@ Qt6Widgetsd.lib;Qt6Chartsd.lib;Qt6Charts.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.l
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtRcc Include="QtWidgetsTCmonitor.qrc" />
-    <QtUic Include="QtWidgetsTCmonitor.ui" />
     <QtMoc Include="QtWidgetsTCmonitor.h" />
     <ClCompile Include="..\src\core\DataStruct\SharedMemoryManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>

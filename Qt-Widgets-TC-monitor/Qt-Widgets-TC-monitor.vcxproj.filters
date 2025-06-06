@@ -26,9 +26,6 @@
     <QtRcc Include="QtWidgetsTCmonitor.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
-    <QtUic Include="QtWidgetsTCmonitor.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <ClCompile Include="QtWidgetsTCmonitor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

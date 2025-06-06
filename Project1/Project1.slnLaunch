@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "新建配置文件",
+    "Projects": [
+      {
+        "Path": "..\\Qt-Widgets-TC-monitor\\Qt-Widgets-TC-monitor.vcxproj",
+        "Action": "Start",
+        "DebugTarget": "本地 Windows 调试器"
+      },
+      {
+        "Path": "Project1.vcxproj",
+        "Action": "Start",
+        "DebugTarget": "本地 Windows 调试器"
+      }
+    ]
+  }
+]
