@@ -125,4 +125,28 @@ void Logger::Info(const std::wstring& message) { Info(WideStringToUtf8(message))
 void Logger::Warning(const std::wstring& message) { Warning(WideStringToUtf8(message)); }
 void Logger::Error(const std::wstring& message) { Error(WideStringToUtf8(message)); }
 
+void Logger::InfoUtf8(const std::string &message) {
+    // Replace std::wstring_convert usage with MultiByteToWideChar
+    int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, message.c_str(), (int)message.size(), nullptr, 0);
+    if (sizeNeeded <= 0) {
+        wprintf(L"[INFO] Conversion error\n");
+        return;
+    }
+    std::wstring wmsg(sizeNeeded, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, message.c_str(), (int)message.size(), &wmsg[0], sizeNeeded);
+    wprintf(L"[INFO] %ls\n", wmsg.c_str());
+}
+
+void Logger::ErrorUtf8(const std::string &message) {
+    // Replace std::wstring_convert usage with MultiByteToWideChar
+    int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, message.c_str(), (int)message.size(), nullptr, 0);
+    if (sizeNeeded <= 0) {
+        wprintf(L"[ERROR] Conversion error\n");
+        return;
+    }
+    std::wstring wmsg(sizeNeeded, L'\0');
+    MultiByteToWideChar(CP_UTF8, 0, message.c_str(), (int)message.size(), &wmsg[0], sizeNeeded);
+    wprintf(L"[ERROR] %ls\n", wmsg.c_str());
+}
+
 

@@ -36,8 +36,9 @@
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
-    <QtModules>core;gui;widgets</QtModules>
+    <QtModules>core;gui;qml;quick;quickcontrols2</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
+    <QtQMLDebugEnable>true</QtQMLDebugEnable>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>QT6.10_msvc_64bit</QtInstall>
@@ -73,15 +74,13 @@
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <UseStandardPreprocessor>true</UseStandardPreprocessor>
       <AdditionalOptions>/Zc:__cplusplus /utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(IntDir);$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtWidgets;$(ProjectDir)x64\Debug\qt\uic</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(IntDir);$(QTDIR)\include;$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtQml;$(ProjectDir)x64\Debug\qt\uic</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>QT_WIDGETS_TC_MONITOR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AdditionalLibraryDirectories>$(QTDIR)\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>Qt6Cored.lib;
-Qt6Guid.lib;
-Qt6Widgetsd.lib;Qt6Chartsd.lib;Qt6Charts.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.lib;F:\Win_x64-10.lastest-sysMonitor\Windows Kits\10\Lib\10.0.26100.0\um\x64\AdvAPI32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Qt6Cored.lib;Qt6Guid.lib;Qt6Widgetsd.lib;Qt6Chartsd.lib;Qt6Charts.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.lib;Qt6Qml.lib;Qt6Quick.lib;F:\Win_x64-10.lastest-sysMonitor\Windows Kits\10\Lib\10.0.26100.0\um\x64\AdvAPI32.Lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <QtUic>
       <Generator>cpp</Generator>
@@ -127,7 +126,6 @@ Qt6Widgetsd.lib;Qt6Chartsd.lib;Qt6Charts.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.l
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtRcc Include="QtWidgetsTCmonitor.qrc" />
-    <QtMoc Include="QtWidgetsTCmonitor.h" />
     <ClCompile Include="..\src\core\DataStruct\SharedMemoryManager.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -139,7 +137,6 @@ Qt6Widgetsd.lib;Qt6Chartsd.lib;Qt6Charts.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.l
     </ClCompile>
     <ClCompile Include="..\src\core\Utils\WinUtils.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="QtWidgetsTCmonitor.cpp" />
     <ClInclude Include="..\src\core\DataStruct\SharedMemoryManager.h" />
     <ClInclude Include="..\src\core\disk\DiskInfo.h" />
     <ClInclude Include="..\src\core\Utils\Logger.h" />
@@ -149,6 +146,10 @@ Qt6Widgetsd.lib;Qt6Chartsd.lib;Qt6Charts.lib;Qt6Core.lib;Qt6Gui.lib;Qt6Widgets.l
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Project1-qml\Project1Content\App.qml" />
+    <None Include="Project1-qml\Project1Content\Screen01.ui.qml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

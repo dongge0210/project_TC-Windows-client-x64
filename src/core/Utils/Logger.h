@@ -37,4 +37,7 @@ public:
     static void Info(const std::wstring& message);
     static void Warning(const std::wstring& message);
     static void Error(const std::wstring& message);
+
+    static void InfoUtf8(const std::string& message);
+    static void ErrorUtf8(const std::string& message);
 };

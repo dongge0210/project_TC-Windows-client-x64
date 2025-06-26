@@ -84,7 +84,7 @@ struct PhysicalDiskDataSM {
 
 // Shared memory block structure (POD only)
 struct SharedMemoryBlock {
-    CRITICAL_SECTION lock;
+    //CRITICAL_SECTION lock;
 
     // CPU information
     wchar_t cpuName[128];
@@ -126,7 +126,8 @@ struct SharedMemoryBlock {
 
     // System information
     wchar_t osDetailedVersion[256];
-    SYSTEMTIME lastUpdate; 
+    SYSTEMTIME lastUpdate;
+    wchar_t lastUpdateUtc[64]; // Added field for storing UTC
     wchar_t motherboardName[128];
     wchar_t deviceName[128];
 
@@ -150,6 +151,9 @@ struct GPUData {
     std::wstring driverVersion;   // 修改: 驱动版本
     std::wstring driverDate;      // 修改: 驱动日期
     std::wstring driverProvider;  // 修改: 驱动提供商
+    bool available;               // 新增: GPU是否可用
+    std::string status;           // 新增: GPU状态
+    float temperature;            // 新增: GPU温度
 };
 
 struct NetworkAdapterData {

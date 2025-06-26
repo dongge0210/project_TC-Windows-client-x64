@@ -1285,3 +1285,8 @@ Item {
         }
     }
 }
+/*##^##
+Designer {
+    D{i:0}D{i:97;locked:true}
+}
+##^##*/

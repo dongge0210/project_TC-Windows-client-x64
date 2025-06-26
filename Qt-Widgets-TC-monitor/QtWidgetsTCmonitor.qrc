@@ -1,4 +1,10 @@
 <RCC>
-    <qresource prefix="QtWidgetsTCmonitor">
+    <qresource prefix="/">
+        <!-- 添加根目录下的QML文件 -->
+        <file>minimal.qml</file>
+        <file>test.qml</file>
+        
+        <!-- 添加Project1-qml内容（如果需要） -->
+        <file>F:\Win_x64-10.lastest-sysMonitor\Qt-Widgets-TC-monitor\Project1-qml\Project1Content\Screen01.ui.qml</file>
     </qresource>
 </RCC>
