@@ -1,9 +1,16 @@
 ﻿#pragma once
 #include <string>
+#include <vector>
+#include "../platform/Platform.h"
+
+#if PLATFORM_WINDOWS
 #include <windows.h>
 #include <pdh.h>
-#include <queue>
-#include <vector>
+typedef DWORD CpuSpeed_t;
+#else
+#include <cstdint>
+typedef uint32_t CpuSpeed_t;
+#endif
 
 class CpuInfo {
 public:
@@ -17,7 +24,7 @@ public:
     int GetLargeCores() const;
     double GetLargeCoreSpeed() const;    // 新增：获取性能核心频率
     double GetSmallCoreSpeed() const;    // 新增：获取能效核心频率
-    DWORD GetCurrentSpeed() const;       // 保持兼容性
+    CpuSpeed_t GetCurrentSpeed() const;       // 保持兼容性
     bool IsHyperThreadingEnabled() const;
     bool IsVirtualizationEnabled() const;
 
@@ -39,6 +46,7 @@ private:
     int largeCores;
     double cpuUsage;
 
+#if PLATFORM_WINDOWS
     // 频率信息
     std::vector<DWORD> largeCoresSpeeds; // 性能核心频率
     std::vector<DWORD> smallCoresSpeeds; // 能效核心频率
@@ -53,4 +61,19 @@ private:
     PDH_HQUERY queryHandle;
     PDH_HCOUNTER counterHandle;
     bool counterInitialized;
+#else
+    // Cross-platform frequency info
+    std::vector<uint32_t> largeCoresSpeeds;
+    std::vector<uint32_t> smallCoresSpeeds;
+    uint64_t lastUpdateTime;
+    
+    // Cross-platform sampling
+    uint64_t lastSampleTick = 0;
+    uint64_t prevSampleTick = 0;
+    double lastSampleIntervalMs = 0.0;
+    
+    // Cross-platform CPU usage tracking
+    bool counterInitialized;
+    uint64_t prevIdleTime, prevTotalTime;
+#endif
 };

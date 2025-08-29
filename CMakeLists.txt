@@ -17,20 +17,42 @@ endif()
 message(STATUS "Building for platform: ${TARGET_PLATFORM}")
 
 # Source files
-file(GLOB_RECURSE SOURCES 
-    "src/main.cpp"
-    "src/core/*.cpp"
-    "src/core/*.h"
+set(CORE_SOURCES
+    "src/main_simple.cpp"
+    "src/core/os/OSInfo.cpp"
+    "src/core/memory/MemoryInfo.cpp"
+    "src/core/Utils/PlatformUtils.cpp"
 )
 
-# Platform-specific exclusions
-if(NOT WIN32)
-    # Exclude Windows-specific files on non-Windows platforms
-    list(FILTER SOURCES EXCLUDE REGEX ".*[Ww]in.*")
-    list(FILTER SOURCES EXCLUDE REGEX ".*[Ww]mi.*")
+# Add Logger and TimeUtils only for Windows (they have Windows dependencies)
+if(WIN32)
+    list(APPEND CORE_SOURCES
+        "src/core/Utils/Logger.cpp"
+        "src/core/Utils/TimeUtils.cpp"
+    )
 endif()
 
-add_executable(SystemMonitor ${SOURCES})
+# Platform-specific sources
+if(WIN32)
+    list(APPEND CORE_SOURCES
+        "src/core/cpu/CpuInfo.cpp"
+        "src/core/gpu/GpuInfo.cpp"
+        "src/core/disk/DiskInfo.cpp"
+        "src/core/network/NetworkAdapter.cpp"
+        "src/core/temperature/TemperatureWrapper.cpp"
+        "src/core/temperature/LibreHardwareMonitorBridge.cpp"
+        "src/core/DataStruct/SharedMemoryManager.cpp"
+        "src/core/DataStruct/Producer.cpp"
+        "src/core/Utils/WinUtils.cpp"
+        "src/core/Utils/WMIManager.cpp"
+        "src/core/Utils/ComInitializationHelper.cpp"
+        "src/core/Utils/LibreHardwareMonitorBridge.cpp"
+    )
+endif()
+
+message(STATUS "Final sources: ${CORE_SOURCES}")
+
+add_executable(SystemMonitor ${CORE_SOURCES})
 
 # Platform-specific configurations
 if(WIN32)

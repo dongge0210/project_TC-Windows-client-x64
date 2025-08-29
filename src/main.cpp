@@ -33,14 +33,13 @@
 #include <locale>   // 添加locale支持以使用setlocale
 
 // Project headers
-#include "core/cpu/CpuInfo.h"
 #include "core/memory/MemoryInfo.h"
 #include "core/os/OSInfo.h"
 #include "core/Utils/PlatformUtils.h"
-#include "core/DataStruct/DataStruct.h"
 
 // Platform-specific headers
 #if PLATFORM_WINDOWS
+    #include "core/cpu/CpuInfo.h"
     #include "core/gpu/GpuInfo.h"
     #include "core/network/NetworkAdapter.h"
     #include "core/Utils/Logger.h"
@@ -48,6 +47,7 @@
     #include "core/Utils/WinUtils.h"
     #include "core/Utils/WmiManager.h"
     #include "core/disk/DiskInfo.h"
+    #include "core/DataStruct/DataStruct.h"
     #include "core/DataStruct/SharedMemoryManager.h"
     #include "core/temperature/TemperatureWrapper.h"
 #endif

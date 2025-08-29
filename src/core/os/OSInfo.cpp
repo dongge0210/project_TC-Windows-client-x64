@@ -117,8 +117,4 @@ void OSInfo::Initialize() {
 
 std::string OSInfo::GetVersion() const {
     return osVersion;
-}
-
-std::string OSInfo::GetVersion() const {
-    return osVersion;
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
