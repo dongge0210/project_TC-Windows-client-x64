@@ -5,11 +5,13 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <iomanip>
 
 // Project headers
 #include "core/memory/MemoryInfo.h"
 #include "core/os/OSInfo.h"
 #include "core/Utils/PlatformUtils.h"
+#include "core/cpu/CpuInfo.h"
 
 // Simple cross-platform system information display
 void PrintSystemInfo() {
@@ -21,6 +23,15 @@ void PrintSystemInfo() {
     // OS info
     OSInfo osInfo;
     std::cout << "OS Version: " << osInfo.GetVersion() << std::endl;
+    
+    // CPU info
+    CpuInfo cpuInfo;
+    std::cout << "CPU: " << cpuInfo.GetName() << std::endl;
+    std::cout << "Total Cores: " << cpuInfo.GetTotalCores() << std::endl;
+    std::cout << "Large Cores: " << cpuInfo.GetLargeCores() << std::endl;
+    std::cout << "Small Cores: " << cpuInfo.GetSmallCores() << std::endl;
+    std::cout << "CPU Speed: " << cpuInfo.GetCurrentSpeed() << " MHz" << std::endl;
+    std::cout << "Hyper-Threading: " << (cpuInfo.IsHyperThreadingEnabled() ? "Enabled" : "Disabled") << std::endl;
     
     // Memory info
     MemoryInfo memInfo;
@@ -44,11 +55,14 @@ int main(int argc, char* argv[]) {
         // Simple monitoring loop
         std::cout << std::endl << "Monitoring system (press Ctrl+C to exit)..." << std::endl;
         
+        CpuInfo cpuInfo;  // Create CPU info for monitoring
+        
         for (int i = 0; i < 10; ++i) {
             std::cout << "\n--- Update " << (i + 1) << " ---" << std::endl;
             
             MemoryInfo memInfo;
             std::cout << "Available Memory: " << (memInfo.GetAvailablePhysical() / (1024 * 1024)) << " MB" << std::endl;
+            std::cout << "CPU Usage: " << std::fixed << std::setprecision(1) << cpuInfo.GetUsage() << "%" << std::endl;
             
             // Wait for 2 seconds
             std::this_thread::sleep_for(std::chrono::seconds(2));

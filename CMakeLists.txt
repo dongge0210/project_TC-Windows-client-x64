@@ -24,6 +24,13 @@ set(CORE_SOURCES
     "src/core/Utils/PlatformUtils.cpp"
 )
 
+# Platform-specific CPU implementation
+if(WIN32)
+    list(APPEND CORE_SOURCES "src/core/cpu/CpuInfo.cpp")
+else()
+    list(APPEND CORE_SOURCES "src/core/cpu/CpuInfo_CrossPlatform.cpp")
+endif()
+
 # Add Logger and TimeUtils only for Windows (they have Windows dependencies)
 if(WIN32)
     list(APPEND CORE_SOURCES
