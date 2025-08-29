@@ -18,7 +18,7 @@ message(STATUS "Building for platform: ${TARGET_PLATFORM}")
 
 # Source files
 set(CORE_SOURCES
-    "src/main_simple.cpp"
+    "src/main.cpp"
     "src/core/os/OSInfo.cpp"
     "src/core/memory/MemoryInfo.cpp"
     "src/core/Utils/PlatformUtils.cpp"

@@ -2,55 +2,58 @@
 #include "core/platform/Platform.h"
 
 #if PLATFORM_WINDOWS
-    // Windows-specific pragmas and settings
-    #pragma unmanaged
-    #pragma comment(linker, "/STACK:8388608")  // 设置栈大小为8MB
-    
-    // Windows-specific includes
-    #include <windows.h>
-    #include <shellapi.h>
-    #include <sddl.h>
-    #include <Aclapi.h>
-    #include <conio.h>   // 添加键盘输入支持
-    #include <io.h>
-    #include <fcntl.h>
-    
-    #pragma comment(lib, "kernel32.lib")
-    #pragma comment(lib, "user32.lib")
-#endif
+// === WINDOWS VERSION - ORIGINAL FUNCTIONALITY PRESERVED ===
 
-// Standard library includes for all platforms
+// 使用#pragma unmanaged确保main函数编译为本机代码
+#pragma unmanaged
+
+// ✅ 添加栈大小控制，防止栈溢出
+#pragma comment(linker, "/STACK:8388608")  // 设置栈大小为8MB
+
+/*
+如果出现
+警告	MSB8077	某些文件设置为 C++/CLI，但未定义"为单个文件启用 CLR 支持"属性。有关更多详细信息，请参阅"高级属性页"文档。
+以上警告请忽视，这个项目的结构没法兼容这个情况
+*/
+// 首先包含Windows头文件以避免宏重定义警告
+#include <windows.h>
+#include <shellapi.h>
+#include <sddl.h>
+#include <Aclapi.h>
+#include <conio.h>   // 添加键盘输入支持
+
+// 然后包含标准库头文件
 #include <chrono>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <utility>
 #include <thread>
+#include <io.h>
+#include <fcntl.h>
 #include <algorithm> // Include for std::transform
 #include <vector> // Include for std::vector
 #include <mutex>     // 添加线程同步支持
 #include <atomic>    // 添加原子操作支持
 #include <locale>   // 添加locale支持以使用setlocale
 
-// Project headers
+// 最后包含项目头文件
+#include "core/cpu/CpuInfo.h"
+#include "core/gpu/GpuInfo.h"
 #include "core/memory/MemoryInfo.h"
+#include "core/network/NetworkAdapter.h"
 #include "core/os/OSInfo.h"
-#include "core/Utils/PlatformUtils.h"
+#include "core/utils/Logger.h"
+#include "core/utils/TimeUtils.h"
+#include "core/utils/WinUtils.h"
+#include "core/utils/WmiManager.h"
+#include "core/disk/DiskInfo.h"
+#include "core/DataStruct/DataStruct.h"
+#include "core/DataStruct/SharedMemoryManager.h"  // Include the new shared memory manager
+#include "core/temperature/TemperatureWrapper.h"  // 使用TemperatureWrapper而不是直接调用LibreHardwareMonitorBridge
 
-// Platform-specific headers
-#if PLATFORM_WINDOWS
-    #include "core/cpu/CpuInfo.h"
-    #include "core/gpu/GpuInfo.h"
-    #include "core/network/NetworkAdapter.h"
-    #include "core/Utils/Logger.h"
-    #include "core/Utils/TimeUtils.h"
-    #include "core/Utils/WinUtils.h"
-    #include "core/Utils/WmiManager.h"
-    #include "core/disk/DiskInfo.h"
-    #include "core/DataStruct/DataStruct.h"
-    #include "core/DataStruct/SharedMemoryManager.h"
-    #include "core/temperature/TemperatureWrapper.h"
-#endif
+#pragma comment(lib, "kernel32.lib")
+#pragma comment(lib, "user32.lib")
 
 // 全局变量
 std::atomic<bool> g_shouldExit{false};
@@ -1009,5 +1012,229 @@ char GetKeyPress() {
     }
     return 0;
 }
+
+#else
+// === CROSS-PLATFORM VERSION - SIMPLIFIED SYSTEM MONITOR ===
+
+// Standard library includes
+#include <chrono>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <utility>
+#include <thread>
+#include <algorithm>
+#include <vector>
+#include <mutex>
+#include <atomic>
+#include <locale>
+#include <csignal>
+#include <sys/select.h>
+#include <unistd.h>
+#include <termios.h>
+
+// Cross-platform project headers
+#include "core/memory/MemoryInfo.h"
+#include "core/os/OSInfo.h"
+#include "core/Utils/PlatformUtils.h"
+#include "core/cpu/CpuInfo.h"
+
+// Global variables for cross-platform version
+std::atomic<bool> g_shouldExit{false};
+static std::mutex g_consoleMutex;
+
+// Signal handler for Unix-like systems
+void SignalHandler(int signal) {
+    if (signal == SIGINT || signal == SIGTERM) {
+        std::cout << "接收到系统关闭信号，正在安全退出..." << std::endl;
+        g_shouldExit = true;
+    }
+}
+
+// Cross-platform console output
+void SafeConsoleOutput(const std::string& message) {
+    std::lock_guard<std::mutex> lock(g_consoleMutex);
+    std::cout << message;
+    std::cout.flush();
+}
+
+void SafeConsoleOutput(const std::string& message, int color) {
+    std::lock_guard<std::mutex> lock(g_consoleMutex);
+    // Convert Windows color code to ANSI color
+    int ansiColor = 37; // Default white
+    switch(color) {
+        case 10: ansiColor = 32; break; // Green
+        case 14: ansiColor = 33; break; // Yellow
+        case 12: ansiColor = 31; break; // Red
+        case 11: ansiColor = 36; break; // Cyan
+        case 9:  ansiColor = 34; break; // Blue
+        default: ansiColor = 37; break; // White
+    }
+    std::cout << "\033[" << ansiColor << "m" << message << "\033[0m";
+    std::cout.flush();
+}
+
+void SafeExit(int exitCode) {
+    std::cout << "程序清理完成，退出码: " << exitCode << std::endl;
+    exit(exitCode);
+}
+
+// Cross-platform keyboard input
+bool CheckForKeyPress() {
+    fd_set readfds;
+    struct timeval timeout;
+    
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+    timeout.tv_sec = 0;
+    timeout.tv_usec = 0;
+    
+    int result = select(STDIN_FILENO + 1, &readfds, NULL, NULL, &timeout);
+    return (result > 0) && FD_ISSET(STDIN_FILENO, &readfds);
+}
+
+char GetKeyPress() {
+    if (CheckForKeyPress()) {
+        char ch;
+        if (read(STDIN_FILENO, &ch, 1) == 1) {
+            return ch;
+        }
+    }
+    return 0;
+}
+
+// Cross-platform time formatting
+std::string FormatDateTime(const std::chrono::system_clock::time_point& tp) {
+    try {
+        auto time = std::chrono::system_clock::to_time_t(tp);
+        struct tm timeinfo;
+        if (localtime_r(&time, &timeinfo) != nullptr) {
+            std::stringstream ss;
+            ss << std::put_time(&timeinfo, "%Y-%m-%d %H:%M:%S");
+            return ss.str();
+        }
+    }
+    catch (...) {
+        // Time formatting failed
+    }
+    return "时间格式化失败";
+}
+
+// Cross-platform main function
+int main(int argc, char* argv[]) {
+    (void)argc; (void)argv; // Suppress unused parameter warnings
+    
+    // Set up signal handlers
+    signal(SIGINT, SignalHandler);
+    signal(SIGTERM, SignalHandler);
+    
+    // Set locale for cross-platform support
+    setlocale(LC_ALL, "en_US.UTF-8");
+    
+    std::cout << "Cross-platform system monitor starting..." << std::endl;
+    std::cout << "Platform: " << PlatformUtils::GetPlatformName() << std::endl;
+    
+    try {
+        // Initialize system monitoring objects
+        OSInfo osInfo;
+        MemoryInfo memInfo;
+        std::unique_ptr<CpuInfo> cpuInfo = std::make_unique<CpuInfo>();
+        
+        std::cout << "System monitor initialized successfully" << std::endl;
+        
+        int loopCounter = 1;
+        bool isDetailedLogging = true;
+        
+        while (!g_shouldExit.load()) {
+            try {
+                auto loopStart = std::chrono::high_resolution_clock::now();
+                
+                // Display system information every 5 loops (every ~5 seconds)
+                isDetailedLogging = (loopCounter % 5 == 1);
+                
+                if (isDetailedLogging) {
+                    std::cout << "\n=== System Information (Loop #" << loopCounter << ") ===" << std::endl;
+                    
+                    // OS Information
+                    std::cout << "Platform: " << PlatformUtils::GetPlatformName() << std::endl;
+                    std::cout << "OS Version: " << osInfo.GetVersion() << std::endl;
+                    
+                    // CPU Information
+                    if (cpuInfo) {
+                        std::cout << "CPU: " << cpuInfo->GetName() << std::endl;
+                        std::cout << "Total Cores: " << cpuInfo->GetTotalCores() << std::endl;
+                        std::cout << "CPU Usage: " << std::fixed << std::setprecision(1) 
+                                  << cpuInfo->GetUsage() << "%" << std::endl;
+                    }
+                    
+                    // Memory Information
+                    try {
+                        uint64_t totalMem = memInfo.GetTotalPhysical();
+                        uint64_t availMem = memInfo.GetAvailablePhysical();
+                        uint64_t usedMem = totalMem - availMem;
+                        double memUsagePercent = totalMem > 0 ? (double(usedMem) / totalMem) * 100.0 : 0.0;
+                        
+                        std::cout << "Total Memory: " << (totalMem / (1024 * 1024 * 1024)) << " GB" << std::endl;
+                        std::cout << "Used Memory: " << (usedMem / (1024 * 1024 * 1024)) << " GB (" 
+                                  << std::fixed << std::setprecision(1) << memUsagePercent << "%)" << std::endl;
+                        std::cout << "Available Memory: " << (availMem / (1024 * 1024 * 1024)) << " GB" << std::endl;
+                    }
+                    catch (const std::exception& e) {
+                        std::cout << "Memory info error: " << e.what() << std::endl;
+                    }
+                    
+                    std::cout << "Current Time: " << FormatDateTime(std::chrono::system_clock::now()) << std::endl;
+                    std::cout << "==========================" << std::endl;
+                }
+                
+                // Check for keyboard input
+                if (CheckForKeyPress()) {
+                    char key = GetKeyPress();
+                    if (key == 'q' || key == 'Q' || key == '\x1B') { // q, Q, or ESC
+                        SafeConsoleOutput("用户请求退出程序\n", 14);
+                        g_shouldExit = true;
+                        break;
+                    }
+                }
+                
+                // Sleep for 1 second, checking for exit signal
+                auto sleepStart = std::chrono::high_resolution_clock::now();
+                while (!g_shouldExit.load()) {
+                    auto now = std::chrono::high_resolution_clock::now();
+                    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - sleepStart);
+                    if (elapsed.count() >= 1000) { // 1 second
+                        break;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                }
+                
+                loopCounter++;
+            }
+            catch (const std::exception& e) {
+                std::cout << "主循环中发生异常: " << e.what() << std::endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            catch (...) {
+                std::cout << "主循环中发生未知异常" << std::endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+        }
+        
+        std::cout << "程序收到退出信号，开始清理" << std::endl;
+        SafeExit(0);
+    }
+    catch (const std::exception& e) {
+        std::cout << "程序发生致命错误: " << e.what() << std::endl;
+        SafeExit(1);
+    }
+    catch (...) {
+        std::cout << "程序发生未知致命错误" << std::endl;
+        SafeExit(1);
+    }
+}
+
+#endif // PLATFORM_WINDOWS
 
 
