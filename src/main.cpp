@@ -1,53 +1,56 @@
-﻿// 使用#pragma unmanaged确保main函数编译为本机代码
-#pragma unmanaged
+﻿// Cross-platform system monitor application
+#include "core/platform/Platform.h"
 
-// ✅ 添加栈大小控制，防止栈溢出
-#pragma comment(linker, "/STACK:8388608")  // 设置栈大小为8MB
+#if PLATFORM_WINDOWS
+    // Windows-specific pragmas and settings
+    #pragma unmanaged
+    #pragma comment(linker, "/STACK:8388608")  // 设置栈大小为8MB
+    
+    // Windows-specific includes
+    #include <windows.h>
+    #include <shellapi.h>
+    #include <sddl.h>
+    #include <Aclapi.h>
+    #include <conio.h>   // 添加键盘输入支持
+    #include <io.h>
+    #include <fcntl.h>
+    
+    #pragma comment(lib, "kernel32.lib")
+    #pragma comment(lib, "user32.lib")
+#endif
 
-/*
-如果出现
-警告	MSB8077	某些文件设置为 C++/CLI，但未定义"为单个文件启用 CLR 支持"属性。有关更多详细信息，请参阅"高级属性页"文档。
-以上警告请忽视，这个项目的结构没法兼容这个情况
-*/
-// 首先包含Windows头文件以避免宏重定义警告
-#include <windows.h>
-#include <shellapi.h>
-#include <sddl.h>
-#include <Aclapi.h>
-#include <conio.h>   // 添加键盘输入支持
-
-// 然后包含标准库头文件
+// Standard library includes for all platforms
 #include <chrono>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 #include <utility>
 #include <thread>
-#include <io.h>
-#include <fcntl.h>
 #include <algorithm> // Include for std::transform
 #include <vector> // Include for std::vector
 #include <mutex>     // 添加线程同步支持
 #include <atomic>    // 添加原子操作支持
 #include <locale>   // 添加locale支持以使用setlocale
 
-// 最后包含项目头文件
+// Project headers
 #include "core/cpu/CpuInfo.h"
-#include "core/gpu/GpuInfo.h"
 #include "core/memory/MemoryInfo.h"
-#include "core/network/NetworkAdapter.h"
 #include "core/os/OSInfo.h"
-#include "core/utils/Logger.h"
-#include "core/utils/TimeUtils.h"
-#include "core/utils/WinUtils.h"
-#include "core/utils/WmiManager.h"
-#include "core/disk/DiskInfo.h"
+#include "core/Utils/PlatformUtils.h"
 #include "core/DataStruct/DataStruct.h"
-#include "core/DataStruct/SharedMemoryManager.h"  // Include the new shared memory manager
-#include "core/temperature/TemperatureWrapper.h"  // 使用TemperatureWrapper而不是直接调用LibreHardwareMonitorBridge
 
-#pragma comment(lib, "kernel32.lib")
-#pragma comment(lib, "user32.lib")
+// Platform-specific headers
+#if PLATFORM_WINDOWS
+    #include "core/gpu/GpuInfo.h"
+    #include "core/network/NetworkAdapter.h"
+    #include "core/Utils/Logger.h"
+    #include "core/Utils/TimeUtils.h"
+    #include "core/Utils/WinUtils.h"
+    #include "core/Utils/WmiManager.h"
+    #include "core/disk/DiskInfo.h"
+    #include "core/DataStruct/SharedMemoryManager.h"
+    #include "core/temperature/TemperatureWrapper.h"
+#endif
 
 // 全局变量
 std::atomic<bool> g_shouldExit{false};
