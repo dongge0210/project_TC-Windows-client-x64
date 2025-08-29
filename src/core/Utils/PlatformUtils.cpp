@@ -81,6 +81,8 @@ bool PlatformUtils::EnablePrivilege(const std::wstring& privilegeName, bool enab
 #else
     // On Unix systems, privilege management is different
     // This is mainly a Windows concept, so return false on other platforms
+    (void)privilegeName; // Suppress unused parameter warning
+    (void)enable;        // Suppress unused parameter warning
     return false;
 #endif
 }
@@ -110,6 +112,7 @@ bool PlatformUtils::CheckPrivilege(const std::wstring& privilegeName) {
     CloseHandle(hToken);
     return (checkResult && result);
 #else
+    (void)privilegeName; // Suppress unused parameter warning
     return false;
 #endif
 }

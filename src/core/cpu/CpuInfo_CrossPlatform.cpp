@@ -22,14 +22,14 @@
 
 CpuInfo::CpuInfo() :
     totalCores(0),
-    largeCores(0),
     smallCores(0),
+    largeCores(0),
     cpuUsage(0.0),
-    counterInitialized(false),
     lastUpdateTime(0),
     lastSampleTick(0),
     prevSampleTick(0),
-    lastSampleIntervalMs(0.0) {
+    lastSampleIntervalMs(0.0),
+    counterInitialized(false) {
 
 #if !PLATFORM_WINDOWS
     prevIdleTime = 0;

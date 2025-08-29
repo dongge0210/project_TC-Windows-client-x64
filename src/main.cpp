@@ -1148,6 +1148,7 @@ int main(int argc, char* argv[]) {
         while (!g_shouldExit.load()) {
             try {
                 auto loopStart = std::chrono::high_resolution_clock::now();
+                (void)loopStart; // Suppress unused variable warning
                 
                 // Display system information every 5 loops (every ~5 seconds)
                 isDetailedLogging = (loopCounter % 5 == 1);
