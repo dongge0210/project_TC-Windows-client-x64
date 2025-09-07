@@ -40,6 +40,7 @@
 #include "core/memory/MemoryInfo.h"
 #include "core/network/NetworkAdapter.h"
 #include "core/os/OSInfo.h"
+#include "core/tpm/TpmInfo.h"  // 新增：TPM信息检测
 #include "core/utils/Logger.h"
 #include "core/utils/TimeUtils.h"
 #include "core/utils/WinUtils.h"
@@ -840,6 +841,49 @@ int main(int argc, char* argv[]) {
                             cachedVirtualization = cpuInfo->IsVirtualizationEnabled();
                         }
                         
+                        // TPM信息检测（静态信息，只在初始化时获取）
+                        static bool tpmInfoCached = false;
+                        static bool cachedHasTpm = false;
+                        static std::string cachedTpmManufacturer;
+                        static std::string cachedTpmVersion;
+                        static std::string cachedTpmStatus;
+                        static bool cachedTpmEnabled = false;
+                        static bool cachedTpmReady = false;
+                        
+                        if (!tpmInfoCached) {
+                            try {
+                                Logger::Info("正在检测TPM信息");
+                                TpmInfo tpmInfo(*wmiManager);
+                                
+                                if (tpmInfo.HasTpm()) {
+                                    const auto& tpmData = tpmInfo.GetTpmData();
+                                    cachedHasTpm = true;
+                                    cachedTpmManufacturer = WinUtils::WstringToString(tpmData.manufacturerName);
+                                    cachedTpmVersion = WinUtils::WstringToString(tpmData.version);
+                                    cachedTpmStatus = WinUtils::WstringToString(tpmData.status);
+                                    cachedTpmEnabled = tpmData.isEnabled;
+                                    cachedTpmReady = tpmData.isReady;
+                                    
+                                    Logger::Info("TPM检测成功: " + cachedTpmManufacturer + 
+                                               " v" + cachedTpmVersion + 
+                                               " (状态: " + cachedTpmStatus + ")");
+                                } else {
+                                    Logger::Info("未检测到TPM或TPM不可用");
+                                }
+                                
+                                tpmInfoCached = true;
+                            }
+                            catch (const std::exception& e) {
+                                Logger::Error("TPM检测失败: " + std::string(e.what()));
+                                // 设置默认值
+                                cachedHasTpm = false;
+                                cachedTpmManufacturer = "未知";
+                                cachedTpmVersion = "未知";
+                                cachedTpmStatus = "检测失败";
+                                tpmInfoCached = true;
+                            }
+                        }
+                        
                         systemInfoCached = true;
                         Logger::Info("系统信息初始化完成");
                     }
@@ -861,6 +905,14 @@ int main(int argc, char* argv[]) {
                 sysInfo.efficiencyCores = cachedEfficiencyCores;
                 sysInfo.hyperThreading = cachedHyperThreading;
                 sysInfo.virtualization = cachedVirtualization;
+                
+                // 使用缓存的TPM信息
+                sysInfo.hasTpm = cachedHasTpm;
+                sysInfo.tpmManufacturer = cachedTpmManufacturer;
+                sysInfo.tpmVersion = cachedTpmVersion;
+                sysInfo.tpmStatus = cachedTpmStatus;
+                sysInfo.tpmEnabled = cachedTpmEnabled;
+                sysInfo.tpmReady = cachedTpmReady;
 
                 // 动态CPU信息（每次循环都需要获取）
                 try {

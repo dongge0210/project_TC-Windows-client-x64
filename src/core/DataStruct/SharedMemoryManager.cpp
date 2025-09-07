@@ -276,6 +276,7 @@ void SharedMemoryManager::WriteToSharedMemory(const SystemInfo& systemInfo) {
         for (int i = 0; i < 2; ++i) { memset(pBuffer->gpus[i].name, 0, sizeof(pBuffer->gpus[i].name)); memset(pBuffer->gpus[i].brand, 0, sizeof(pBuffer->gpus[i].brand)); }
         for (int i = 0; i < 8; ++i) { memset(&pBuffer->disks[i], 0, sizeof(pBuffer->disks[i])); memset(&pBuffer->physicalDisks[i], 0, sizeof(pBuffer->physicalDisks[i])); }
         for (int i = 0; i < 10; ++i) { memset(pBuffer->temperatures[i].sensorName, 0, sizeof(pBuffer->temperatures[i].sensorName)); }
+        memset(&pBuffer->tpm, 0, sizeof(pBuffer->tpm));
 
         // CPU
         SafeCopyWideString(pBuffer->cpuName, 128, WinUtils::StringToWstring(systemInfo.cpuName));
@@ -411,6 +412,29 @@ void SharedMemoryManager::WriteToSharedMemory(const SystemInfo& systemInfo) {
         pBuffer->cpuTemperature = systemInfo.cpuTemperature;
         pBuffer->gpuTemperature = systemInfo.gpuTemperature;
         pBuffer->cpuUsageSampleIntervalMs = systemInfo.cpuUsageSampleIntervalMs;
+
+        // TPM信息
+        pBuffer->hasTpm = systemInfo.hasTpm;
+        if (systemInfo.hasTpm) {
+            SafeCopyWideString(pBuffer->tpm.manufacturerName, 128, WinUtils::StringToWstring(systemInfo.tpmManufacturer));
+            SafeCopyWideString(pBuffer->tpm.version, 32, WinUtils::StringToWstring(systemInfo.tpmVersion));
+            SafeCopyWideString(pBuffer->tpm.status, 64, WinUtils::StringToWstring(systemInfo.tpmStatus));
+            pBuffer->tpm.isEnabled = systemInfo.tpmEnabled;
+            pBuffer->tpm.isReady = systemInfo.tpmReady;
+            // 其他TPM字段保持默认值
+            pBuffer->tpm.isActivated = false;
+            pBuffer->tpm.isOwned = false;
+            pBuffer->tpm.tbsAvailable = false;
+            pBuffer->tpm.physicalPresenceRequired = false;
+            pBuffer->tpm.specVersion = 0;
+            pBuffer->tpm.tbsVersion = 0;
+            memset(pBuffer->tpm.manufacturerId, 0, sizeof(pBuffer->tpm.manufacturerId));
+            memset(pBuffer->tpm.firmwareVersion, 0, sizeof(pBuffer->tpm.firmwareVersion));
+            memset(pBuffer->tpm.errorMessage, 0, sizeof(pBuffer->tpm.errorMessage));
+        } else {
+            // 清零TPM数据
+            memset(&pBuffer->tpm, 0, sizeof(pBuffer->tpm));
+        }
 
         GetSystemTime(&pBuffer->lastUpdate);
         Logger::Trace("成功写入系统/磁盘/SMART 信息到共享内存");
