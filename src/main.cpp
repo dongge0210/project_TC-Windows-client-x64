@@ -44,7 +44,7 @@
 #include "core/utils/Logger.h"
 #include "core/utils/TimeUtils.h"
 #include "core/utils/WinUtils.h"
-#include "core/utils/WmiManager.h"
+#include "core/Utils/WMIManager.h"
 #include "core/disk/DiskInfo.h"
 #include "core/DataStruct/DataStruct.h"
 #include "core/DataStruct/SharedMemoryManager.h"  // Include the new shared memory manager
@@ -529,7 +529,7 @@ private:
     bool cachedGpuIsVirtual_ = false;
 
 public:
-    void Initialize(WmiManager& wmiManager) {
+    void Initialize(WMIManager& wmiManager) {
         std::lock_guard<std::mutex> lock(mtx_);
         if (initialized_) return;
         
@@ -707,9 +707,9 @@ int main(int argc, char* argv[]) {
         }
 
         // 创建WMI管理器并初始化 - 增强内存分配异常处理
-        std::unique_ptr<WmiManager> wmiManager;
+        std::unique_ptr<WMIManager> wmiManager;
         try {
-            wmiManager = std::make_unique<WmiManager>();
+            wmiManager = std::make_unique<WMIManager>();
             if (!wmiManager) {
                 Logger::Fatal("WMI管理器对象创建失败 - 内存分配返回null");
                 SafeExit(1);

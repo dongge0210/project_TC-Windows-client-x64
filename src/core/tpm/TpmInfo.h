@@ -4,7 +4,7 @@
 #include <wbemidl.h>
 #include <windows.h>
 
-class WmiManager;
+class WMIManager;
 
 class TpmInfo {
 public:
@@ -27,7 +27,7 @@ public:
         std::wstring errorMessage;          // 错误信息（如果有）
     };
 
-    TpmInfo(WmiManager& manager);
+    TpmInfo(WMIManager& manager);
     ~TpmInfo();
 
     const TpmData& GetTpmData() const;
@@ -38,7 +38,7 @@ private:
     void DetectTpmViaTbs();
     void QueryTpmProperties();
     
-    WmiManager& wmiManager;
+    WMIManager& wmiManager;
     IWbemServices* pSvc = nullptr;
     TpmData tpmData;
     bool hasTpm = false;

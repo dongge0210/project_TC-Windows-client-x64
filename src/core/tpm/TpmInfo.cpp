@@ -1,14 +1,17 @@
 #include "TpmInfo.h"
-#include "../utils/Logger.h"
-#include "../utils/WmiManager.h"
+#include "../Utils/Logger.h"
+#include "../Utils/WMIManager.h"
 #include <comutil.h>
 #include <tbs.h>        // TPM Base Services
 #include <wbemidl.h>
 
-// 链接TBS库
+// 链接TBS库和其他必要的库
 #pragma comment(lib, "tbs.lib")
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "oleaut32.lib")
+#pragma comment(lib, "wbemuuid.lib")
 
-TpmInfo::TpmInfo(WmiManager& manager) : wmiManager(manager) {
+TpmInfo::TpmInfo(WMIManager& manager) : wmiManager(manager) {
     if (!wmiManager.IsInitialized()) {
         Logger::Error("WMI服务未初始化");
         return;
@@ -153,6 +156,7 @@ void TpmInfo::DetectTpmViaWmi() {
 void TpmInfo::DetectTpmViaTbs() {
     // 尝试检测TBS (TPM Base Services)
     TBS_HCONTEXT hContext = 0;
+    
     // 使用TBS_CONTEXT_PARAMS 兼容旧版本Windows SDK
     TBS_CONTEXT_PARAMS contextParams = { 0 };
     contextParams.version = TBS_CONTEXT_VERSION_ONE; // 基础版本，兼容性更好
@@ -164,7 +168,6 @@ void TpmInfo::DetectTpmViaTbs() {
         
         // 获取TBS版本信息
         TPM_DEVICE_INFO deviceInfo = {0};
-        UINT32 deviceInfoSize = sizeof(deviceInfo);
         
         result = Tbsi_GetDeviceInfo(sizeof(deviceInfo), &deviceInfo);
         if (result == TBS_SUCCESS) {
@@ -175,41 +178,60 @@ void TpmInfo::DetectTpmViaTbs() {
                 if (tpmData.version.empty()) {
                     tpmData.version = L"1.2";
                 }
+                Logger::Info("检测到TPM 1.2");
             } else if (deviceInfo.tpmVersion == TPM_VERSION_20) {
                 if (tpmData.version.empty()) {
                     tpmData.version = L"2.0";
                 }
+                Logger::Info("检测到TPM 2.0");
+            } else {
+                Logger::Info("检测到未知TPM版本: " + std::to_string(deviceInfo.tpmVersion));
             }
             
             Logger::Info("TBS可用, TPM版本: " + std::to_string(deviceInfo.tpmVersion));
+        } else {
+            Logger::Warn("TBS设备信息获取失败: 0x" + std::to_string(result));
         }
         
         // 如果WMI没有检测到TPM，但TBS可用，说明TPM存在
         if (!hasTpm) {
             hasTpm = true;
             tpmData.isEnabled = true; // TBS可用说明TPM已启用
+            tpmData.isActivated = true; // 如果TBS可用，TPM通常也是激活的
             tpmData.status = L"通过TBS检测到";
             Logger::Info("通过TBS检测到TPM");
         }
         
-        // 关闭TBS上下文 (使用Tbsip_Context_Close 兼容性最好)
+        // 关闭TBS上下文
         Tbsip_Context_Close(hContext);
     } else {
         tpmData.tbsAvailable = false;
         
-        // 设置错误信息
+        // 设置详细的错误信息
         switch (result) {
             case TBS_E_TPM_NOT_FOUND:
                 tpmData.errorMessage = L"未找到TPM设备";
+                Logger::Info("TBS检测结果: 未找到TPM设备");
                 break;
             case TBS_E_SERVICE_NOT_RUNNING:
-                tpmData.errorMessage = L"TPM服务未运行";
+                tpmData.errorMessage = L"TPM基础服务未运行";
+                Logger::Warn("TBS检测结果: TPM基础服务未运行");
                 break;
             case TBS_E_INSUFFICIENT_BUFFER:
                 tpmData.errorMessage = L"缓冲区不足";
+                Logger::Warn("TBS检测结果: 缓冲区不足");
+                break;
+            case TBS_E_INVALID_PARAMETER:
+                tpmData.errorMessage = L"无效参数";
+                Logger::Warn("TBS检测结果: 无效参数");
+                break;
+            case TBS_E_ACCESS_DENIED:
+                tpmData.errorMessage = L"访问被拒绝";
+                Logger::Warn("TBS检测结果: 访问被拒绝");
                 break;
             default:
                 tpmData.errorMessage = L"TBS初始化失败: 0x" + std::to_wstring(result);
+                Logger::Warn("TBS检测失败，错误代码: 0x" + std::to_string(result));
                 break;
         }
         
