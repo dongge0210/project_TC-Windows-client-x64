@@ -142,15 +142,22 @@ struct SystemInfo {
     double cpuTemperature; // 新增：CPU温度
     double gpuTemperature; // 新增：GPU温度
     double cpuUsageSampleIntervalMs = 0.0; // 新增：CPU使用率采样间隔（毫秒）
-    
-    // TPM信息
+    // TPM信息（扩展）
     bool hasTpm = false;            // 是否存在TPM
     std::string tpmManufacturer;    // TPM制造商
+    std::string tpmManufacturerId;  // 制造商ID
     std::string tpmVersion;         // TPM版本
+    std::string tpmFirmwareVersion; // 固件版本
     std::string tpmStatus;          // TPM状态
     bool tpmEnabled = false;        // TPM是否启用
+    bool tpmIsActivated = false;    // 是否激活
+    bool tpmIsOwned = false;        // 是否已拥有
     bool tpmReady = false;          // TPM是否就绪
-    
+    bool tpmTbsAvailable = false;   // TBS是否可用
+    bool tpmPhysicalPresenceRequired = false; // 是否需要物理存在
+    uint32_t tpmSpecVersion = 0;    // 规范版本
+    uint32_t tpmTbsVersion = 0;     // TBS版本
+    std::string tpmErrorMessage;    // 错误信息
     SYSTEMTIME lastUpdate;
 };
 

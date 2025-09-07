@@ -45,6 +45,22 @@ namespace WPF_UI1.Models
         public double GpuTemperature { get; set; }
         public double CpuUsageSampleIntervalMs { get; set; } // 新增：CPU使用率采样间隔
         public DateTime LastUpdate { get; set; }
+        // TPM 信息（完整）
+        public bool HasTpm { get; set; }
+        public string TpmManufacturer { get; set; } = string.Empty;
+        public string TpmManufacturerId { get; set; } = string.Empty;
+        public string TpmVersion { get; set; } = string.Empty;
+        public string TpmFirmwareVersion { get; set; } = string.Empty;
+        public string TpmStatus { get; set; } = string.Empty;
+        public bool TpmEnabled { get; set; }
+        public bool TpmIsActivated { get; set; }
+        public bool TpmIsOwned { get; set; }
+        public bool TpmReady { get; set; }
+        public bool TpmTbsAvailable { get; set; }
+        public bool TpmPhysicalPresenceRequired { get; set; }
+        public uint TpmSpecVersion { get; set; }
+        public uint TpmTbsVersion { get; set; }
+        public string TpmErrorMessage { get; set; } = string.Empty;
     }
 
     public abstract class NotifyBase : INotifyPropertyChanged

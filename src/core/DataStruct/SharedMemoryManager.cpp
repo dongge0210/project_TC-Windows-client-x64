@@ -417,22 +417,20 @@ void SharedMemoryManager::WriteToSharedMemory(const SystemInfo& systemInfo) {
         pBuffer->hasTpm = systemInfo.hasTpm;
         if (systemInfo.hasTpm) {
             SafeCopyWideString(pBuffer->tpm.manufacturerName, 128, WinUtils::StringToWstring(systemInfo.tpmManufacturer));
+            SafeCopyWideString(pBuffer->tpm.manufacturerId, 32, WinUtils::StringToWstring(systemInfo.tpmManufacturerId));
             SafeCopyWideString(pBuffer->tpm.version, 32, WinUtils::StringToWstring(systemInfo.tpmVersion));
+            SafeCopyWideString(pBuffer->tpm.firmwareVersion, 32, WinUtils::StringToWstring(systemInfo.tpmFirmwareVersion));
             SafeCopyWideString(pBuffer->tpm.status, 64, WinUtils::StringToWstring(systemInfo.tpmStatus));
+            SafeCopyWideString(pBuffer->tpm.errorMessage, 256, WinUtils::StringToWstring(systemInfo.tpmErrorMessage));
             pBuffer->tpm.isEnabled = systemInfo.tpmEnabled;
             pBuffer->tpm.isReady = systemInfo.tpmReady;
-            // 其他TPM字段保持默认值
-            pBuffer->tpm.isActivated = false;
-            pBuffer->tpm.isOwned = false;
-            pBuffer->tpm.tbsAvailable = false;
-            pBuffer->tpm.physicalPresenceRequired = false;
-            pBuffer->tpm.specVersion = 0;
-            pBuffer->tpm.tbsVersion = 0;
-            memset(pBuffer->tpm.manufacturerId, 0, sizeof(pBuffer->tpm.manufacturerId));
-            memset(pBuffer->tpm.firmwareVersion, 0, sizeof(pBuffer->tpm.firmwareVersion));
-            memset(pBuffer->tpm.errorMessage, 0, sizeof(pBuffer->tpm.errorMessage));
+            pBuffer->tpm.isActivated = systemInfo.tpmIsActivated;
+            pBuffer->tpm.isOwned = systemInfo.tpmIsOwned;
+            pBuffer->tpm.tbsAvailable = systemInfo.tpmTbsAvailable;
+            pBuffer->tpm.physicalPresenceRequired = systemInfo.tpmPhysicalPresenceRequired;
+            pBuffer->tpm.specVersion = systemInfo.tpmSpecVersion;
+            pBuffer->tpm.tbsVersion = systemInfo.tpmTbsVersion;
         } else {
-            // 清零TPM数据
             memset(&pBuffer->tpm, 0, sizeof(pBuffer->tpm));
         }
 

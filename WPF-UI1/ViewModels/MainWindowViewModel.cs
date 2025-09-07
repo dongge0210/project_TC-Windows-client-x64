@@ -112,6 +112,53 @@ namespace WPF_UI1.ViewModels
         private PhysicalDiskView? selectedPhysicalDisk;
         #endregion
 
+        #region TPM Properties
+        [ObservableProperty]
+        private bool hasTpm;
+
+        [ObservableProperty]
+        private string tpmManufacturer = "检测中";
+
+        [ObservableProperty]
+        private string tpmManufacturerId = string.Empty;
+
+        [ObservableProperty]
+        private string tpmVersion = string.Empty;
+
+        [ObservableProperty]
+        private string tpmFirmwareVersion = string.Empty;
+
+        [ObservableProperty]
+        private string tpmStatus = string.Empty;
+
+        [ObservableProperty]
+        private bool tpmEnabled;
+
+        [ObservableProperty]
+        private bool tpmIsActivated;
+
+        [ObservableProperty]
+        private bool tpmIsOwned;
+
+        [ObservableProperty]
+        private bool tpmReady;
+
+        [ObservableProperty]
+        private bool tpmTbsAvailable;
+
+        [ObservableProperty]
+        private bool tpmPhysicalPresenceRequired;
+
+        [ObservableProperty]
+        private uint tpmSpecVersion;
+
+        [ObservableProperty]
+        private uint tpmTbsVersion;
+
+        [ObservableProperty]
+        private string tpmErrorMessage = string.Empty;
+        #endregion
+
         #region Chart Properties
         public ObservableCollection<ISeries> CpuTemperatureSeries { get; } = new();
         public ObservableCollection<ISeries> GpuTemperatureSeries { get; } = new();
@@ -354,6 +401,41 @@ namespace WPF_UI1.ViewModels
 
                 // 更新温度图表
                 UpdateTemperatureCharts(systemInfo.CpuTemperature, systemInfo.GpuTemperature);
+
+                // TPM (完整)
+                HasTpm = systemInfo.HasTpm;
+                if (systemInfo.HasTpm)
+                {
+                    TpmManufacturer = string.IsNullOrWhiteSpace(systemInfo.TpmManufacturer) ? "未知制造商" : systemInfo.TpmManufacturer;
+                    TpmManufacturerId = systemInfo.TpmManufacturerId;
+                    TpmVersion = string.IsNullOrWhiteSpace(systemInfo.TpmVersion) ? "未知版本" : systemInfo.TpmVersion;
+                    TpmFirmwareVersion = systemInfo.TpmFirmwareVersion;
+                    TpmStatus = string.IsNullOrWhiteSpace(systemInfo.TpmStatus) ? "未知状态" : systemInfo.TpmStatus;
+                    TpmEnabled = systemInfo.TpmEnabled;
+                    TpmIsActivated = systemInfo.TpmIsActivated;
+                    TpmIsOwned = systemInfo.TpmIsOwned;
+                    TpmReady = systemInfo.TpmReady;
+                    TpmTbsAvailable = systemInfo.TpmTbsAvailable;
+                    TpmPhysicalPresenceRequired = systemInfo.TpmPhysicalPresenceRequired;
+                    TpmSpecVersion = systemInfo.TpmSpecVersion;
+                    TpmTbsVersion = systemInfo.TpmTbsVersion;
+                    TpmErrorMessage = systemInfo.TpmErrorMessage;
+                }
+                else
+                {
+                    TpmManufacturer = "未检测到TPM";
+                    TpmVersion = "-";
+                    TpmStatus = "无";
+                    TpmEnabled = false;
+                    TpmReady = false;
+                    TpmIsActivated = false;
+                    TpmIsOwned = false;
+                    TpmTbsAvailable = false;
+                    TpmPhysicalPresenceRequired = false;
+                    TpmSpecVersion = 0;
+                    TpmTbsVersion = 0;
+                    TpmErrorMessage = string.Empty;
+                }
 
                 Log.Debug($"系统数据更新完成: CPU={CpuName}, 内存使用率={MemoryUsagePercent:F1}%, GPU数量={Gpus.Count}");
             }

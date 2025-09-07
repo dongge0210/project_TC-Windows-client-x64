@@ -153,9 +153,9 @@ void TpmInfo::DetectTpmViaWmi() {
 void TpmInfo::DetectTpmViaTbs() {
     // 尝试检测TBS (TPM Base Services)
     TBS_HCONTEXT hContext = 0;
-    TBS_CONTEXT_PARAMS2 contextParams = {0};
-    contextParams.version = TBS_CONTEXT_VERSION_TWO;
-    contextParams.requestRaw = FALSE;
+    // 使用TBS_CONTEXT_PARAMS 兼容旧版本Windows SDK
+    TBS_CONTEXT_PARAMS contextParams = { 0 };
+    contextParams.version = TBS_CONTEXT_VERSION_ONE; // 基础版本，兼容性更好
 
     TBS_RESULT result = Tbsi_Context_Create(&contextParams, &hContext);
     
@@ -192,7 +192,8 @@ void TpmInfo::DetectTpmViaTbs() {
             Logger::Info("通过TBS检测到TPM");
         }
         
-        Tbsi_Context_Close(hContext);
+        // 关闭TBS上下文 (使用Tbsip_Context_Close 兼容性最好)
+        Tbsip_Context_Close(hContext);
     } else {
         tpmData.tbsAvailable = false;
         
