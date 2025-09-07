@@ -11,20 +11,58 @@
 #pragma comment(lib, "oleaut32.lib")
 #pragma comment(lib, "wbemuuid.lib")
 
-TpmInfo::TpmInfo(WMIManager& manager) : wmiManager(manager) {
+TpmInfo::TpmInfo(WmiManager& manager) : wmiManager(manager) {
+    Logger::Info("开始TPM检测");
+    
     if (!wmiManager.IsInitialized()) {
-        Logger::Error("WMI服务未初始化");
+        Logger::Error("WMI服务未初始化，无法检测TPM");
+        tpmData.errorMessage = L"WMI服务未初始化";
         return;
     }
+    
     pSvc = wmiManager.GetWmiService();
+    if (!pSvc) {
+        Logger::Error("无法获取WMI服务，无法检测TPM");
+        tpmData.errorMessage = L"无法获取WMI服务";
+        return;
+    }
     
     // 首先尝试通过WMI检测TPM
-    DetectTpmViaWmi();
+    try {
+        DetectTpmViaWmi();
+    } catch (const std::exception& e) {
+        Logger::Error("WMI TPM检测发生异常: " + std::string(e.what()));
+        tpmData.errorMessage = L"WMI检测异常";
+    } catch (...) {
+        Logger::Error("WMI TPM检测发生未知异常");
+        tpmData.errorMessage = L"WMI检测发生未知异常";
+    }
     
     // 然后尝试通过TBS检测TPM
-    DetectTpmViaTbs();
+    try {
+        DetectTpmViaTbs();
+    } catch (const std::exception& e) {
+        Logger::Error("TBS TPM检测发生异常: " + std::string(e.what()));
+        if (tpmData.errorMessage.empty()) {
+            tpmData.errorMessage = L"TBS检测异常";
+        }
+    } catch (...) {
+        Logger::Error("TBS TPM检测发生未知异常");
+        if (tpmData.errorMessage.empty()) {
+            tpmData.errorMessage = L"TBS检测发生未知异常";
+        }
+    }
     
-    Logger::Info("TPM检测完成");
+    // 记录最终检测结果
+    if (hasTpm) {
+        std::string manufacturerStr(tpmData.manufacturerName.begin(), tpmData.manufacturerName.end());
+        std::string versionStr(tpmData.version.begin(), tpmData.version.end());
+        std::string statusStr(tpmData.status.begin(), tpmData.status.end());
+        Logger::Info("TPM检测完成 - 检测到TPM: " + manufacturerStr + " v" + versionStr + " (" + statusStr + ")");
+    } else {
+        std::string errorStr(tpmData.errorMessage.begin(), tpmData.errorMessage.end());
+        Logger::Info("TPM检测完成 - 未检测到TPM: " + errorStr);
+    }
 }
 
 TpmInfo::~TpmInfo() {
