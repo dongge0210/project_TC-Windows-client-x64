@@ -25,6 +25,11 @@ public:
         bool tbsAvailable = false;          // TBS是否可用
         uint32_t tbsVersion = 0;            // TBS版本
         std::wstring errorMessage;          // 错误信息（如果有）
+        
+        // 检测方法信息
+        std::wstring detectionMethod;       // 使用的检测方法 ("TBS", "WMI", "TBS+WMI", "未检测到")
+        bool wmiDetectionWorked = false;    // WMI检测是否成功
+        bool tbsDetectionWorked = false;    // TBS检测是否成功
     };
 
     TpmInfo(WmiManager& manager);
@@ -37,6 +42,7 @@ private:
     void DetectTpmViaWmi();
     void DetectTpmViaTbs();
     void QueryTpmProperties();
+    void DetermineDetectionMethod(); // 确定使用的检测方法
     
     WmiManager& wmiManager;
     IWbemServices* pSvc = nullptr;

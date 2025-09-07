@@ -106,6 +106,9 @@ struct TpmData {
     uint32_t specVersion;           // TPM规范版本
     uint32_t tbsVersion;            // TBS版本
     wchar_t errorMessage[256];      // 错误信息
+    wchar_t detectionMethod[64];    // 检测方法 ("TBS", "WMI", "TBS+WMI", "未检测到")
+    bool wmiDetectionWorked;        // WMI检测是否成功
+    bool tbsDetectionWorked;        // TBS检测是否成功
 };
 
 // SystemInfo结构
@@ -158,6 +161,9 @@ struct SystemInfo {
     uint32_t tpmSpecVersion = 0;    // 规范版本
     uint32_t tpmTbsVersion = 0;     // TBS版本
     std::string tpmErrorMessage;    // 错误信息
+    std::string tmpDetectionMethod; // 检测方法
+    bool tmpWmiDetectionWorked = false; // WMI检测是否成功
+    bool tmpTbsDetectionWorked = false; // TBS检测是否成功
     SYSTEMTIME lastUpdate;
 };
 

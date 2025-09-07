@@ -11,7 +11,7 @@ using SkiaSharp;
 using WPF_UI1.Models;
 using WPF_UI1.Services;
 using Serilog;
-using System.Linq; // ÐÂÔö: ÓÃÓÚ FirstOrDefault / SequenceEqual
+using System.Linq; // ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ FirstOrDefault / SequenceEqual
 
 namespace WPF_UI1.ViewModels
 {
@@ -27,17 +27,17 @@ namespace WPF_UI1.ViewModels
         private bool isConnected;
 
         [ObservableProperty]
-        private string connectionStatus = "ÕýÔÚÁ¬½Ó...";
+        private string connectionStatus = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...";
 
         [ObservableProperty]
-        private string windowTitle = "ÏµÍ³Ó²¼þ¼àÊÓÆ÷";
+        private string windowTitle = "ÏµÍ³Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
 
         [ObservableProperty]
-        private string lastUpdateTime = "´ÓÎ´¸üÐÂ";
+        private string lastUpdateTime = "ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½";
 
         #region CPU Properties
         [ObservableProperty]
-        private string cpuName = "ÕýÔÚ¼ì²â...";
+        private string cpuName = "ï¿½ï¿½ï¿½Ú¼ï¿½ï¿½...";
 
         [ObservableProperty]
         private int physicalCores;
@@ -66,13 +66,13 @@ namespace WPF_UI1.ViewModels
 
         #region Memory Properties
         [ObservableProperty]
-        private string totalMemory = "¼ì²âÖÐ...";
+        private string totalMemory = "ï¿½ï¿½ï¿½ï¿½ï¿½...";
 
         [ObservableProperty]
-        private string usedMemory = "¼ì²âÖÐ...";
+        private string usedMemory = "ï¿½ï¿½ï¿½ï¿½ï¿½...";
 
         [ObservableProperty]
-        private string availableMemory = "¼ì²âÖÐ...";
+        private string availableMemory = "ï¿½ï¿½ï¿½ï¿½ï¿½...";
 
         [ObservableProperty]
         private double memoryUsagePercent;
@@ -104,7 +104,7 @@ namespace WPF_UI1.ViewModels
         [ObservableProperty]
         private DiskData? selectedDisk;
 
-        // ÐÂÔö£ºÎïÀí´ÅÅÌ·Ö×é
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½
         [ObservableProperty]
         private ObservableCollection<PhysicalDiskView> physicalDisks = new();
 
@@ -117,7 +117,7 @@ namespace WPF_UI1.ViewModels
         private bool hasTpm;
 
         [ObservableProperty]
-        private string tpmManufacturer = "¼ì²âÖÐ";
+        private string tpmManufacturer = "ï¿½ï¿½ï¿½ï¿½ï¿½";
 
         [ObservableProperty]
         private string tpmManufacturerId = string.Empty;
@@ -157,6 +157,15 @@ namespace WPF_UI1.ViewModels
 
         [ObservableProperty]
         private string tpmErrorMessage = string.Empty;
+        
+        [ObservableProperty]
+        private string tpmDetectionMethod = string.Empty;
+        
+        [ObservableProperty]
+        private bool tpmWmiDetectionWorked;
+        
+        [ObservableProperty]
+        private bool tpmTbsDetectionWorked;
         #endregion
 
         #region Chart Properties
@@ -173,35 +182,35 @@ namespace WPF_UI1.ViewModels
             
             InitializeCharts();
             
-            // ÉèÖÃ¸üÐÂ¶¨Ê±Æ÷
+            // ï¿½ï¿½ï¿½Ã¸ï¿½ï¿½Â¶ï¿½Ê±ï¿½ï¿½
             _updateTimer = new DispatcherTimer
             {
-                Interval = TimeSpan.FromMilliseconds(500) // ÉÔÎ¢½µµÍÆµÂÊÒÔ¼õÉÙCPUÕ¼ÓÃ
+                Interval = TimeSpan.FromMilliseconds(500) // ï¿½ï¿½Î¢ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½CPUÕ¼ï¿½ï¿½
             };
             _updateTimer.Tick += UpdateTimer_Tick;
             _updateTimer.Start();
 
-            // ³õ´Î³¢ÊÔÁ¬½Ó
+            // ï¿½ï¿½ï¿½Î³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             TryConnect();
         }
 
         private void InitializeCharts()
         {
-            // CPUÎÂ¶ÈÍ¼±í
+            // CPUï¿½Â¶ï¿½Í¼ï¿½ï¿½
             CpuTemperatureSeries.Add(new LineSeries<double>
             {
                 Values = _cpuTempData,
-                Name = "CPUÎÂ¶È",
+                Name = "CPUï¿½Â¶ï¿½",
                 Stroke = new SolidColorPaint(SKColors.DeepSkyBlue) { StrokeThickness = 2 },
                 Fill = null,
-                GeometrySize = 0 // Òþ²ØÊý¾Ýµã
+                GeometrySize = 0 // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½
             });
 
-            // GPUÎÂ¶ÈÍ¼±í
+            // GPUï¿½Â¶ï¿½Í¼ï¿½ï¿½
             GpuTemperatureSeries.Add(new LineSeries<double>
             {
                 Values = _gpuTempData,
-                Name = "GPUÎÂ¶È",
+                Name = "GPUï¿½Â¶ï¿½",
                 Stroke = new SolidColorPaint(SKColors.Orange) { StrokeThickness = 2 },
                 Fill = null,
                 GeometrySize = 0
@@ -221,13 +230,13 @@ namespace WPF_UI1.ViewModels
                 
                 if (systemInfo != null)
                 {
-                    _consecutiveErrors = 0; // ÖØÖÃ´íÎó¼ÆÊýÆ÷
+                    _consecutiveErrors = 0; // ï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
                     if (!IsConnected)
                     {
                         IsConnected = true;
-                        ConnectionStatus = "ÒÑÁ¬½Ó";
-                        WindowTitle = "ÏµÍ³Ó²¼þ¼àÊÓÆ÷";
+                        ConnectionStatus = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                        WindowTitle = "ÏµÍ³Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                     }
 
                     UpdateSystemData(systemInfo);
@@ -242,13 +251,13 @@ namespace WPF_UI1.ViewModels
                         if (IsConnected)
                         {
                             IsConnected = false;
-                            ConnectionStatus = "Á¬½ÓÒÑ¶Ï¿ª - ³¢ÊÔÖØÐÂÁ¬½Ó...";
-                            WindowTitle = "ÏµÍ³Ó²¼þ¼àÊÓÆ÷ - Á¬½ÓÖÐ¶Ï";
+                            ConnectionStatus = "ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¶Ï¿ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½...";
+                            WindowTitle = "ÏµÍ³Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶ï¿½";
                             
-                            // ÏÔÊ¾´íÎó×´Ì¬µÄÊý¾Ý
+                            // ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             ShowDisconnectedState();
                             
-                            // ³¢ÊÔÖØÐÂÁ¬½Ó
+                            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                             await Task.Run(() => TryConnect());
                         }
                     }
@@ -256,13 +265,13 @@ namespace WPF_UI1.ViewModels
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "¸üÐÂÏµÍ³ÐÅÏ¢Ê±·¢Éú´íÎó");
+                Log.Error(ex, "ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½Ï¢Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
                 _consecutiveErrors++;
                 
                 if (_consecutiveErrors >= MAX_CONSECUTIVE_ERRORS)
                 {
                     IsConnected = false;
-                    ConnectionStatus = $"´íÎó: {ex.Message}";
+                    ConnectionStatus = $"ï¿½ï¿½ï¿½ï¿½: {ex.Message}";
                     ShowErrorState(ex.Message);
                 }
             }
@@ -270,22 +279,22 @@ namespace WPF_UI1.ViewModels
 
         private void TryConnect()
         {
-            Log.Information("³¢ÊÔÁ¬½Ó¹²ÏíÄÚ´æ...");
+            Log.Information("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¹ï¿½ï¿½ï¿½ï¿½Ú´ï¿½...");
             
             if (_sharedMemoryService.Initialize())
             {
                 IsConnected = true;
-                ConnectionStatus = "ÒÑÁ¬½Ó";
-                WindowTitle = "ÏµÍ³Ó²¼þ¼àÊÓÆ÷";
+                ConnectionStatus = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+                WindowTitle = "ÏµÍ³Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
                 _consecutiveErrors = 0;
-                Log.Information("¹²ÏíÄÚ´æÁ¬½Ó³É¹¦");
+                Log.Information("ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½Ó³É¹ï¿½");
             }
             else
             {
                 IsConnected = false;
-                ConnectionStatus = $"Á¬½ÓÊ§°Ü: {_sharedMemoryService.LastError}";
-                WindowTitle = "ÏµÍ³Ó²¼þ¼àÊÓÆ÷ - Î´Á¬½Ó";
-                Log.Warning($"¹²ÏíÄÚ´æÁ¬½ÓÊ§°Ü: {_sharedMemoryService.LastError}");
+                ConnectionStatus = $"ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {_sharedMemoryService.LastError}";
+                WindowTitle = "ÏµÍ³Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - Î´ï¿½ï¿½ï¿½ï¿½";
+                Log.Warning($"ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {_sharedMemoryService.LastError}");
                 
                 ShowDisconnectedState();
             }
@@ -293,18 +302,18 @@ namespace WPF_UI1.ViewModels
 
         private void ShowDisconnectedState()
         {
-            CpuName = "? Á¬½ÓÒÑ¶Ï¿ª";
-            TotalMemory = "Î´Á¬½Ó";
-            UsedMemory = "Î´Á¬½Ó";
-            AvailableMemory = "Î´Á¬½Ó";
+            CpuName = "? ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¶Ï¿ï¿½";
+            TotalMemory = "Î´ï¿½ï¿½ï¿½ï¿½";
+            UsedMemory = "Î´ï¿½ï¿½ï¿½ï¿½";
+            AvailableMemory = "Î´ï¿½ï¿½ï¿½ï¿½";
             
-            // Çå¿Õ¼¯ºÏ
+            // ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½
             Gpus.Clear();
             NetworkAdapters.Clear();
             Disks.Clear();
             PhysicalDisks.Clear();
             
-            // ÖØÖÃÑ¡Ôñ
+            // ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
             SelectedGpu = null;
             SelectedNetworkAdapter = null;
             SelectedDisk = null;
@@ -313,29 +322,29 @@ namespace WPF_UI1.ViewModels
 
         private void ShowErrorState(string errorMessage)
         {
-            CpuName = $"?? Êý¾Ý¶ÁÈ¡Ê§°Ü: {errorMessage}";
-            TotalMemory = "¶ÁÈ¡Ê§°Ü";
-            UsedMemory = "¶ÁÈ¡Ê§°Ü";
-            AvailableMemory = "¶ÁÈ¡Ê§°Ü";
+            CpuName = $"?? ï¿½ï¿½ï¿½Ý¶ï¿½È¡Ê§ï¿½ï¿½: {errorMessage}";
+            TotalMemory = "ï¿½ï¿½È¡Ê§ï¿½ï¿½";
+            UsedMemory = "ï¿½ï¿½È¡Ê§ï¿½ï¿½";
+            AvailableMemory = "ï¿½ï¿½È¡Ê§ï¿½ï¿½";
         }
 
         private void UpdateSystemData(SystemInfo systemInfo)
         {
             try
             {
-                // ¸üÐÂCPUÐÅÏ¢ - Ìí¼ÓÊý¾ÝÑéÖ¤
-                CpuName = ValidateAndSetString(systemInfo.CpuName, "Î´Öª´¦ÀíÆ÷");
-                PhysicalCores = ValidateAndSetInt(systemInfo.PhysicalCores, "ÎïÀíºËÐÄ");
-                LogicalCores = ValidateAndSetInt(systemInfo.LogicalCores, "Âß¼­ºËÐÄ");
-                PerformanceCores = ValidateAndSetInt(systemInfo.PerformanceCores, "ÐÔÄÜºËÐÄ");
-                EfficiencyCores = ValidateAndSetInt(systemInfo.EfficiencyCores, "ÄÜÐ§ºËÐÄ");
-                CpuUsage = ValidateAndSetDouble(systemInfo.CpuUsage, "CPUÊ¹ÓÃÂÊ");
+                // ï¿½ï¿½ï¿½ï¿½CPUï¿½ï¿½Ï¢ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤
+                CpuName = ValidateAndSetString(systemInfo.CpuName, "Î´Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                PhysicalCores = ValidateAndSetInt(systemInfo.PhysicalCores, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                LogicalCores = ValidateAndSetInt(systemInfo.LogicalCores, "ï¿½ß¼ï¿½ï¿½ï¿½ï¿½ï¿½");
+                PerformanceCores = ValidateAndSetInt(systemInfo.PerformanceCores, "ï¿½ï¿½ï¿½Üºï¿½ï¿½ï¿½");
+                EfficiencyCores = ValidateAndSetInt(systemInfo.EfficiencyCores, "ï¿½ï¿½Ð§ï¿½ï¿½ï¿½ï¿½");
+                CpuUsage = ValidateAndSetDouble(systemInfo.CpuUsage, "CPUÊ¹ï¿½ï¿½ï¿½ï¿½");
                 HyperThreading = systemInfo.HyperThreading;
                 Virtualization = systemInfo.Virtualization;
-                CpuTemperature = ValidateAndSetDouble(systemInfo.CpuTemperature, "CPUÎÂ¶È");
+                CpuTemperature = ValidateAndSetDouble(systemInfo.CpuTemperature, "CPUï¿½Â¶ï¿½");
 
-                // ¸üÐÂÄÚ´æÐÅÏ¢ - Ìí¼ÓÊý¾ÝÑéÖ¤
-                TotalMemory = systemInfo.TotalMemory > 0 ? FormatBytes(systemInfo.TotalMemory) : "Î´¼ì²âµ½";
+                // ï¿½ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½Ï¢ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤
+                TotalMemory = systemInfo.TotalMemory > 0 ? FormatBytes(systemInfo.TotalMemory) : "Î´ï¿½ï¿½âµ½";
                 UsedMemory = systemInfo.UsedMemory > 0 ? FormatBytes(systemInfo.UsedMemory) : "Î´Öª";
                 AvailableMemory = systemInfo.AvailableMemory > 0 ? FormatBytes(systemInfo.AvailableMemory) : "Î´Öª";
                 
@@ -343,42 +352,42 @@ namespace WPF_UI1.ViewModels
                     ? (double)systemInfo.UsedMemory / systemInfo.TotalMemory * 100.0 
                     : 0.0;
 
-                // ¸üÐÂGPUÐÅÏ¢
+                // ï¿½ï¿½ï¿½ï¿½GPUï¿½ï¿½Ï¢
                 UpdateCollection(Gpus, systemInfo.Gpus ?? new List<GpuData>());
                 if (SelectedGpu == null && Gpus.Count > 0)
                     SelectedGpu = Gpus[0];
 
-                GpuTemperature = ValidateAndSetDouble(systemInfo.GpuTemperature, "GPUÎÂ¶È");
+                GpuTemperature = ValidateAndSetDouble(systemInfo.GpuTemperature, "GPUï¿½Â¶ï¿½");
 
-                // ÔÚ¸üÐÂÍøÂçÊÊÅäÆ÷Ç°±£´æµ±Ç°Ñ¡Ôñ¼ü£¨±ÜÃâ»Øµ¯£©
+                // ï¿½Ú¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½æµ±Ç°Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½
                 string? previousNetKey = SelectedNetworkAdapter != null
                     ? $"{SelectedNetworkAdapter.Name}|{SelectedNetworkAdapter.Mac}"
                     : null;
 
-                // ¸üÐÂÍøÂçÐÅÏ¢
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
                 UpdateCollection(NetworkAdapters, systemInfo.Adapters ?? new List<NetworkAdapterData>());
 
-                // ³¢ÊÔ»Ö¸´Ö®Ç°µÄÑ¡Ôñ
+                // ï¿½ï¿½ï¿½Ô»Ö¸ï¿½Ö®Ç°ï¿½ï¿½Ñ¡ï¿½ï¿½
                 if (previousNetKey != null)
                 {
                     var restored = NetworkAdapters.FirstOrDefault(a => $"{a.Name}|{a.Mac}" == previousNetKey);
                     if (restored != null)
                     {
-                        SelectedNetworkAdapter = restored; // »Ö¸´Ô­Ñ¡Ôñ
+                        SelectedNetworkAdapter = restored; // ï¿½Ö¸ï¿½Ô­Ñ¡ï¿½ï¿½
                     }
                 }
 
                 if (SelectedNetworkAdapter == null && NetworkAdapters.Count > 0)
                     SelectedNetworkAdapter = NetworkAdapters[0];
 
-                // ÔÚ¸üÐÂ´ÅÅÌÇ°±£´æµ±Ç°Ñ¡Ôñ
+                // ï¿½Ú¸ï¿½ï¿½Â´ï¿½ï¿½ï¿½Ç°ï¿½ï¿½ï¿½æµ±Ç°Ñ¡ï¿½ï¿½
                 string? previousDiskKey = SelectedDisk != null ? $"{SelectedDisk.Letter}:{SelectedDisk.Label}" : null;
                 string? previousPhysicalKey = SelectedPhysicalDisk?.Disk?.SerialNumber;
 
-                // ¸üÐÂ´ÅÅÌÐÅÏ¢
+                // ï¿½ï¿½ï¿½Â´ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
                 UpdateCollection(Disks, systemInfo.Disks ?? new List<DiskData>());
 
-                // ¹¹½¨/¸üÐÂÎïÀí´ÅÅÌ·Ö×é
+                // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½
                 BuildOrUpdatePhysicalDisks(systemInfo);
 
                 if (previousDiskKey != null)
@@ -399,16 +408,16 @@ namespace WPF_UI1.ViewModels
                 if (SelectedPhysicalDisk == null && PhysicalDisks.Count > 0)
                     SelectedPhysicalDisk = PhysicalDisks[0];
 
-                // ¸üÐÂÎÂ¶ÈÍ¼±í
+                // ï¿½ï¿½ï¿½ï¿½ï¿½Â¶ï¿½Í¼ï¿½ï¿½
                 UpdateTemperatureCharts(systemInfo.CpuTemperature, systemInfo.GpuTemperature);
 
-                // TPM (ÍêÕû)
+                // TPM (ï¿½ï¿½ï¿½ï¿½)
                 HasTpm = systemInfo.HasTpm;
                 if (systemInfo.HasTpm)
                 {
-                    TpmManufacturer = string.IsNullOrWhiteSpace(systemInfo.TpmManufacturer) ? "Î´ÖªÖÆÔìÉÌ" : systemInfo.TpmManufacturer;
+                    TpmManufacturer = string.IsNullOrWhiteSpace(systemInfo.TpmManufacturer) ? "Î´Öªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" : systemInfo.TpmManufacturer;
                     TpmManufacturerId = systemInfo.TpmManufacturerId;
-                    TpmVersion = string.IsNullOrWhiteSpace(systemInfo.TpmVersion) ? "Î´Öª°æ±¾" : systemInfo.TpmVersion;
+                    TpmVersion = string.IsNullOrWhiteSpace(systemInfo.TpmVersion) ? "Î´Öªï¿½æ±¾" : systemInfo.TpmVersion;
                     TpmFirmwareVersion = systemInfo.TpmFirmwareVersion;
                     TpmStatus = string.IsNullOrWhiteSpace(systemInfo.TpmStatus) ? "Î´Öª×´Ì¬" : systemInfo.TpmStatus;
                     TpmEnabled = systemInfo.TpmEnabled;
@@ -420,12 +429,15 @@ namespace WPF_UI1.ViewModels
                     TpmSpecVersion = systemInfo.TpmSpecVersion;
                     TpmTbsVersion = systemInfo.TpmTbsVersion;
                     TpmErrorMessage = systemInfo.TpmErrorMessage;
+                    TpmDetectionMethod = string.IsNullOrWhiteSpace(systemInfo.TpmDetectionMethod) ? "Î´Öª" : systemInfo.TpmDetectionMethod;
+                    TpmWmiDetectionWorked = systemInfo.TpmWmiDetectionWorked;
+                    TpmTbsDetectionWorked = systemInfo.TpmTbsDetectionWorked;
                 }
                 else
                 {
-                    TpmManufacturer = "Î´¼ì²âµ½TPM";
+                    TpmManufacturer = "Î´ï¿½ï¿½âµ½TPM";
                     TpmVersion = "-";
-                    TpmStatus = "ÎÞ";
+                    TpmStatus = "ï¿½ï¿½";
                     TpmEnabled = false;
                     TpmReady = false;
                     TpmIsActivated = false;
@@ -435,14 +447,17 @@ namespace WPF_UI1.ViewModels
                     TpmSpecVersion = 0;
                     TpmTbsVersion = 0;
                     TpmErrorMessage = string.Empty;
+                    TpmDetectionMethod = "Î´ï¿½ï¿½âµ½";
+                    TpmWmiDetectionWorked = false;
+                    TpmTbsDetectionWorked = false;
                 }
 
-                Log.Debug($"ÏµÍ³Êý¾Ý¸üÐÂÍê³É: CPU={CpuName}, ÄÚ´æÊ¹ÓÃÂÊ={MemoryUsagePercent:F1}%, GPUÊýÁ¿={Gpus.Count}");
+                Log.Debug($"ÏµÍ³ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: CPU={CpuName}, ï¿½Ú´ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½={MemoryUsagePercent:F1}%, GPUï¿½ï¿½ï¿½ï¿½={Gpus.Count}");
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "¸üÐÂÏµÍ³Êý¾ÝÊ±·¢Éú´íÎó");
-                CpuName = $"?? Êý¾Ý¸üÐÂÊ§°Ü: {ex.Message}";
+                Log.Error(ex, "ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
+                CpuName = $"?? ï¿½ï¿½ï¿½Ý¸ï¿½ï¿½ï¿½Ê§ï¿½ï¿½: {ex.Message}";
             }
         }
 
@@ -450,10 +465,10 @@ namespace WPF_UI1.ViewModels
         {
             try
             {
-                // ÏÈ½¨Á¢ ÎïÀí´ÅÅÌÐòÁÐºÅ -> ÏÖÓÐView Ó³Éä£¬±ãÓÚÔöÁ¿¸üÐÂ
+                // ï¿½È½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ðºï¿½ -> ï¿½ï¿½ï¿½ï¿½View Ó³ï¿½ä£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 var map = PhysicalDisks.ToDictionary(p => p.Disk.SerialNumber, p => p);
 
-                // ±ê¼ÇÈÔ´æÔÚµÄ
+                // ï¿½ï¿½ï¿½ï¿½Ô´ï¿½ï¿½Úµï¿½
                 var alive = new HashSet<string>();
 
                 foreach (var pd in systemInfo.PhysicalDisks)
@@ -465,23 +480,23 @@ namespace WPF_UI1.ViewModels
                     }
                     else
                     {
-                        // ¸üÐÂÒýÓÃ£¨Èô¶ÔÏóÖØ½¨£©
+                        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø½ï¿½ï¿½ï¿½
                         view.Disk = pd;
                     }
                     alive.Add(pd.SerialNumber);
 
-                    // ¸üÐÂÆä·ÖÇøÁÐ±í£ºÕÒËùÓÐ Disks ÖÐ PhysicalDiskIndex ¶ÔÓ¦µÄ
+                    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Disks ï¿½ï¿½ PhysicalDiskIndex ï¿½ï¿½Ó¦ï¿½ï¿½
                     var partitions = systemInfo.Disks.Where(d => d.PhysicalDiskIndex >= 0 && d.PhysicalDiskIndex < systemInfo.PhysicalDisks.Count && systemInfo.PhysicalDisks[d.PhysicalDiskIndex].SerialNumber == pd.SerialNumber).ToList();
 
-                    // ÔöÁ¿Í¬²½ view.Partitions
-                    // É¾³ý²»´æÔÚµÄ
+                    // ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ view.Partitions
+                    // É¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Úµï¿½
                     for (int i = view.Partitions.Count - 1; i >= 0; i--)
                     {
                         var part = view.Partitions[i];
                         if (!partitions.Any(p => p.Letter == part.Letter))
                             view.Partitions.RemoveAt(i);
                     }
-                    // Ìí¼Ó/¸üÐÂ
+                    // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½
                     foreach (var part in partitions)
                     {
                         var existing = view.Partitions.FirstOrDefault(p => p.Letter == part.Letter);
@@ -491,12 +506,12 @@ namespace WPF_UI1.ViewModels
                         }
                         else
                         {
-                            // ÊôÐÔÒýÓÃÒÑ¾­¸üÐÂ¹ý£¨Í¬¶ÔÏó£©£¬ÈôÊÇ²»Í¬ÊµÀý¿ÉÖðÊôÐÔ¸´ÖÆ£¬ÕâÀï¼ÙÉèÍ¬ÊµÀý
+                            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Â¹ï¿½ï¿½ï¿½Í¬ï¿½ï¿½ï¿½ó£©£ï¿½ï¿½ï¿½ï¿½Ç²ï¿½Í¬Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¸ï¿½ï¿½Æ£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Êµï¿½ï¿½
                         }
                     }
                 }
 
-                // ÒÆ³ýÒÑ²»´æÔÚµÄÎïÀí´ÅÅÌ
+                // ï¿½Æ³ï¿½ï¿½Ñ²ï¿½ï¿½ï¿½ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 for (int i = PhysicalDisks.Count - 1; i >= 0; i--)
                 {
                     if (!alive.Contains(PhysicalDisks[i].Disk.SerialNumber))
@@ -505,7 +520,7 @@ namespace WPF_UI1.ViewModels
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "¹¹½¨ÎïÀí´ÅÅÌ·Ö×éÊ§°Ü");
+                Log.Error(ex, "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì·ï¿½ï¿½ï¿½Ê§ï¿½ï¿½");
             }
         }
 
@@ -519,8 +534,8 @@ namespace WPF_UI1.ViewModels
         {
             if (string.IsNullOrWhiteSpace(value))
             {
-                Log.Debug($"{fieldName} Êý¾ÝÎª¿Õ£¬Ê¹ÓÃÄ¬ÈÏÖµ");
-                return $"{fieldName} Î´¼ì²âµ½";
+                Log.Debug($"{fieldName} ï¿½ï¿½ï¿½ï¿½Îªï¿½Õ£ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½Öµ");
+                return $"{fieldName} Î´ï¿½ï¿½âµ½";
             }
             return value;
         }
@@ -529,7 +544,7 @@ namespace WPF_UI1.ViewModels
         {
             if (value <= 0)
             {
-                Log.Debug($"{fieldName} Êý¾ÝÒì³£: {value}£¬Ê¹ÓÃÄ¬ÈÏÖµ0");
+                Log.Debug($"{fieldName} ï¿½ï¿½ï¿½ï¿½ï¿½ì³£: {value}ï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½Öµ0");
                 return 0;
             }
             return value;
@@ -539,7 +554,7 @@ namespace WPF_UI1.ViewModels
         {
             if (double.IsNaN(value) || double.IsInfinity(value) || value < 0)
             {
-                Log.Debug($"{fieldName} Êý¾ÝÒì³£: {value}£¬Ê¹ÓÃÄ¬ÈÏÖµ0");
+                Log.Debug($"{fieldName} ï¿½ï¿½ï¿½ï¿½ï¿½ì³£: {value}ï¿½ï¿½Ê¹ï¿½ï¿½Ä¬ï¿½ï¿½Öµ0");
                 return 0.0;
             }
             return value;
@@ -547,7 +562,7 @@ namespace WPF_UI1.ViewModels
 
         private void UpdateCollection<T>(ObservableCollection<T> collection, List<T> newItems)
         {
-            // ¸Ä½øµÄ¸üÐÂ²ßÂÔ£ºÖ»ÔÚ±ØÒªÊ±¸üÐÂ¼¯ºÏ
+            // ï¿½Ä½ï¿½ï¿½Ä¸ï¿½ï¿½Â²ï¿½ï¿½Ô£ï¿½Ö»ï¿½Ú±ï¿½ÒªÊ±ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½
             try
             {
                 if (newItems == null)
@@ -567,12 +582,12 @@ namespace WPF_UI1.ViewModels
                         collection.Add(item);
                     }
                     
-                    Log.Debug($"¸üÐÂ¼¯ºÏ: {typeof(T).Name}, ÊýÁ¿: {newItems.Count}");
+                    Log.Debug($"ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½: {typeof(T).Name}, ï¿½ï¿½ï¿½ï¿½: {newItems.Count}");
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"¸üÐÂ¼¯ºÏÊ±·¢Éú´íÎó: {typeof(T).Name}");
+                Log.Error(ex, $"ï¿½ï¿½ï¿½Â¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {typeof(T).Name}");
             }
         }
 
@@ -580,17 +595,17 @@ namespace WPF_UI1.ViewModels
         {
             try
             {
-                // ÑéÖ¤ÎÂ¶ÈÊý¾ÝµÄÓÐÐ§ÐÔ
-                if (cpuTemp > 0 && cpuTemp < 150) // ºÏÀíµÄCPUÎÂ¶È·¶Î§
+                // ï¿½ï¿½Ö¤ï¿½Â¶ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½Ð§ï¿½ï¿½
+                if (cpuTemp > 0 && cpuTemp < 150) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½CPUï¿½Â¶È·ï¿½Î§
                 {
                     _cpuTempData.Add(cpuTemp);
                 }
                 else if (_cpuTempData.Count == 0)
                 {
-                    _cpuTempData.Add(0); // Èç¹ûÃ»ÓÐÊý¾Ý£¬Ìí¼Ó0ÒÔ±£³ÖÍ¼±íÁ¬ÐøÐÔ
+                    _cpuTempData.Add(0); // ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½Ô±ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                 }
 
-                if (gpuTemp > 0 && gpuTemp < 150) // ºÏÀíµÄGPUÎÂ¶È·¶Î§
+                if (gpuTemp > 0 && gpuTemp < 150) // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½GPUï¿½Â¶È·ï¿½Î§
                 {
                     _gpuTempData.Add(gpuTemp);
                 }
@@ -599,7 +614,7 @@ namespace WPF_UI1.ViewModels
                     _gpuTempData.Add(0);
                 }
 
-                // ±£³Ö×î´óÊý¾ÝµãÊýÁ¿
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½ï¿½
                 while (_cpuTempData.Count > MAX_CHART_POINTS)
                     _cpuTempData.RemoveAt(0);
 
@@ -608,7 +623,7 @@ namespace WPF_UI1.ViewModels
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "¸üÐÂÎÂ¶ÈÍ¼±íÊ±·¢Éú´íÎó");
+                Log.Error(ex, "ï¿½ï¿½ï¿½ï¿½ï¿½Â¶ï¿½Í¼ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             }
         }
 
@@ -648,7 +663,7 @@ namespace WPF_UI1.ViewModels
 
         public string FormatNetworkSpeed(ulong speedBps)
         {
-            if (speedBps == 0) return "Î´Á¬½Ó";
+            if (speedBps == 0) return "Î´ï¿½ï¿½ï¿½ï¿½";
 
             const ulong Kbps = 1000UL;
             const ulong Mbps = Kbps * Kbps;
@@ -668,19 +683,19 @@ namespace WPF_UI1.ViewModels
         {
             if (SelectedDisk != null)
             {
-                // TODO: ÊµÏÖSMARTÏêÇé¶Ô»°¿ò
-                Log.Information($"ÏÔÊ¾´ÅÅÌ {SelectedDisk.Letter}: µÄSMARTÏêÇé");
+                // TODO: Êµï¿½ï¿½SMARTï¿½ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½
+                Log.Information($"ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ {SelectedDisk.Letter}: ï¿½ï¿½SMARTï¿½ï¿½ï¿½ï¿½");
             }
             else
             {
-                Log.Warning("Î´Ñ¡Ôñ´ÅÅÌ£¬ÎÞ·¨ÏÔÊ¾SMARTÏêÇé");
+                Log.Warning("Î´Ñ¡ï¿½ï¿½ï¿½ï¿½Ì£ï¿½ï¿½Þ·ï¿½ï¿½ï¿½Ê¾SMARTï¿½ï¿½ï¿½ï¿½");
             }
         }
 
         [RelayCommand]
         private void Reconnect()
         {
-            Log.Information("ÓÃ»§ÊÖ¶¯ÇëÇóÖØÐÂÁ¬½Ó");
+            Log.Information("ï¿½Ã»ï¿½ï¿½Ö¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             _consecutiveErrors = 0;
             TryConnect();
         }
@@ -689,10 +704,10 @@ namespace WPF_UI1.ViewModels
         {
             base.OnPropertyChanged(e);
             
-            // ¿ÉÒÔÔÚÕâÀïÌí¼ÓÊôÐÔ±ä»¯Ê±µÄÌØÊâ´¦ÀíÂß¼­
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô±ä»¯Ê±ï¿½ï¿½ï¿½ï¿½ï¿½â´¦ï¿½ï¿½ï¿½ß¼ï¿½
             if (e.PropertyName == nameof(IsConnected))
             {
-                Log.Debug($"Á¬½Ó×´Ì¬±ä»¯: {IsConnected}");
+                Log.Debug($"ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ä»¯: {IsConnected}");
             }
         }
     }

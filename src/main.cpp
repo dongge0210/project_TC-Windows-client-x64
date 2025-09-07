@@ -70,6 +70,9 @@ static bool cachedTpmPhysicalPresenceRequired = false;
 static uint32_t cachedTpmSpecVersion = 0;
 static uint32_t cachedTpmTbsVersion = 0;
 static std::string cachedTpmErrorMessage;
+static std::string cachedTmpDetectionMethod;
+static bool cachedTmpWmiDetectionWorked = false;
+static bool cachedTmpTbsDetectionWorked = false;
 static bool tpmCacheInitialized = false; // 是否已检测
 
 // 全局变量
@@ -887,6 +890,9 @@ int main(int argc, char* argv[]) {
                                     Logger::Info("TPM检测成功: " + ::cachedTpmManufacturer + " v" + ::cachedTpmVersion +
                                                  " (状态: " + ::cachedTpmStatus + ")");
                                 } else {
+                                    ::cachedTmpDetectionMethod = WinUtils::WstringToString(tpmData.detectionMethod);
+                                    ::cachedTmpWmiDetectionWorked = tpmData.wmiDetectionWorked;
+                                    ::cachedTmpTbsDetectionWorked = tpmData.tbsDetectionWorked;
                                     // 未检测到TPM，缓存错误/状态信息
                                     ::cachedHasTpm = false;
                                     ::cachedTpmManufacturer = "未检测到TPM";
@@ -969,6 +975,9 @@ int main(int argc, char* argv[]) {
                 sysInfo.tpmSpecVersion = ::cachedTpmSpecVersion;
                 sysInfo.tpmTbsVersion = ::cachedTpmTbsVersion;
                 sysInfo.tpmErrorMessage = ::cachedTpmErrorMessage;
+                sysInfo.tmpDetectionMethod = ::cachedTmpDetectionMethod;
+                sysInfo.tmpWmiDetectionWorked = ::cachedTmpWmiDetectionWorked;
+                sysInfo.tmpTbsDetectionWorked = ::cachedTmpTbsDetectionWorked;
 
                 // 如首次检测失败，尝试有限次数重试（避免一次临时失败导致一直显示未检测）
                 if (!::cachedHasTpm && tpmCacheInitialized && tpmRetryCounter < TPM_MAX_RETRY) {
