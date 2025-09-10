@@ -90,6 +90,27 @@ struct TemperatureData {
     double temperature;     // 温度（摄氏度）
 };
 
+// TPM信息
+struct TpmData {
+    wchar_t manufacturerName[128];  // TPM制造商名称
+    wchar_t manufacturerId[32];     // 制造商ID
+    wchar_t version[32];            // TPM版本
+    wchar_t firmwareVersion[32];    // 固件版本
+    wchar_t status[64];             // TPM状态
+    bool isEnabled;                 // TPM是否启用
+    bool isActivated;               // TPM是否激活
+    bool isOwned;                   // TPM是否已拥有
+    bool isReady;                   // TPM是否就绪
+    bool tbsAvailable;              // TBS是否可用
+    bool physicalPresenceRequired;  // 是否需要物理存在
+    uint32_t specVersion;           // TPM规范版本
+    uint32_t tbsVersion;            // TBS版本
+    wchar_t errorMessage[256];      // 错误信息
+    wchar_t detectionMethod[64];    // 检测方法 ("TBS", "WMI", "TBS+WMI", "未检测到")
+    bool wmiDetectionWorked;        // WMI检测是否成功
+    bool tbsDetectionWorked;        // TBS检测是否成功
+};
+
 // SystemInfo结构
 struct SystemInfo {
     std::string cpuName;
@@ -124,6 +145,25 @@ struct SystemInfo {
     double cpuTemperature; // 新增：CPU温度
     double gpuTemperature; // 新增：GPU温度
     double cpuUsageSampleIntervalMs = 0.0; // 新增：CPU使用率采样间隔（毫秒）
+    // TPM信息（扩展）
+    bool hasTpm = false;            // 是否存在TPM
+    std::string tpmManufacturer;    // TPM制造商
+    std::string tpmManufacturerId;  // 制造商ID
+    std::string tpmVersion;         // TPM版本
+    std::string tpmFirmwareVersion; // 固件版本
+    std::string tpmStatus;          // TPM状态
+    bool tpmEnabled = false;        // TPM是否启用
+    bool tpmIsActivated = false;    // 是否激活
+    bool tpmIsOwned = false;        // 是否已拥有
+    bool tpmReady = false;          // TPM是否就绪
+    bool tpmTbsAvailable = false;   // TBS是否可用
+    bool tpmPhysicalPresenceRequired = false; // 是否需要物理存在
+    uint32_t tpmSpecVersion = 0;    // 规范版本
+    uint32_t tpmTbsVersion = 0;     // TBS版本
+    std::string tpmErrorMessage;    // 错误信息
+    std::string tmpDetectionMethod; // 检测方法
+    bool tmpWmiDetectionWorked = false; // WMI检测是否成功
+    bool tmpTbsDetectionWorked = false; // TBS检测是否成功
     SYSTEMTIME lastUpdate;
 };
 
@@ -168,11 +208,15 @@ struct SharedMemoryBlock {
     // 温度数据（支持10个传感器）
     TemperatureData temperatures[10];
 
+    // TPM信息
+    TpmData tpm;
+
     int adapterCount;
     int tempCount;
     int gpuCount;
     int diskCount;
     int physicalDiskCount;       // 新增：物理磁盘数量
+    bool hasTpm;                 // 新增：是否存在TPM
     SYSTEMTIME lastUpdate;
     CRITICAL_SECTION lock;
 };
