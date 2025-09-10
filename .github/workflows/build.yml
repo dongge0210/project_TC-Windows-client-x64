@@ -23,20 +23,14 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    # 尝试恢复 CUDA Toolkit artifact
-    - name: Restore CUDA Toolkit from artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: cuda-toolkit
-        path: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA
-      continue-on-error: true
-
-    # CUDA Toolkit 缓存（actions/cache 也保留，万一有用）
+    # CUDA Toolkit 缓存
     - name: Cache CUDA Toolkit
-      uses: actions/cache@v3
+      uses: actions/cache@v4.2.4
       with:
         path: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA
-        key: cuda-12.8.0
+        key: CUDA
+        enableCrossOsArchive: true
+        save-always: true
 
     - name: Setup CUDA 12.8
       uses: Jimver/cuda-toolkit@v0.2.20
@@ -96,11 +90,3 @@ jobs:
           Project1/x64/${{ env.BUILD_CONFIGURATION }}/*.exe
           Project1/x64/${{ env.BUILD_CONFIGURATION }}/*.dll
           Project1/x64/${{ env.BUILD_CONFIGURATION }}/*.pdb
-
-    # 无论 workflow 成功与否都保存 CUDA Toolkit artifact
-    - name: Save CUDA Toolkit as artifact
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: cuda-toolkit
-        path: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA
