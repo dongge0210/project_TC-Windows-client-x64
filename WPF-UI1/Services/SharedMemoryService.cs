@@ -26,6 +26,25 @@ namespace WPF_UI1.Services
         // 与C++结构严格匹配（#pragma pack(1) 且 bool 为1字节）
         // 统一指定 Pack=1, 并对每个bool加 MarshalAs(UnmanagedType.I1)
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct TpmDataStruct
+        {
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 128)] public ushort[] manufacturerName;  // wchar_t[128]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] public ushort[] manufacturerId;      // wchar_t[32]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] public ushort[] version;            // wchar_t[32]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)] public ushort[] firmwareVersion;    // wchar_t[32]
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 64)] public ushort[] status;             // wchar_t[64]
+            [MarshalAs(UnmanagedType.I1)] public bool isEnabled;
+            [MarshalAs(UnmanagedType.I1)] public bool isActivated;
+            [MarshalAs(UnmanagedType.I1)] public bool isOwned;
+            [MarshalAs(UnmanagedType.I1)] public bool isReady;
+            [MarshalAs(UnmanagedType.I1)] public bool tbsAvailable;
+            [MarshalAs(UnmanagedType.I1)] public bool physicalPresenceRequired;
+            public uint specVersion;
+            public uint tbsVersion;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 256)] public ushort[] errorMessage;      // wchar_t[256]
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct SharedMemoryBlock
         {
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 128)]
@@ -44,26 +63,21 @@ namespace WPF_UI1.Services
             public ulong availableMemory;
             public double cpuTemperature;
             public double gpuTemperature;
-            public double cpuUsageSampleIntervalMs; // 新增：CPU采样间隔
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)]
-            public GPUDataStruct[] gpus;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public NetworkAdapterStruct[] adapters;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public SharedDiskDataStruct[] disks;
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)]
-            public PhysicalDiskSmartDataStruct[] physicalDisks; // 大结构，仅为保持偏移
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
-            public TemperatureDataStruct[] temperatures;
+            public double cpuUsageSampleIntervalMs;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 2)] public GPUDataStruct[] gpus;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)] public NetworkAdapterStruct[] adapters;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)] public SharedDiskDataStruct[] disks;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 8)] public PhysicalDiskSmartDataStruct[] physicalDisks;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)] public TemperatureDataStruct[] temperatures;
+            public TpmDataStruct tpm;          // 与C++端顺序一致
             public int adapterCount;
             public int tempCount;
             public int gpuCount;
             public int diskCount;
             public int physicalDiskCount;
+            [MarshalAs(UnmanagedType.I1)] public bool hasTpm;  // 在 C++ 里 tpm 后、计数字段后再有 hasTpm（保持顺序）
             public SYSTEMTIME lastUpdate;
-            // CRITICAL_SECTION: 在 Win64 下一般 40 字节（pack=1），用占位符字节数组
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 40)]
-            public byte[] lockData;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 40)] public byte[] lockData;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -474,9 +488,28 @@ namespace WPF_UI1.Services
                         });
                     }
                 }
-
+                // TPM 信息（完整）
+                systemInfo.HasTpm = sharedData.hasTpm;
+                if (sharedData.hasTpm)
+                {
+                    var tpm = sharedData.tpm;
+                    systemInfo.TpmManufacturer = SafeWideCharArrayToString(tpm.manufacturerName) ?? string.Empty;
+                    systemInfo.TpmManufacturerId = SafeWideCharArrayToString(tpm.manufacturerId) ?? string.Empty;
+                    systemInfo.TpmVersion = SafeWideCharArrayToString(tpm.version) ?? string.Empty;
+                    systemInfo.TpmFirmwareVersion = SafeWideCharArrayToString(tpm.firmwareVersion) ?? string.Empty;
+                    systemInfo.TpmStatus = SafeWideCharArrayToString(tpm.status) ?? string.Empty;
+                    systemInfo.TpmEnabled = tpm.isEnabled;
+                    systemInfo.TpmIsActivated = tpm.isActivated;
+                    systemInfo.TpmIsOwned = tpm.isOwned;
+                    systemInfo.TpmReady = tpm.isReady;
+                    systemInfo.TpmTbsAvailable = tpm.tbsAvailable;
+                    systemInfo.TpmPhysicalPresenceRequired = tpm.physicalPresenceRequired;
+                    systemInfo.TpmSpecVersion = tpm.specVersion;
+                    systemInfo.TpmTbsVersion = tpm.tbsVersion;
+                    systemInfo.TpmErrorMessage = SafeWideCharArrayToString(tpm.errorMessage) ?? string.Empty;
+                }
                 systemInfo.LastUpdate = DateTime.Now;
-                Log.Debug($"解析共享内存成功: CPU={systemInfo.CpuName}, GPU数={systemInfo.Gpus.Count}, 网卡数={systemInfo.Adapters.Count}, 逻辑盘={systemInfo.Disks.Count}, 物理盘={systemInfo.PhysicalDisks.Count}");
+                Log.Debug($"解析共享内存成功: CPU={systemInfo.CpuName}, GPU数={systemInfo.Gpus.Count}, TPM={systemInfo.HasTpm}");
                 return systemInfo;
             }
             catch (Exception ex)

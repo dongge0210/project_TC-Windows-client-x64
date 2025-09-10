@@ -185,6 +185,7 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
     <ClInclude Include="..\src\core\memory\MemoryInfo.h" />
     <ClInclude Include="..\src\core\network\NetworkAdapter.h" />
     <ClInclude Include="..\src\core\os\OSInfo.h" />
+    <ClInclude Include="..\src\core\tpm\TpmInfo.h" />
     <ClInclude Include="..\src\core\temperature\TemperatureWrapper.h" />
     <ClInclude Include="..\src\core\Utils\LibreHardwareMonitorBridge.h" />
     <ClInclude Include="..\src\core\Utils\Logger.h" />
@@ -201,6 +202,7 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
     <ClCompile Include="..\src\core\memory\MemoryInfo.cpp" />
     <ClCompile Include="..\src\core\network\NetworkAdapter.cpp" />
     <ClCompile Include="..\src\core\os\OSInfo.cpp" />
+    <ClCompile Include="..\src\core\tpm\TpmInfo.cpp" />
     <ClCompile Include="..\src\core\temperature\TemperatureWrapper.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsManaged>

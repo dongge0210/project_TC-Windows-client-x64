@@ -21,6 +21,9 @@
             <converters:BytesToStringConverter x:Key="BytesToStringConverter"/>
             <converters:NetworkSpeedConverter x:Key="NetworkSpeedConverter"/>
             <converters:DiskUsagePercentageConverter x:Key="DiskUsagePercentageConverter"/>
+            <!-- 新增 -->
+            <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
 
             <!-- 深色主题样式 -->
             <Style TargetType="Window">

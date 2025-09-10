@@ -30,6 +30,9 @@
     <ClInclude Include="..\src\core\os\OSInfo.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\core\tpm\TpmInfo.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\core\Utils\Logger.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -75,6 +78,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\os\OSInfo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\core\tpm\TpmInfo.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\src\core\network\NetworkAdapter.cpp">
