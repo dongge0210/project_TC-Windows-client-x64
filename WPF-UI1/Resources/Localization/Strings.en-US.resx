@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- Application General -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>System Hardware Monitor</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>Real-time Hardware Monitoring Tool</value>
+  </data>
+  
+  <!-- Menu and Buttons -->
+  <data name="Menu_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Menu_View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Menu_Tools" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+  <data name="Menu_Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Menu_Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Menu_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Button_Reconnect" xml:space="preserve">
+    <value>Reconnect</value>
+  </data>
+  <data name="Button_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Button_SmartDetails" xml:space="preserve">
+    <value>SMART Details</value>
+  </data>
+  
+  <!-- Hardware Information Labels -->
+  <data name="Hardware_CPU" xml:space="preserve">
+    <value>Processor Information</value>
+  </data>
+  <data name="Hardware_Memory" xml:space="preserve">
+    <value>Memory Information</value>
+  </data>
+  <data name="Hardware_GPU" xml:space="preserve">
+    <value>Graphics Information</value>
+  </data>
+  <data name="Hardware_Network" xml:space="preserve">
+    <value>Network Information</value>
+  </data>
+  <data name="Hardware_Storage" xml:space="preserve">
+    <value>Storage Device Information</value>
+  </data>
+  <data name="Hardware_Temperature" xml:space="preserve">
+    <value>Temperature Monitoring</value>
+  </data>
+  <data name="Hardware_TPM" xml:space="preserve">
+    <value>TPM Trusted Platform Module</value>
+  </data>
+  
+  <!-- CPU Information -->
+  <data name="CPU_Name" xml:space="preserve">
+    <value>Name:</value>
+  </data>
+  <data name="CPU_PhysicalCores" xml:space="preserve">
+    <value>Physical Cores:</value>
+  </data>
+  <data name="CPU_LogicalCores" xml:space="preserve">
+    <value>Logical Cores:</value>
+  </data>
+  <data name="CPU_PerformanceCores" xml:space="preserve">
+    <value>Performance Cores:</value>
+  </data>
+  <data name="CPU_EfficiencyCores" xml:space="preserve">
+    <value>Efficiency Cores:</value>
+  </data>
+  <data name="CPU_Usage" xml:space="preserve">
+    <value>CPU Usage:</value>
+  </data>
+  <data name="CPU_Temperature" xml:space="preserve">
+    <value>CPU Temperature:</value>
+  </data>
+  <data name="CPU_HyperThreading" xml:space="preserve">
+    <value>Hyper-Threading:</value>
+  </data>
+  <data name="CPU_Virtualization" xml:space="preserve">
+    <value>Virtualization:</value>
+  </data>
+  <data name="CPU_SampleInterval" xml:space="preserve">
+    <value>Sample Interval:</value>
+  </data>
+  
+  <!-- Memory Information -->
+  <data name="Memory_Total" xml:space="preserve">
+    <value>Total Memory:</value>
+  </data>
+  <data name="Memory_Used" xml:space="preserve">
+    <value>Used Memory:</value>
+  </data>
+  <data name="Memory_Available" xml:space="preserve">
+    <value>Available Memory:</value>
+  </data>
+  <data name="Memory_Usage" xml:space="preserve">
+    <value>Memory Usage:</value>
+  </data>
+  
+  <!-- GPU Information -->
+  <data name="GPU_Select" xml:space="preserve">
+    <value>GPU Selection:</value>
+  </data>
+  <data name="GPU_Name" xml:space="preserve">
+    <value>Name:</value>
+  </data>
+  <data name="GPU_Brand" xml:space="preserve">
+    <value>Brand:</value>
+  </data>
+  <data name="GPU_Memory" xml:space="preserve">
+    <value>Video Memory:</value>
+  </data>
+  <data name="GPU_CoreClock" xml:space="preserve">
+    <value>Core Clock:</value>
+  </data>
+  <data name="GPU_Temperature" xml:space="preserve">
+    <value>GPU Temperature:</value>
+  </data>
+  
+  <!-- Network Information -->
+  <data name="Network_Adapter" xml:space="preserve">
+    <value>Network Adapter:</value>
+  </data>
+  <data name="Network_AdapterName" xml:space="preserve">
+    <value>Adapter Name:</value>
+  </data>
+  <data name="Network_AdapterType" xml:space="preserve">
+    <value>Adapter Type:</value>
+  </data>
+  <data name="Network_IPAddress" xml:space="preserve">
+    <value>IP Address:</value>
+  </data>
+  <data name="Network_MACAddress" xml:space="preserve">
+    <value>MAC Address:</value>
+  </data>
+  <data name="Network_Speed" xml:space="preserve">
+    <value>Connection Speed:</value>
+  </data>
+  
+  <!-- Storage Information -->
+  <data name="Storage_PhysicalDisk" xml:space="preserve">
+    <value>Physical Disk:</value>
+  </data>
+  <data name="Storage_Partitions" xml:space="preserve">
+    <value>Partitions:</value>
+  </data>
+  <data name="Storage_BasicInfo" xml:space="preserve">
+    <value>Basic Information</value>
+  </data>
+  <data name="Storage_Usage" xml:space="preserve">
+    <value>Usage Information</value>
+  </data>
+  <data name="Storage_DriveLetter" xml:space="preserve">
+    <value>Drive Letter:</value>
+  </data>
+  <data name="Storage_Label" xml:space="preserve">
+    <value>Label:</value>
+  </data>
+  <data name="Storage_FileSystem" xml:space="preserve">
+    <value>File System:</value>
+  </data>
+  <data name="Storage_TotalSize" xml:space="preserve">
+    <value>Total Size:</value>
+  </data>
+  <data name="Storage_UsedSpace" xml:space="preserve">
+    <value>Used Space:</value>
+  </data>
+  <data name="Storage_FreeSpace" xml:space="preserve">
+    <value>Free Space:</value>
+  </data>
+  <data name="Storage_UsageRate" xml:space="preserve">
+    <value>Usage Rate:</value>
+  </data>
+  
+  <!-- TPM Information -->
+  <data name="TPM_DetectionResult" xml:space="preserve">
+    <value>Detection Result:</value>
+  </data>
+  <data name="TPM_Manufacturer" xml:space="preserve">
+    <value>Manufacturer:</value>
+  </data>
+  <data name="TPM_ManufacturerID" xml:space="preserve">
+    <value>Manufacturer ID:</value>
+  </data>
+  <data name="TPM_Version" xml:space="preserve">
+    <value>Version:</value>
+  </data>
+  <data name="TPM_FirmwareVersion" xml:space="preserve">
+    <value>Firmware Version:</value>
+  </data>
+  <data name="TPM_Status" xml:space="preserve">
+    <value>Status:</value>
+  </data>
+  <data name="TPM_Enabled" xml:space="preserve">
+    <value>Enabled:</value>
+  </data>
+  <data name="TPM_Activated" xml:space="preserve">
+    <value>Activated:</value>
+  </data>
+  <data name="TPM_Owned" xml:space="preserve">
+    <value>Owned:</value>
+  </data>
+  <data name="TPM_Ready" xml:space="preserve">
+    <value>Ready:</value>
+  </data>
+  <data name="TPM_TBSAvailable" xml:space="preserve">
+    <value>TBS Available:</value>
+  </data>
+  <data name="TPM_PhysicalPresenceRequired" xml:space="preserve">
+    <value>Physical Presence Required:</value>
+  </data>
+  <data name="TPM_SpecVersion" xml:space="preserve">
+    <value>Spec Version:</value>
+  </data>
+  <data name="TPM_TBSVersion" xml:space="preserve">
+    <value>TBS Version:</value>
+  </data>
+  <data name="TPM_DetectionMethod" xml:space="preserve">
+    <value>Detection Method:</value>
+  </data>
+  <data name="TPM_ErrorMessage" xml:space="preserve">
+    <value>Error Message:</value>
+  </data>
+  
+  <!-- Status Information -->
+  <data name="Status_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Status_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="Status_LastUpdate" xml:space="preserve">
+    <value>Last Update:</value>
+  </data>
+  
+  <!-- Common Terms -->
+  <data name="Common_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Common_Supported" xml:space="preserve">
+    <value>Supported</value>
+  </data>
+  <data name="Common_NotSupported" xml:space="preserve">
+    <value>Not Supported</value>
+  </data>
+  <data name="Common_Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Common_Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="Common_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  
+  <!-- System Tray -->
+  <data name="Tray_Show" xml:space="preserve">
+    <value>Show</value>
+  </data>
+  <data name="Tray_Hide" xml:space="preserve">
+    <value>Hide</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Tray_About" xml:space="preserve">
+    <value>About</value>
+  </data>
+  
+  <!-- Temperature Monitoring -->
+  <data name="Temperature_CPUHistory" xml:space="preserve">
+    <value>CPU Temperature History</value>
+  </data>
+  <data name="Temperature_GPUHistory" xml:space="preserve">
+    <value>GPU Temperature History</value>
+  </data>
+  
+  <!-- Plugins -->
+  <data name="Plugin_Manager" xml:space="preserve">
+    <value>Plugin Manager</value>
+  </data>
+  <data name="Plugin_Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="Plugin_Disable" xml:space="preserve">
+    <value>Disable</value>
+  </data>
+  <data name="Plugin_Settings" xml:space="preserve">
+    <value>Plugin Settings</value>
+  </data>
+</root>

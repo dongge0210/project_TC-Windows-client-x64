@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  
+  <!-- 应用程序通用 -->
+  <data name="AppTitle" xml:space="preserve">
+    <value>系统硬件监视器</value>
+  </data>
+  <data name="AppDescription" xml:space="preserve">
+    <value>实时硬件监控工具</value>
+  </data>
+  
+  <!-- 菜单和按钮 -->
+  <data name="Menu_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Menu_View" xml:space="preserve">
+    <value>查看</value>
+  </data>
+  <data name="Menu_Tools" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="Menu_Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="Menu_Language" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Menu_Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Menu_Exit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="Button_Reconnect" xml:space="preserve">
+    <value>重连</value>
+  </data>
+  <data name="Button_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Button_SmartDetails" xml:space="preserve">
+    <value>SMART详情</value>
+  </data>
+  
+  <!-- 硬件信息标签 -->
+  <data name="Hardware_CPU" xml:space="preserve">
+    <value>处理器信息</value>
+  </data>
+  <data name="Hardware_Memory" xml:space="preserve">
+    <value>内存信息</value>
+  </data>
+  <data name="Hardware_GPU" xml:space="preserve">
+    <value>显卡信息</value>
+  </data>
+  <data name="Hardware_Network" xml:space="preserve">
+    <value>网络信息</value>
+  </data>
+  <data name="Hardware_Storage" xml:space="preserve">
+    <value>存储设备信息</value>
+  </data>
+  <data name="Hardware_Temperature" xml:space="preserve">
+    <value>温度监控</value>
+  </data>
+  <data name="Hardware_TPM" xml:space="preserve">
+    <value>TPM 信任平台模块</value>
+  </data>
+  
+  <!-- CPU信息 -->
+  <data name="CPU_Name" xml:space="preserve">
+    <value>名称:</value>
+  </data>
+  <data name="CPU_PhysicalCores" xml:space="preserve">
+    <value>物理核心:</value>
+  </data>
+  <data name="CPU_LogicalCores" xml:space="preserve">
+    <value>逻辑核心:</value>
+  </data>
+  <data name="CPU_PerformanceCores" xml:space="preserve">
+    <value>性能核心:</value>
+  </data>
+  <data name="CPU_EfficiencyCores" xml:space="preserve">
+    <value>能效核心:</value>
+  </data>
+  <data name="CPU_Usage" xml:space="preserve">
+    <value>CPU使用率:</value>
+  </data>
+  <data name="CPU_Temperature" xml:space="preserve">
+    <value>CPU温度:</value>
+  </data>
+  <data name="CPU_HyperThreading" xml:space="preserve">
+    <value>超线程:</value>
+  </data>
+  <data name="CPU_Virtualization" xml:space="preserve">
+    <value>虚拟化:</value>
+  </data>
+  <data name="CPU_SampleInterval" xml:space="preserve">
+    <value>采样间隔:</value>
+  </data>
+  
+  <!-- 内存信息 -->
+  <data name="Memory_Total" xml:space="preserve">
+    <value>总内存:</value>
+  </data>
+  <data name="Memory_Used" xml:space="preserve">
+    <value>已用内存:</value>
+  </data>
+  <data name="Memory_Available" xml:space="preserve">
+    <value>可用内存:</value>
+  </data>
+  <data name="Memory_Usage" xml:space="preserve">
+    <value>内存使用率:</value>
+  </data>
+  
+  <!-- GPU信息 -->
+  <data name="GPU_Select" xml:space="preserve">
+    <value>GPU选择:</value>
+  </data>
+  <data name="GPU_Name" xml:space="preserve">
+    <value>名称:</value>
+  </data>
+  <data name="GPU_Brand" xml:space="preserve">
+    <value>品牌:</value>
+  </data>
+  <data name="GPU_Memory" xml:space="preserve">
+    <value>显存:</value>
+  </data>
+  <data name="GPU_CoreClock" xml:space="preserve">
+    <value>核心频率:</value>
+  </data>
+  <data name="GPU_Temperature" xml:space="preserve">
+    <value>GPU温度:</value>
+  </data>
+  
+  <!-- 网络信息 -->
+  <data name="Network_Adapter" xml:space="preserve">
+    <value>网络适配器:</value>
+  </data>
+  <data name="Network_AdapterName" xml:space="preserve">
+    <value>适配器名称:</value>
+  </data>
+  <data name="Network_AdapterType" xml:space="preserve">
+    <value>网卡类型:</value>
+  </data>
+  <data name="Network_IPAddress" xml:space="preserve">
+    <value>IP地址:</value>
+  </data>
+  <data name="Network_MACAddress" xml:space="preserve">
+    <value>MAC地址:</value>
+  </data>
+  <data name="Network_Speed" xml:space="preserve">
+    <value>连接速度:</value>
+  </data>
+  
+  <!-- 存储信息 -->
+  <data name="Storage_PhysicalDisk" xml:space="preserve">
+    <value>物理磁盘:</value>
+  </data>
+  <data name="Storage_Partitions" xml:space="preserve">
+    <value>分区:</value>
+  </data>
+  <data name="Storage_BasicInfo" xml:space="preserve">
+    <value>基本信息</value>
+  </data>
+  <data name="Storage_Usage" xml:space="preserve">
+    <value>使用情况</value>
+  </data>
+  <data name="Storage_DriveLetter" xml:space="preserve">
+    <value>盘符:</value>
+  </data>
+  <data name="Storage_Label" xml:space="preserve">
+    <value>卷标:</value>
+  </data>
+  <data name="Storage_FileSystem" xml:space="preserve">
+    <value>文件系统:</value>
+  </data>
+  <data name="Storage_TotalSize" xml:space="preserve">
+    <value>总容量:</value>
+  </data>
+  <data name="Storage_UsedSpace" xml:space="preserve">
+    <value>已用空间:</value>
+  </data>
+  <data name="Storage_FreeSpace" xml:space="preserve">
+    <value>可用空间:</value>
+  </data>
+  <data name="Storage_UsageRate" xml:space="preserve">
+    <value>使用率:</value>
+  </data>
+  
+  <!-- TPM信息 -->
+  <data name="TPM_DetectionResult" xml:space="preserve">
+    <value>检测结果:</value>
+  </data>
+  <data name="TPM_Manufacturer" xml:space="preserve">
+    <value>制造商:</value>
+  </data>
+  <data name="TPM_ManufacturerID" xml:space="preserve">
+    <value>制造商ID:</value>
+  </data>
+  <data name="TPM_Version" xml:space="preserve">
+    <value>版本:</value>
+  </data>
+  <data name="TPM_FirmwareVersion" xml:space="preserve">
+    <value>固件版本:</value>
+  </data>
+  <data name="TPM_Status" xml:space="preserve">
+    <value>状态:</value>
+  </data>
+  <data name="TPM_Enabled" xml:space="preserve">
+    <value>启用:</value>
+  </data>
+  <data name="TPM_Activated" xml:space="preserve">
+    <value>激活:</value>
+  </data>
+  <data name="TPM_Owned" xml:space="preserve">
+    <value>已拥有:</value>
+  </data>
+  <data name="TPM_Ready" xml:space="preserve">
+    <value>就绪:</value>
+  </data>
+  <data name="TPM_TBSAvailable" xml:space="preserve">
+    <value>TBS可用:</value>
+  </data>
+  <data name="TPM_PhysicalPresenceRequired" xml:space="preserve">
+    <value>需物理存在:</value>
+  </data>
+  <data name="TPM_SpecVersion" xml:space="preserve">
+    <value>规范版本:</value>
+  </data>
+  <data name="TPM_TBSVersion" xml:space="preserve">
+    <value>TBS版本:</value>
+  </data>
+  <data name="TPM_DetectionMethod" xml:space="preserve">
+    <value>检测方法:</value>
+  </data>
+  <data name="TPM_ErrorMessage" xml:space="preserve">
+    <value>错误信息:</value>
+  </data>
+  
+  <!-- 状态信息 -->
+  <data name="Status_Connected" xml:space="preserve">
+    <value>已连接</value>
+  </data>
+  <data name="Status_Disconnected" xml:space="preserve">
+    <value>未连接</value>
+  </data>
+  <data name="Status_LastUpdate" xml:space="preserve">
+    <value>最后更新:</value>
+  </data>
+  
+  <!-- 通用词汇 -->
+  <data name="Common_Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="Common_No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="Common_Supported" xml:space="preserve">
+    <value>支持</value>
+  </data>
+  <data name="Common_NotSupported" xml:space="preserve">
+    <value>不支持</value>
+  </data>
+  <data name="Common_Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Common_Loading" xml:space="preserve">
+    <value>加载中...</value>
+  </data>
+  <data name="Common_Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  
+  <!-- 系统托盘 -->
+  <data name="Tray_Show" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="Tray_Hide" xml:space="preserve">
+    <value>隐藏</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="Tray_About" xml:space="preserve">
+    <value>关于</value>
+  </data>
+  
+  <!-- 温度监控 -->
+  <data name="Temperature_CPUHistory" xml:space="preserve">
+    <value>CPU温度历史</value>
+  </data>
+  <data name="Temperature_GPUHistory" xml:space="preserve">
+    <value>GPU温度历史</value>
+  </data>
+  
+  <!-- 插件 -->
+  <data name="Plugin_Manager" xml:space="preserve">
+    <value>插件管理器</value>
+  </data>
+  <data name="Plugin_Enable" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Plugin_Disable" xml:space="preserve">
+    <value>禁用</value>
+  </data>
+  <data name="Plugin_Settings" xml:space="preserve">
+    <value>插件设置</value>
+  </data>
+</root>
