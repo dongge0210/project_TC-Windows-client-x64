@@ -1,6 +1,8 @@
 #include "Application.h"
 #include "core/Utils/Logger.h"
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 namespace TCMT {
 
@@ -31,17 +33,6 @@ bool Application::Initialize(const std::string& configPath) {
         Logger::Warning("GPU系统初始化失败，继续运行");
     }
     
-    // 初始化服务
-    if (!InitializeServices()) {
-        Logger::Error("服务初始化失败");
-        return false;
-    }
-    
-    // 初始化插件
-    if (!InitializePlugins()) {
-        Logger::Warning("插件系统初始化失败，继续运行");
-    }
-    
     m_initialized = true;
     Logger::Info("TCMT应用程序初始化完成");
     return true;
@@ -59,14 +50,6 @@ bool Application::Start() {
     
     Logger::Info("启动TCMT应用程序");
     
-    // 启动所有服务
-    if (!GetServiceManager().StartAllServices()) {
-        Logger::Warning("部分服务启动失败");
-    }
-    
-    // 启动插件
-    GetPluginManager().StartAllPlugins();
-    
     m_isRunning = true;
     Logger::Info("TCMT应用程序启动完成");
     return true;
@@ -78,12 +61,6 @@ void Application::Stop() {
     }
     
     Logger::Info("停止TCMT应用程序");
-    
-    // 停止插件
-    GetPluginManager().StopAllPlugins();
-    
-    // 停止服务
-    GetServiceManager().StopAllServices();
     
     m_isRunning = false;
     Logger::Info("TCMT应用程序已停止");
@@ -115,48 +92,12 @@ void Application::Cleanup() {
     
     Stop();
     
-    GetPluginManager().Cleanup();
-    GetServiceManager().Cleanup();
-    
     m_initialized = false;
     Logger::Info("TCMT应用程序资源清理完成");
 }
 
-Services::ServiceManager& Application::GetServiceManager() {
-    return Services::ServiceManager::GetInstance();
-}
-
-Plugins::PluginManager& Application::GetPluginManager() {
-    return Plugins::PluginManager::GetInstance();
-}
-
 GPU::GPUManager& Application::GetGPUManager() {
     return GPU::GPUManager::GetInstance();
-}
-
-bool Application::InitializeServices() {
-    Logger::Info("初始化系统服务");
-    
-    // 这里可以注册各种服务
-    // auto& serviceManager = GetServiceManager();
-    // serviceManager.RegisterService("monitoring", std::make_unique<MonitoringService>());
-    // serviceManager.RegisterService("hotkey", std::make_unique<HotkeyService>());
-    // serviceManager.RegisterService("tray", std::make_unique<SystemTrayService>());
-    
-    Logger::Info("系统服务初始化完成");
-    return true;
-}
-
-bool Application::InitializePlugins() {
-    Logger::Info("初始化插件系统");
-    
-    auto& pluginManager = GetPluginManager();
-    
-    // 扫描插件目录
-    pluginManager.ScanPluginDirectory("plugins/");
-    
-    Logger::Info("插件系统初始化完成");
-    return true;
 }
 
 bool Application::InitializeGPU() {
