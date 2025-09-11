@@ -1,4 +1,6 @@
 name: Sync to Gitee and GitLab
+permissions:
+  contents: read
 
 on:
   push:
