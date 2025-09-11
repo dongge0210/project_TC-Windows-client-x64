@@ -1,0 +1,13 @@
+name: Games
+
+on: [push]
+
+jobs:
+  breakout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: breakout gane
+        uses: cyprieng/github-breakout@v1.2.1
+        with:
+          username: dongge0210  # 你的用户名
