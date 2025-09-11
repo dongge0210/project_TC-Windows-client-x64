@@ -74,14 +74,7 @@ namespace WPF_UI1.Services
         {
             new CultureInfo("zh-CN"), // 简体中文
             new CultureInfo("zh-TW"), // 繁体中文
-            new CultureInfo("en-US"), // 英语
-            new CultureInfo("ja-JP"), // 日语
-            new CultureInfo("ko-KR"), // 韩语
-            new CultureInfo("ru-RU"), // 俄语
-            new CultureInfo("de-DE"), // 德语
-            new CultureInfo("fr-FR"), // 法语
-            new CultureInfo("es-ES"), // 西班牙语
-            new CultureInfo("pt-BR")  // 葡萄牙语
+            new CultureInfo("en-US")  // 英语
         };
 
         /// <summary>
