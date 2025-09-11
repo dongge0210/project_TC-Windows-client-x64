@@ -1,5 +1,5 @@
 #pragma once
-#include "gpu/GPUAbstraction.h"
+#include "../gpu/GPUAbstraction.h"
 #include <string>
 #include <memory>
 
