@@ -182,6 +182,7 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
     <ClInclude Include="..\src\core\DataStruct\SharedMemoryManager.h" />
     <ClInclude Include="..\src\core\disk\DiskInfo.h" />
     <ClInclude Include="..\src\core\gpu\GpuInfo.h" />
+    <ClInclude Include="..\src\core\gpu\GPUAbstraction.h" />
     <ClInclude Include="..\src\core\memory\MemoryInfo.h" />
     <ClInclude Include="..\src\core\network\NetworkAdapter.h" />
     <ClInclude Include="..\src\core\os\OSInfo.h" />
@@ -193,16 +194,19 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
     <ClInclude Include="..\src\core\Utils\TimeUtils.h" />
     <ClInclude Include="..\src\core\Utils\WinUtils.h" />
     <ClInclude Include="..\src\core\Utils\WMIManager.h" />
+    <ClInclude Include="..\src\core\application\Application.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\core\cpu\CpuInfo.cpp" />
     <ClCompile Include="..\src\core\DataStruct\SharedMemoryManager.cpp" />
     <ClCompile Include="..\src\core\disk\DiskInfo.cpp" />
     <ClCompile Include="..\src\core\gpu\GpuInfo.cpp" />
+    <ClCompile Include="..\src\core\gpu\GPUAbstraction.cpp" />
     <ClCompile Include="..\src\core\memory\MemoryInfo.cpp" />
     <ClCompile Include="..\src\core\network\NetworkAdapter.cpp" />
     <ClCompile Include="..\src\core\os\OSInfo.cpp" />
     <ClCompile Include="..\src\core\tpm\TpmInfo.cpp" />
+    <ClCompile Include="..\src\core\application\Application.cpp" />
     <ClCompile Include="..\src\core\temperature\TemperatureWrapper.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsManaged>

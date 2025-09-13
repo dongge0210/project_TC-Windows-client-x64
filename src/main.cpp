@@ -49,6 +49,7 @@
 #include "core/DataStruct/DataStruct.h"
 #include "core/DataStruct/SharedMemoryManager.h"  // Include the new shared memory manager
 #include "core/temperature/TemperatureWrapper.h"  // 使用TemperatureWrapper而不是直接调用LibreHardwareMonitorBridge
+#include "core/application/Application.h"  // 应用程序主控制器
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
@@ -607,6 +608,19 @@ public:
 
 // 主函数 - 控制台模式
 int main(int argc, char* argv[]) {
+    // 检查帮助参数
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            std::cout << "TCMT Windows Client x64\n";
+            std::cout << "用法: " << argv[0] << " [选项]\n";
+            std::cout << "选项:\n";
+            std::cout << "  --help, -h               显示此帮助信息\n";
+            return 0;
+        }
+    }
+    
+    // 正常监控模式
     // 设置结构化异常处理
     _set_se_translator(SEHTranslator);
     
