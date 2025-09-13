@@ -2,7 +2,6 @@
 using Serilog;
 using System.IO;
 using System;
-using WPF_UI1.Services;
 
 namespace WPF_UI1
 {
@@ -20,9 +19,6 @@ namespace WPF_UI1
             Log.Information("应用程序版本: 1.0.0");
             Log.Information("运行时版本: {RuntimeVersion}", Environment.Version);
             Log.Information("操作系统: {OS}", Environment.OSVersion);
-
-            // 初始化国际化服务
-            LocalizationService.Instance.LoadLanguageSetting();
 
             // 设置全局异常处理
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;

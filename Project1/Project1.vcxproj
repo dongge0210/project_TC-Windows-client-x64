@@ -195,7 +195,6 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
     <ClInclude Include="..\src\core\Utils\WinUtils.h" />
     <ClInclude Include="..\src\core\Utils\WMIManager.h" />
     <ClInclude Include="..\src\core\application\Application.h" />
-    <ClInclude Include="..\src\core\devtools\DiagnosticTools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\core\cpu\CpuInfo.cpp" />
@@ -208,7 +207,6 @@ _WINSOCK_DEPRECATED_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefiniti
     <ClCompile Include="..\src\core\os\OSInfo.cpp" />
     <ClCompile Include="..\src\core\tpm\TpmInfo.cpp" />
     <ClCompile Include="..\src\core\application\Application.cpp" />
-    <ClCompile Include="..\src\core\devtools\DiagnosticTools.cpp" />
     <ClCompile Include="..\src\core\temperature\TemperatureWrapper.cpp">
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</CompileAsManaged>
       <CompileAsManaged Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</CompileAsManaged>

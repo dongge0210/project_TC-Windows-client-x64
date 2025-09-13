@@ -50,7 +50,6 @@
 #include "core/DataStruct/SharedMemoryManager.h"  // Include the new shared memory manager
 #include "core/temperature/TemperatureWrapper.h"  // 使用TemperatureWrapper而不是直接调用LibreHardwareMonitorBridge
 #include "core/application/Application.h"  // 应用程序主控制器
-#include "core/devtools/DiagnosticTools.h"  // Dev工具化诊断命令行
 
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "user32.lib")
@@ -609,68 +608,15 @@ public:
 
 // 主函数 - 控制台模式
 int main(int argc, char* argv[]) {
-    // 检查命令行参数
-    bool startDevTools = false;
+    // 检查帮助参数
     for (int i = 1; i < argc; i++) {
         std::string arg = argv[i];
-        if (arg == "--dev" || arg == "-d" || arg == "--devtools") {
-            startDevTools = true;
-            break;
-        }
         if (arg == "--help" || arg == "-h") {
             std::cout << "TCMT Windows Client x64\n";
             std::cout << "用法: " << argv[0] << " [选项]\n";
             std::cout << "选项:\n";
-            std::cout << "  --dev, -d, --devtools    启动开发工具化诊断命令行\n";
             std::cout << "  --help, -h               显示此帮助信息\n";
             return 0;
-        }
-    }
-    
-    // 如果启动开发工具，则进入诊断模式
-    if (startDevTools) {
-        try {
-            // 基础初始化
-            SetConsoleCP(65001);
-            SetConsoleOutputCP(65001);
-            setlocale(LC_ALL, "en_US.UTF-8");
-            
-            Logger::EnableConsoleOutput(true);
-            Logger::Initialize("tcmt_devtools.log");
-            Logger::SetLogLevel(LOG_INFO);
-            
-            // 初始化COM
-            HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-            if (FAILED(hr)) {
-                std::cout << "COM初始化失败" << std::endl;
-                return 1;
-            }
-            
-            // 初始化应用程序核心
-            auto& app = TCMT::Application::GetInstance();
-            if (!app.Initialize()) {
-                std::cout << "应用程序初始化失败" << std::endl;
-                CoUninitialize();
-                return 1;
-            }
-            
-            // 启动诊断工具
-            auto& devTools = TCMT::DevTools::DiagnosticTools::GetInstance();
-            if (devTools.Initialize()) {
-                devTools.StartCommandLine();
-            } else {
-                std::cout << "诊断工具初始化失败" << std::endl;
-            }
-            
-            // 清理
-            devTools.Cleanup();
-            app.Cleanup();
-            CoUninitialize();
-            return 0;
-        }
-        catch (const std::exception& e) {
-            std::cout << "启动开发工具时发生错误: " << e.what() << std::endl;
-            return 1;
         }
     }
     
